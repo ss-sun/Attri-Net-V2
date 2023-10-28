@@ -71,6 +71,7 @@ def main(exp_configs):
 if __name__ == '__main__':
     from parser import resnet_get_parser, attrinet_get_parser, bcos_resnet_get_parser
     model = "attri-net" # select which model to train, "resnet" or "attri-net"
+    # test git sync
     if model == "resnet":
         parser = resnet_get_parser()
     if model == "attri-net":
