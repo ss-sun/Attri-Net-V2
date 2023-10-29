@@ -8,6 +8,7 @@ from data.nih_chestxray import NIHChestXrayDataModule
 from data.vindr_cxr import Vindr_CXRDataModule
 from data.skm_tea_mri import SKMTEADataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
+from data.airogs_glaucoma import AIROGS_fundusDataModule
 
 
 def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
@@ -44,6 +45,11 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
         datamodule = SKMTEADataModule(dataset_params,
                                         img_size=data_default_params['img_size'],
                                         seed=exp_configs.manual_seed)  # use official split
+    if exp_configs.dataset == 'airogs':
+        datamodule = AIROGS_fundusDataModule(dataset_params,
+                                             img_size=data_default_params['img_size'],
+                                             seed=42)
+
     if 'contam' in exp_configs.dataset:
         print("working on contaminated dataset")
         datamodule = Contaminate_CheXpertDataModule(dataset_params,

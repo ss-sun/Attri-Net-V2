@@ -39,6 +39,15 @@ skmtea_mri_dict = {
 }
 
 
+airogs_fundus_dict = {
+    "root_dir": "/mnt/qb/work/baumgartner/sun22/data/5793241",
+    "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/5793241/train_labels.csv",
+    "train_diseases": ["RG"],
+}
+
+
+
+
 # contaminated_chexpert_dict = {
 #     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small_contaminated/",
 #     "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
@@ -94,6 +103,7 @@ dataset_dict = {
     "skmtea": skmtea_mri_dict,
     "contam20": Cardiomegaly_tag_degree20_dict,
     "contam50": Cardiomegaly_tag_degree50_dict,
+    "airogs": airogs_fundus_dict
 }
 
 

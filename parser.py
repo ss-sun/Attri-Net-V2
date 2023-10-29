@@ -14,7 +14,7 @@ def attrinet_get_parser():
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'contam20','contam50'])
+    parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'contam20','contam50','airogs'])
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
@@ -34,7 +34,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_2', type=float, default=200, help='weight for l1 loss of healthy mask')
     parser.add_argument('--lambda_3', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
-    parser.add_argument('--process_mask', type=str, default='sum(abs(mx))', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
 
     # Training configuration.
     parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train for')
