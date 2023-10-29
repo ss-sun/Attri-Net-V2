@@ -34,7 +34,7 @@ class AIROGS_fundus(Dataset):
         label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
         label = np.array(label)
         data['img'] = img
-        data['label'] = label
+        data['label'] = label.astype(np.float32)
         return data
 
 
@@ -62,13 +62,17 @@ class AIROGS_fundusDataModule(LightningDataModule):
             'train': tfs.Compose([ # I want to add scale here, because the fundus images vary in size, some are bigger
                 tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-                tfs.Resize((self.img_size, self.img_size)),
+                tfs.Resize(336),
+                tfs.CenterCrop(320),
+                # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
                 tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
 
             ]),
             'test': tfs.Compose([
-                tfs.Resize((self.img_size, self.img_size)),
+                tfs.Resize(342),
+                tfs.CenterCrop(320),
+                # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
                 tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
 
@@ -266,7 +270,7 @@ if __name__ == '__main__':
             count += len(disease_dataloader.dataset)
         print('count', count)
 
-    for i in range(len(test_loaders.dataset)):
+    for i in range(10):
         print(i)
         data = test_loaders.dataset[i]
         img = data['img']
