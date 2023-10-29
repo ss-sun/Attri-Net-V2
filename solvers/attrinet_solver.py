@@ -448,10 +448,8 @@ class task_switch_solver(object):
 
         imgs, lbls = batch['img'], batch['label']
         imgs = imgs.to(self.device)
-        lbls = lbls.to(self.device)
-
+        lbls = lbls.to(self.device).long()
         return imgs, lbls
-
 
 
     def train(self):
