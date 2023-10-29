@@ -369,7 +369,10 @@ class task_switch_solver(object):
             masks = torch.cat((masks_pos, masks_neg))
             dests = torch.cat((dests_pos, dests_neg))
             lbls = torch.cat((pos_lbls, neg_lbls))
-            y_pred = classifier(masks)
+            if self.process_mask != "sum(abs(mx))":
+                y_pred = classifier(masks)
+            if self.process_mask == "sum(abs(mx))":
+                y_pred = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
             pred_batch = torch.sigmoid(y_pred)
             dest_name = str(gen_iterations) + "_" + disease + "_dest_samples.png"
             mask_name = str(gen_iterations) + "_" + disease + "_mask_samples.png"
@@ -706,8 +709,11 @@ class task_switch_solver(object):
                     classifier = self.net_lgs[disease]
                     task_code = self.latent_z_task[disease].to(self.device)
                     _, masks = self.net_g(valid_data, task_code)
+                    if self.process_mask != "sum(abs(mx))":
+                        y_pred_logits = classifier(masks)
+                    if self.process_mask == "sum(abs(mx))":
+                        y_pred_logits = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
 
-                    y_pred_logits = classifier(masks)
                     y_pred = torch.sigmoid(y_pred_logits).squeeze()
                     valid_loss = self.lgs_loss(y_pred_logits.squeeze(), valid_labels[:, idx])
 
@@ -783,7 +789,12 @@ class task_switch_solver(object):
                     task_code = self.latent_z_task[disease].to(self.device)
                     _, masks = self.net_g(test_data, task_code)
 
-                    y_pred_logits = classifier(masks)
+                    # y_pred_logits = classifier(masks)
+                    if self.process_mask != "sum(abs(mx))":
+                        y_pred_logits = classifier(masks)
+                    if self.process_mask == "sum(abs(mx))":
+                        y_pred_logits = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
+
                     y_pred = torch.sigmoid(y_pred_logits).squeeze()
 
                     idx = self.TRAIN_DISEASES.index(disease)
@@ -884,6 +895,11 @@ class task_switch_solver(object):
         disease = self.TRAIN_DISEASES[label_idx]
         classifier = self.net_lgs[disease]
         attrs = self.get_attributes(inputs, label_idx)
-        pred_logits = classifier(attrs)
+
+        # pred_logits = classifier(attrs)
+        if self.process_mask != "sum(abs(mx))":
+            pred_logits = classifier(attrs)
+        if self.process_mask == "sum(abs(mx))":
+            pred_logits = classifier(attrs.sum(dim=(1, 2, 3), keepdim=True))
         prob = torch.sigmoid(pred_logits)
         return prob
