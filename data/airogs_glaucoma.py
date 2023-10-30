@@ -32,9 +32,9 @@ class AIROGS_fundus(Dataset):
         img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
         # Get labels from the dataframe for current image
         label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
-        label = np.array(label)
+        label = np.asfarray(label)
         data['img'] = img
-        data['label'] = label.astype(np.float32)
+        data['label'] = label
         return data
 
 

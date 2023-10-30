@@ -448,7 +448,7 @@ class task_switch_solver(object):
 
         imgs, lbls = batch['img'], batch['label']
         imgs = imgs.to(self.device)
-        lbls = lbls.to(self.device).long()
+        lbls = lbls.to(self.device)
         return imgs, lbls
 
 
