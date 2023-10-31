@@ -19,12 +19,14 @@ echo -e "---------------------------------\n"
 # Due to a potential bug, we need to manually load our bash configurations first
 source /mnt/qb/home/baumgartner/sun22/.bashrc
 
+cd /mnt/qb/work/baumgartner/sun22/project/tmi
+
 # Next activate the conda environment
 conda activate tt_interaction
 
 
 echo "convert training images to png"
-python3 spine/preprocess/dicom2png.py \
+python3 ./data/preprocess_vindr.py \
   --input-dir "/mnt/qb/baumgartner/rawdata/vindr-cxr-physionet-original/1.0.0/train" \
   --output-dir "/mnt/qb/baumgartner/rawdata/vindr-cxr-physionet-pngs/1.0.0/train" \
   --cpus 4 \
