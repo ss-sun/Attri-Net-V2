@@ -110,6 +110,7 @@ class task_switch_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
             self.model_path = exp_configs.model_path
+            self.process_mask = exp_configs.process_mask
 
             # Create latent code for self.TRAIN_DISEASES tasks
             self.latent_z_task = self.create_task_code()

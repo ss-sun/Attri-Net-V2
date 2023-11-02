@@ -165,9 +165,13 @@ def vis_classcenter(center_losses, out_dir):
 
 
 def main():
-    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-02 16:51:03--contam20--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-02 16:51:03--contam20--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+
+
     model_dir = model_path + "/ckpt"
-    confounder_file_path = os.path.join(model_path, "tag.txt")
+    #confounder_file_path = os.path.join(model_path, "tag.txt")
+    confounder_file_path = "./tag.txt"
     net_lgs = load_lgs(model_dir)
     out_dir = os.path.join(model_path, "contaim_weights")
     os.makedirs(out_dir,exist_ok=True)

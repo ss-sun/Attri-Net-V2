@@ -452,7 +452,8 @@ def argument_parser():
     parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--dataset', type=str, default='skmtea', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
+    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
+    parser.add_argument('--process_mask', type=str, default='abs(mx)', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--top_k', type=int, default=1, help="top k pixels to be considered as hit")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
@@ -476,7 +477,8 @@ def get_arguments():
 
     if exp_configs.exp_name == 'attri-net':
         print("evaluating our model")
-        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+        # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask]
         print("evaluate model: " + exp_configs.model_path)
 
         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
