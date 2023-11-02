@@ -19,7 +19,15 @@ python3 ./data/preprocess_vindr.py \
   --log-file "/mnt/qb/rawdata/vindr-cxr-physionet-pngs/1.0.0/convert_test_log.txt" \
   --out-file "/mnt/qb/rawdata/vindr-cxr-physionet-pngs/1.0.0/convert_test_results.csv" \
 
-2. split the train set into train and validation set, keep the test set unchanged.
+
+2. to speed up train, I resized all images in vindr to 320*320, and also scale the boundbox annotation. using scripts in preprocess_nih_vindr_datasets.py
+Now the dataset document as following:
+train set: /mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train_pngs_rescaled
+resized train_bbox: /mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train_resized.csv
+test set: /mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/test_pngs_rescaled
+resized test_bbox: /mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test_resized.csv
+
+3. In the dataset module, I split the train set into train and validation set, keep the test set unchanged.
 
 
 

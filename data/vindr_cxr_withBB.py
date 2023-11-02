@@ -92,13 +92,12 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
 
         self.data_transforms = {
             'train': tfs.Compose([
-                tfs.Resize((self.img_size, self.img_size)),
                 tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
-                tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
+                #tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
                 tfs.ToTensor(),
             ]),
             'test': tfs.Compose([
-                tfs.Resize((self.img_size, self.img_size)),
+
                 tfs.ToTensor(),
             ]),
         }
