@@ -45,6 +45,12 @@ airogs_fundus_dict = {
     "train_diseases": ["RG"],
 }
 
+vindr_cxr_withBBdict = {
+        "root_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train.csv",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test.csv",
+        "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening','Pleural effusion'],
+    }
 
 
 
@@ -103,7 +109,8 @@ dataset_dict = {
     "skmtea": skmtea_mri_dict,
     "contam20": Cardiomegaly_tag_degree20_dict,
     "contam50": Cardiomegaly_tag_degree50_dict,
-    "airogs": airogs_fundus_dict
+    "airogs": airogs_fundus_dict,
+    "vindr_cxr_withBB":vindr_cxr_withBBdict,
 }
 
 

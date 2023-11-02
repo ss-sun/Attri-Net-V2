@@ -45,7 +45,8 @@ class AIROGS_fundusDataModule(LightningDataModule):
 
     def __init__(self, dataset_params, split_ratio=0.8, resplit=False, img_size=320, seed=42):
         self.root_dir = dataset_params["root_dir"]
-        self.image_dir = os.path.join(self.root_dir, 'train')
+        # self.image_dir = os.path.join(self.root_dir, 'train')
+        self.image_dir = os.path.join(self.root_dir, 'train_scaled')
         self.train_csv_file = dataset_params["train_csv_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
         self.split_ratio = split_ratio
@@ -70,7 +71,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
 
             ]),
             'test': tfs.Compose([
-                tfs.Resize(342),
+                tfs.Resize(336),
                 tfs.CenterCrop(320),
                 # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
@@ -270,12 +271,12 @@ if __name__ == '__main__':
             count += len(disease_dataloader.dataset)
         print('count', count)
 
-    for i in range(10):
-        print(i)
-        data = test_loaders.dataset[i]
-        img = data['img']
-        lbl = data['label']
-        img = img.squeeze()
-        print('img.shape', img.shape)
-        plt.imshow(img,cmap='gray')
-        plt.show()
+    # for i in range(10):
+    #     print(i)
+    #     data = test_loaders.dataset[i]
+    #     img = data['img']
+    #     lbl = data['label']
+    #     img = img.squeeze()
+    #     print('img.shape', img.shape)
+    #     plt.imshow(img,cmap='gray')
+    #     plt.show()

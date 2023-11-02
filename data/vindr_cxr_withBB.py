@@ -20,13 +20,13 @@ from PIL import Image, ImageDraw
 
 
 class Vindr_CXR_BBOX(Dataset):
-    def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_type="single-label"):
+    def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_style="single-label"):
         self.image_dir = image_dir
         self.df = df
         self.TRAIN_DISEASES = train_diseases
         self.transforms = transforms
         self.img_size = img_size
-        self.lbl_type = lbl_type
+        self.lbl_type = lbl_style
 
     def __len__(self):
         return len(self.df)
@@ -34,8 +34,8 @@ class Vindr_CXR_BBOX(Dataset):
 
     def __getitem__(self, idx):
 
+        data = {}
         if self.lbl_type == "single-label":
-            data = {}
             img_id = self.df.iloc[idx]['image_id']
             img_path = os.path.join(self.image_dir, img_id + '.png')
             img = Image.open(img_path)  # value (0,255)
@@ -67,12 +67,13 @@ class Vindr_CXR_BBOX(Dataset):
                 w = x_max - x_min
                 h = y_max - y_min
                 bbox = np.array([x, y, w, h])  # change bbox to [x_min, y_min, width, height]
+
             data['label'] = label
             data['BBox'] = bbox
         return data
 
 
-class Vindr_CXRDataModule(LightningDataModule):
+class Vindr_CXR_BB_DataModule(LightningDataModule):
 
     def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42, with_bb=False):
 
@@ -106,6 +107,8 @@ class Vindr_CXRDataModule(LightningDataModule):
         # Read train and test csv files
         train_df = pd.read_csv(self.train_csv_file)
         test_df = pd.read_csv(self.test_csv_file)
+        print('len(train_df): ',len(train_df))
+        print('len(train_df): ',len(test_df))
         self.diagnoses = np.unique(np.asarray(train_df['class_name'].tolist())).tolist()
 
         # Preprocess csv file
@@ -119,16 +122,22 @@ class Vindr_CXRDataModule(LightningDataModule):
                 shutil.rmtree(self.split_df_dir)
             os.mkdir(self.split_df_dir)
             self.train_df, self.valid_df = self.split(df=train_df, train_ratio=self.split_ratio, shuffle=True)
+
         self.test_df = test_df
+        print('len(self.train_df): ', len(self.train_df))
+        print('len(self.valid_df): ', len(self.valid_df))
+        print('len(self.test_df): ', len(self.test_df))
+
+
 
 
         # Create datasets
         self.train_set = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES,
-                                   transforms=self.data_transforms['train'], img_size=self.img_size, lbl_style="multi-label")
+                                   transforms=self.data_transforms['train'], img_size=self.img_size, lbl_style="single-label")
         self.valid_set = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES,
-                                   transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="multi-label")
+                                   transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="single-label")
         self.test_set = Vindr_CXR_BBOX(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES,
-                                  transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="multi-label")
+                                  transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="single-label")
 
 
         self.single_disease_train_sets = self.create_trainsets()
@@ -275,22 +284,19 @@ if __name__ == '__main__':
         return mask
 
 
-    vindr_cxr_dict = {
-        "image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
-        "BB_image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train_pngs",
-        "BBox_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/splitted_df/test_df.csv",
-        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train.csv",
-        "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening',
-                           'Pleural effusion'],
+    vindr_cxr_withBBdict = {
+        "root_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train.csv",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test.csv",
+        "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening','Pleural effusion'],
     }
-
     data_default_params = {
         "split_ratio": 0.8,
         "resplit": False,
         "img_size": 320,
     }
 
-    datamodule = Vindr_CXRDataModule(vindr_cxr_dict,
+    datamodule = Vindr_CXR_BB_DataModule(vindr_cxr_withBBdict,
                                         split_ratio=data_default_params['split_ratio'],
                                         resplit=data_default_params['resplit'],
                                         img_size=data_default_params['img_size'],
@@ -301,36 +307,46 @@ if __name__ == '__main__':
     valid_loader = datamodule.valid_dataloader(batch_size=4)
     test_loader = datamodule.test_dataloader(batch_size=4)
 
-    BBox_test_dataloader = datamodule.BBox_test_dataloader(batch_size=1, shuffle=True)
-    print('len(test_loaders.dataset)', len(BBox_test_dataloader.dataset))
-
     print(len(train_loader.dataset))
     print(len(valid_loader.dataset))
     print(len(test_loader.dataset))
-    print(len(train_loader.dataset) + len(valid_loader.dataset) + len(test_loader.dataset))
-# # #
-# # #     for idx in tqdm(range(500)):
-# # #         print(idx)
-# # #         data = BBox_test_dataloader.dataset[idx]
-# # #         img = data['img']
-# # #         label = data['label']
-# # #         bbox = data['BBox']
-# # #         if np.sum(bbox)!=0 and label[1] == 1:
-# # #             print("cardiomegealy")
-# # #             BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
-# # #             x_min = int(bbox[0].item())
-# # #             y_min = int(bbox[1].item())
-# # #             x_max = x_min + int(bbox[2].item())
-# # #             y_max = y_min + int(bbox[3].item())
-# # #
-# # #             img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
-# # #             draw = ImageDraw.Draw(img)
-# # #             draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
-# # #             draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
-# # #             img.show()
-# # #
-# # #             BBmask = Image.fromarray(BBmask * 255).convert('RGB')
-# # #             BBmask.show()
+
+    train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+    for disease in vindr_cxr_withBBdict["train_diseases"]:
+        print(disease)
+        count = 0
+        for c in ['neg', 'pos']:
+            print(c)
+            disease_dataloader = train_dataloaders[c][disease]
+            print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
+            count += len(disease_dataloader.dataset)
+        print('count', count)
+
+    loader = train_dataloaders['neg']['Cardiomegaly']
+
+
+    for idx in tqdm(range(500)):
+        print(idx)
+        data = loader.dataset[idx]
+        img = data['img']
+        label = data['label']
+        bbox = data['BBox']
+        if np.sum(bbox)!=0 and label[1] == 1:
+            print("cardiomegealy")
+            BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
+            x_min = int(bbox[0].item())
+            y_min = int(bbox[1].item())
+            x_max = x_min + int(bbox[2].item())
+            y_max = y_min + int(bbox[3].item())
+
+            img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
+            draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
+            img.show()
+
+            BBmask = Image.fromarray(BBmask * 255).convert('RGB')
+            BBmask.show()
 # #
 # #
 # #

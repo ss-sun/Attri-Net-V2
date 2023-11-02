@@ -20,3 +20,10 @@ python3 ./data/preprocess_vindr.py \
   --out-file "/mnt/qb/rawdata/vindr-cxr-physionet-pngs/1.0.0/convert_test_results.csv" \
 
 2. split the train set into train and validation set, keep the test set unchanged.
+
+
+
+airogs dataset preprocessing
+1. download
+2. resize using script preprocess_airogs.py
+3. 

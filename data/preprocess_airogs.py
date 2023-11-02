@@ -32,7 +32,6 @@ def preprocess(src_dir, dest_dir, basesize=512):
 
 
 if __name__ == '__main__':
-
     src_dir = "/mnt/qb/work/baumgartner/sun22/data/5793241/train"
     dest_dir = "/mnt/qb/work/baumgartner/sun22/data/5793241/train_scaled"
     preprocess(src_dir, dest_dir)

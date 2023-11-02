@@ -9,6 +9,7 @@ from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, 
 from models.lgs_classifier import LogisticRegressionModel
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from models.losses import EnergyPointingGameBBMultipleLoss
 
 
 
@@ -25,7 +26,7 @@ class task_switch_solver(object):
         """
         Initialize solver
         """
-
+        self.debug = exp_configs.debug
         # Initialize configurations.
         self.exp_configs = exp_configs
         self.use_gpu = exp_configs.use_gpu
@@ -60,6 +61,7 @@ class task_switch_solver(object):
             self.lambda_1 = exp_configs.lambda_1
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
+            self.lambda_loc = 1
             self.lambda_ctr = exp_configs.lambda_centerloss
             self.process_mask = exp_configs.process_mask
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
@@ -98,6 +100,7 @@ class task_switch_solver(object):
             self.net_d.apply(self.weights_init)
             self.optim_g, self.optim_d, self.optim_lgs = self.init_optimizer(self.net_g, self.net_d, self.net_lgs)
             self.lgs_loss = torch.nn.BCEWithLogitsLoss()
+            self.local_loss = EnergyPointingGameBBMultipleLoss()
             if self.process_mask != 'sum(abs(mx))':
                 self.center_losses, self.optimizer_centloss = self.init_centerlosses()
 
@@ -446,10 +449,10 @@ class task_switch_solver(object):
                     self.dloader_neg[current_training_disease])
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
-        imgs, lbls = batch['img'], batch['label']
+        imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
         imgs = imgs.to(self.device)
         lbls = lbls.to(self.device)
-        return imgs, lbls
+        return imgs, lbls, bboxs
 
 
     def train(self):
@@ -481,6 +484,11 @@ class task_switch_solver(object):
             else:
                 d_iters = self.d_iters
 
+                ### only for test
+                if self.debug:
+                    d_iters = 1
+                    self.sample_step = 1
+                    self.model_valid_step = 1
             # =================================================================================== #
             #                             1. Train the discriminator                              #
             # =================================================================================== #
@@ -492,8 +500,8 @@ class task_switch_solver(object):
 
                 # Select a disease to train on and get a positive batch and a negative batch.
                 self.current_training_disease = self.TRAIN_DISEASES[dis_iterations % self.num_class]
-                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 # Switch the discriminator to a specific disease task and compute critic loss.
                 task_code = self.latent_z_task[self.current_training_disease].to(self.device)
@@ -518,8 +526,8 @@ class task_switch_solver(object):
 
             # Select a disease to train on and get a positive batch and a negative batch.
             self.current_training_disease = self.TRAIN_DISEASES[gen_iterations % self.num_class]
-            imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-            imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+            imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+            imgs_pos, lbls_pos, bboxs_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
             # Switch the generator to a specific disease task and compute generator loss.
             task_code= self.latent_z_task[self.current_training_disease].to(self.device)
@@ -530,6 +538,7 @@ class task_switch_solver(object):
             gen_loss_d = - self.net_d(pos_dests, task_code).mean() * self.lambda_critic
 
             # Regularization terms.
+
             l1_anomaly = torch.mean(torch.abs(torch.mean(pos_masks, dim=1, keepdim=True))) * self.lambda_1
             l1_health = torch.mean(torch.abs(torch.mean(neg_masks, dim=1, keepdim=True))) * self.lambda_2
 
@@ -546,13 +555,19 @@ class task_switch_solver(object):
             classifiers_loss = classifiers_loss * self.lambda_3
 
 
+            # compute localization loss
+            localization_loss = 0
+            for img_idx in range(len(imgs_pos)):
+                bb_list = bboxs_pos[img_idx]
+                localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
+
 
             if self.process_mask != "sum(abs(mx))":
                 # Get center loss.
                 center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
                                                                                 lbls_all[:, disease_idx]) * self.lambda_ctr
                 # Total loss.
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss
+                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss + localization_loss * self.lambda_loc
 
                 logdict = {
                     "gen_loss": gen_loss,
@@ -560,7 +575,8 @@ class task_switch_solver(object):
                     "l1_anomaly": l1_anomaly,
                     "l1_health": l1_health,
                     "classifiers_loss": classifiers_loss,
-                    "center_loss": center_loss
+                    "center_loss": center_loss,
+                    "localization_loss": localization_loss
                 }
                 if self.use_wandb:
                     for n, v in logdict.items():
