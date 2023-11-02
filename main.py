@@ -1,7 +1,7 @@
 from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
 # from solvers.attrinet_solver_g_withoutcl import task_switch_solver
-# from solvers.attrinet_solver_energyloss import task_switch_solver
+from solvers.attrinet_solver_energyloss import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 import logging
 from experiment_utils import init_seed, init_experiment, init_wandb
@@ -16,7 +16,6 @@ def prepare_exps(exp_configs):
     init_seed(exp_configs.manual_seed)
     if exp_configs.use_wandb:
         init_wandb(exp_configs)
-
 
 
 def main(exp_configs):

@@ -35,4 +35,7 @@ attrinet_model_path_dict = {
         "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-14 10:57:38--nih_chestxray--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
         "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-13 18:10:38--vindr_cxr--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
         "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-09-22 13:19:07--skmtea--bs=4--lg_ds=32--l_cri=1.0--l1=500.0--l2=1000.0--l3=500.0--l_ctr=0.01",
+        "chexpert_abs(mx)":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-28 19:51:00--chexpert--process_mask=abs(mx)--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
+        "chexpert_sum(abs(mx))":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-29 17:13:06--chexpert--process_mask=sum(abs(mx))--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
+
 }  # new models

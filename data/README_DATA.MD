@@ -27,7 +27,6 @@ Now the dataset document as following:
 "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train_resized.csv",
 "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test_resized.csv",
 
-
 3. In the dataset module, I split the train set into train and validation set, keep the test set unchanged.
 
 

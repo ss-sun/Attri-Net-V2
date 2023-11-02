@@ -26,7 +26,9 @@ class task_switch_solver(object):
         """
         Initialize solver
         """
+        print("using the task switch solver with energy loss")
         self.debug = exp_configs.debug
+
         # Initialize configurations.
         self.exp_configs = exp_configs
         self.use_gpu = exp_configs.use_gpu
@@ -61,8 +63,8 @@ class task_switch_solver(object):
             self.lambda_1 = exp_configs.lambda_1
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
-            self.lambda_loc = 1
             self.lambda_ctr = exp_configs.lambda_centerloss
+            self.lambda_loc = exp_configs.lambda_localizationloss
             self.process_mask = exp_configs.process_mask
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
             self.cls_iteration = exp_configs.cls_iteration # more classifier steps for one generator step
@@ -88,6 +90,7 @@ class task_switch_solver(object):
             self.dloader_pos = data_loader['train_pos']
             self.dloader_neg = data_loader['train_neg']
             self.valid_loader = data_loader['valid']
+            self.max_val_batches = len(self.valid_loader)
             self.vis_loader_pos = data_loader['vis_pos']
             self.vis_loader_neg = data_loader['vis_neg']
 
@@ -484,11 +487,12 @@ class task_switch_solver(object):
             else:
                 d_iters = self.d_iters
 
-                ### only for test
-                if self.debug:
-                    d_iters = 1
-                    self.sample_step = 1
-                    self.model_valid_step = 1
+            ### only for test
+            if self.debug:
+                d_iters = 1
+                self.sample_step = 1
+                self.model_valid_step = 1
+                self.max_val_batches = 50
             # =================================================================================== #
             #                             1. Train the discriminator                              #
             # =================================================================================== #
@@ -561,7 +565,6 @@ class task_switch_solver(object):
                 bb_list = bboxs_pos[img_idx]
                 localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
 
-
             if self.process_mask != "sum(abs(mx))":
                 # Get center loss.
                 center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
@@ -617,6 +620,7 @@ class task_switch_solver(object):
                 gen_loss.backward()
                 self.optim_g.step()
                 gen_iterations += 1
+                # print("gen_iterations", gen_iterations)
 
                 # =================================================================================== #
             #                               3. Train the classifiers                              #
@@ -627,8 +631,8 @@ class task_switch_solver(object):
                 # Set requires_grad for respective classifier.
                 self.set_require_grads([False, False, True])
 
-                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
                 classifier = self.net_lgs[self.current_training_disease]
@@ -672,7 +676,7 @@ class task_switch_solver(object):
             # every model_valid_step, do validation
             if gen_iterations % self.model_valid_step == 0:
                 print(" - model validation-")
-                auc, _, _ = self.validation(max_batches=500)
+                auc, _, _ = self.validation(max_batches=self.max_val_batches)
                 valid_auc.append(auc)
                 print("validation AUC: ", auc)
                 print("current best AUC: ", best_auc)

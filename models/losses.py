@@ -30,6 +30,27 @@ class BBMultipleLoss:
         return bb_mask
 
 
+# class EnergyPointingGameBBMultipleLoss:
+#
+#     def __init__(self):
+#         super().__init__()
+#         self.only_positive = False
+#         self.binarize = False
+#
+#     def __call__(self, attributions, bb_coordinates):
+#         pos_attributions = attributions.clamp(min=0) # original code
+#         bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
+#
+#         for coords in bb_coordinates: # original code
+#             xmin, ymin, xmax, ymax = coords
+#             bb_mask[ymin:ymax, xmin:xmax] = 1
+#         num = pos_attributions[torch.where(bb_mask == 1)].sum()
+#         den = pos_attributions.sum()
+#         if den < 1e-7:
+#             return 1-num
+#         return 1-num/den
+
+
 class EnergyPointingGameBBMultipleLoss:
 
     def __init__(self):
@@ -38,18 +59,17 @@ class EnergyPointingGameBBMultipleLoss:
         self.binarize = False
 
     def __call__(self, attributions, bb_coordinates):
-        #pos_attributions = attributions.clamp(min=0) # original code
-        pos_attributions = torch.abs(attributions) # modified code, adapted to attri-net.
+        pos_attributions = torch.abs(attributions)  # modified code, adapted to attri-net.
         bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
-        for coords in bb_coordinates:
-            xmin, ymin, xmax, ymax = coords
-            bb_mask[ymin:ymax, xmin:xmax] = 1
+        xmin, ymin, width, height = bb_coordinates.numpy()  # modified code, adapted to attri-net.
+        xmax = xmin + width
+        ymax = ymin + height
+        bb_mask[:,ymin:ymax, xmin:xmax] = 1
         num = pos_attributions[torch.where(bb_mask == 1)].sum()
         den = pos_attributions.sum()
         if den < 1e-7:
-            return 1-num
-        return 1-num/den
-
+            return 1 - num
+        return 1 - num / den
 
 
 class RRRBBMultipleLoss(BBMultipleLoss):
