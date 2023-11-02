@@ -9,13 +9,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 from data.data_utils import map_image_to_intensity_range, normalize_image
 from PIL import Image, ImageDraw
-#
-# csv_file = "/mnt/qb/rawdata/vindr-cxr-physionet/1.0.0/annotations/annotations_test.csv"
-# df = pd.read_csv(csv_file)
-# print(len(df))
-# class_name = np.unique(df['class_name'].tolist())
-# print(class_name)
-#
+
 
 
 
@@ -39,13 +33,8 @@ class Vindr_CXR_BBOX(Dataset):
             img_id = self.df.iloc[idx]['image_id']
             img_path = os.path.join(self.image_dir, img_id + '.png')
             img = Image.open(img_path)  # value (0,255)
-            # get the scale factor to scale the bounding box coordinates to adpat image size change from 1024 -> 320.
-            scale_factor_w = self.img_size / float(img.size[0])  # img.size[0] is the width of the image since img is PIL image
-            scale_factor_h = self.img_size / float(img.size[1])  # img.size[1] is the height of the image since img is PIL image. different from numpy array!
-
             if self.transforms is not None:
                 img = self.transforms(img)  # return image in range (0,1)
-
             img = normalize_image(img)
             img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
             data['img'] = img
@@ -58,10 +47,10 @@ class Vindr_CXR_BBOX(Dataset):
                 disease_idx = self.TRAIN_DISEASES.index(lesion_type)
                 label[disease_idx] = 1
                 # note: the x,y coordinates of the bounding box corrspond to the top left corner of the bounding box, and the width and height of the bounding box.
-                x_min = int(self.df.iloc[idx]['x_min'] * scale_factor_w)  # original 'x_min' is the width coordinate of the bounding box
-                y_min = int(self.df.iloc[idx]['y_min'] * scale_factor_h)  # original 'y_min' is the height coordinate of the bounding box
-                x_max = int(self.df.iloc[idx]['x_max'] * scale_factor_w)
-                y_max = int(self.df.iloc[idx]['y_max'] * scale_factor_h)
+                x_min = int(self.df.iloc[idx]['x_min'])  # original 'x_min' is the width coordinate of the bounding box
+                y_min = int(self.df.iloc[idx]['y_min'])  # original 'y_min' is the height coordinate of the bounding box
+                x_max = int(self.df.iloc[idx]['x_max'])
+                y_max = int(self.df.iloc[idx]['y_max'])
                 x = x_min
                 y = y_min
                 w = x_max - x_min
@@ -78,8 +67,8 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
     def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42, with_bb=False):
 
         self.root_dir = dataset_params["root_dir"]
-        self.train_image_dir = self.root_dir + "/train_pngs"
-        self.test_image_dir = self.root_dir + "/test_pngs"
+        self.train_image_dir = dataset_params["train_image_dir"]
+        self.test_image_dir = dataset_params["test_image_dir"]
         self.train_csv_file = dataset_params["train_csv_file"]
         self.test_csv_file = dataset_params["test_csv_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
@@ -97,7 +86,6 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
                 tfs.ToTensor(),
             ]),
             'test': tfs.Compose([
-
                 tfs.ToTensor(),
             ]),
         }
@@ -285,10 +273,14 @@ if __name__ == '__main__':
 
     vindr_cxr_withBBdict = {
         "root_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
-        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train.csv",
-        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test.csv",
-        "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening','Pleural effusion'],
+        "train_image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train_pngs_rescaled_320*320",
+        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/test_pngs_rescaled_320*320",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train_resized.csv",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_test_resized.csv",
+        "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening',
+                           'Pleural effusion'],
     }
+
     data_default_params = {
         "split_ratio": 0.8,
         "resplit": False,
@@ -321,8 +313,8 @@ if __name__ == '__main__':
             count += len(disease_dataloader.dataset)
         print('count', count)
 
-    loader = train_dataloaders['neg']['Cardiomegaly']
-
+    #loader = train_dataloaders['neg']['Cardiomegaly']
+    loader = test_loader
 
     for idx in tqdm(range(500)):
         print(idx)
