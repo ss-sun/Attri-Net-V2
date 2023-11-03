@@ -90,7 +90,7 @@ class task_switch_solver(object):
             self.dloader_pos = data_loader['train_pos']
             self.dloader_neg = data_loader['train_neg']
             self.valid_loader = data_loader['valid']
-            self.max_val_batches = len(self.valid_loader)
+            self.max_val_batches = 500
             self.vis_loader_pos = data_loader['vis_pos']
             self.vis_loader_neg = data_loader['vis_neg']
 
@@ -455,7 +455,9 @@ class task_switch_solver(object):
         imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
         imgs = imgs.to(self.device)
         lbls = lbls.to(self.device)
-        return imgs, lbls, bboxs
+        disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
+        bbox = bboxs[:, disease_idx, :]
+        return imgs, lbls, bbox
 
 
     def train(self):
@@ -531,7 +533,7 @@ class task_switch_solver(object):
             # Select a disease to train on and get a positive batch and a negative batch.
             self.current_training_disease = self.TRAIN_DISEASES[gen_iterations % self.num_class]
             imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
-            imgs_pos, lbls_pos, bboxs_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+            imgs_pos, lbls_pos, bbox_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
             # Switch the generator to a specific disease task and compute generator loss.
             task_code= self.latent_z_task[self.current_training_disease].to(self.device)
@@ -562,7 +564,7 @@ class task_switch_solver(object):
             # compute localization loss
             localization_loss = 0
             for img_idx in range(len(imgs_pos)):
-                bb_list = bboxs_pos[img_idx]
+                bb_list = bbox_pos[img_idx]
                 localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
 
             if self.process_mask != "sum(abs(mx))":

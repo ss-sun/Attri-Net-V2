@@ -13,58 +13,112 @@ from PIL import Image, ImageDraw
 
 
 
+# class Vindr_CXR_BBOX(Dataset):
+#     def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_style="single-label"):
+#         self.image_dir = image_dir
+#         self.df = df
+#         self.TRAIN_DISEASES = train_diseases
+#         self.transforms = transforms
+#         self.img_size = img_size
+#         self.lbl_type = lbl_style
+#
+#     def __len__(self):
+#         return len(self.df)
+#         # return len(self.image_list)
+#
+#     def __getitem__(self, idx):
+#
+#         data = {}
+#         if self.lbl_type == "single-label":
+#             img_id = self.df.iloc[idx]['image_id']
+#             img_path = os.path.join(self.image_dir, img_id + '.png')
+#             img = Image.open(img_path)  # value (0,255)
+#             if self.transforms is not None:
+#                 img = self.transforms(img)  # return image in range (0,1)
+#             img = normalize_image(img)
+#             img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+#             data['img'] = img
+#
+#             label = np.zeros(len(self.TRAIN_DISEASES))
+#             bbox = np.zeros(4)
+#
+#             lesion_type = self.df.iloc[idx]['class_name']
+#             if lesion_type in self.TRAIN_DISEASES:
+#                 disease_idx = self.TRAIN_DISEASES.index(lesion_type)
+#                 label[disease_idx] = 1
+#                 # note: the x,y coordinates of the bounding box corrspond to the top left corner of the bounding box, and the width and height of the bounding box.
+#                 x_min = int(self.df.iloc[idx]['x_min'])  # original 'x_min' is the width coordinate of the bounding box
+#                 y_min = int(self.df.iloc[idx]['y_min'])  # original 'y_min' is the height coordinate of the bounding box
+#                 x_max = int(self.df.iloc[idx]['x_max'])
+#                 y_max = int(self.df.iloc[idx]['y_max'])
+#                 x = x_min
+#                 y = y_min
+#                 w = x_max - x_min
+#                 h = y_max - y_min
+#                 bbox = np.array([x, y, w, h])  # change bbox to [x_min, y_min, width, height]
+#
+#             data['label'] = label
+#             data['BBox'] = bbox
+#
+#
+#
+#         return data
+
+
+
 class Vindr_CXR_BBOX(Dataset):
-    def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_style="single-label"):
+    def __init__(self, image_dir, df, train_diseases, transforms, img_size):
         self.image_dir = image_dir
         self.df = df
         self.TRAIN_DISEASES = train_diseases
         self.transforms = transforms
         self.img_size = img_size
-        self.lbl_type = lbl_style
+        # create image list
+        img_id = df['image_id'].tolist()
+        self.image_list = np.unique(np.asarray(img_id))
 
     def __len__(self):
-        return len(self.df)
-        # return len(self.image_list)
+        return len(self.image_list)
 
     def __getitem__(self, idx):
 
         data = {}
-        if self.lbl_type == "single-label":
-            img_id = self.df.iloc[idx]['image_id']
-            img_path = os.path.join(self.image_dir, img_id + '.png')
-            img = Image.open(img_path)  # value (0,255)
-            if self.transforms is not None:
-                img = self.transforms(img)  # return image in range (0,1)
-            img = normalize_image(img)
-            img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
-            data['img'] = img
 
-            label = np.zeros(len(self.TRAIN_DISEASES))
-            bbox = np.zeros(4)
+        img_id = self.image_list[idx]
+        img_path = os.path.join(self.image_dir, img_id + '.png')
+        img = Image.open(img_path)  # value (0,255)
+        if self.transforms is not None:
+            img = self.transforms(img)  # return image in range (0,1)
+        img = normalize_image(img)
+        img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+        data['img'] = img
 
-            lesion_type = self.df.iloc[idx]['class_name']
+        # Get labels from the dataframe for current image
+        rows = self.df.loc[self.df['image_id'] == img_id]
+        # lesion_types = rows['class_name'].tolist()
+        label = np.zeros(len(self.TRAIN_DISEASES))
+        bbox = np.zeros((len(self.TRAIN_DISEASES), 4))
+        for index, row in rows.iterrows():
+            lesion_type = row['class_name']
             if lesion_type in self.TRAIN_DISEASES:
-                disease_idx = self.TRAIN_DISEASES.index(lesion_type)
-                label[disease_idx] = 1
-                # note: the x,y coordinates of the bounding box corrspond to the top left corner of the bounding box, and the width and height of the bounding box.
-                x_min = int(self.df.iloc[idx]['x_min'])  # original 'x_min' is the width coordinate of the bounding box
-                y_min = int(self.df.iloc[idx]['y_min'])  # original 'y_min' is the height coordinate of the bounding box
-                x_max = int(self.df.iloc[idx]['x_max'])
-                y_max = int(self.df.iloc[idx]['y_max'])
-                x = x_min
-                y = y_min
-                w = x_max - x_min
-                h = y_max - y_min
-                bbox = np.array([x, y, w, h])  # change bbox to [x_min, y_min, width, height]
+                idx = self.TRAIN_DISEASES.index(lesion_type)
+                label[idx] = 1
+                bb = [int(row['x_min']), int(row['y_min']), int((row['x_max']-row['x_min'])), int((row['y_max']-row['y_min']))]
+                bbox[idx] = np.array(bb)
 
-            data['label'] = label
-            data['BBox'] = bbox
+        data['img'] = img
+        data['label'] = label
+        data['BBox'] = bbox
         return data
+
+
+
+
 
 
 class Vindr_CXR_BB_DataModule(LightningDataModule):
 
-    def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42, with_bb=False):
+    def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42):
 
         self.root_dir = dataset_params["root_dir"]
         self.train_image_dir = dataset_params["train_image_dir"]
@@ -120,11 +174,11 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
 
         # Create datasets
         self.train_set = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES,
-                                   transforms=self.data_transforms['train'], img_size=self.img_size, lbl_style="single-label")
+                                   transforms=self.data_transforms['train'], img_size=self.img_size)
         self.valid_set = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES,
-                                   transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="single-label")
+                                   transforms=self.data_transforms['test'], img_size=self.img_size)
         self.test_set = Vindr_CXR_BBOX(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES,
-                                  transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style="single-label")
+                                  transforms=self.data_transforms['test'], img_size=self.img_size)
 
 
         self.single_disease_train_sets = self.create_trainsets()
@@ -187,44 +241,31 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
         return vis_sets
 
     def subset(self, src_df, disease, label, transforms):
-        if label == 'pos':
-            idx = np.where(src_df['class_name'] == disease)[0]
-        if label == 'neg':
-            idx = np.where(src_df['class_name'] != disease)[0]
+        pos_idx = np.where(src_df['class_name'] == disease)[0]
+        pos_img_list = src_df.iloc[pos_idx]['image_id'].tolist()
+        unique_pos_img = np.unique(np.asarray(pos_img_list))
 
-        filtered_df = src_df.iloc[idx.tolist()]
+        if label == 'pos':
+            filter_indices = []
+            for index, row in src_df.iterrows():
+                image_id = row['image_id']
+                if image_id in unique_pos_img:
+                    filter_indices.append(index)
+
+        if label == 'neg':
+            filter_indices = []
+            for index, row in src_df.iterrows():
+                image_id = row['image_id']
+                if image_id in unique_pos_img:
+                    pass
+                else:
+                    filter_indices.append(index)
+
+        filtered_df = src_df.iloc[filter_indices]
         filtered_df = filtered_df.reset_index(drop=True)
         subset = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES,
-                           transforms=transforms, img_size=self.img_size, lbl_style="single-label")
-
+                           transforms=transforms, img_size=self.img_size)
         return subset
-
-
-        # pos_idx = np.where(src_df['class_name'] == disease)[0]
-        # pos_img_list = src_df.iloc[pos_idx]['image_id'].tolist()
-        # unique_pos_img = np.unique(np.asarray(pos_img_list))
-        #
-        # if label == 'pos':
-        #     filter_indices = []
-        #     for index, row in src_df.iterrows():
-        #         image_id = row['image_id']
-        #         if image_id in unique_pos_img:
-        #             filter_indices.append(index)
-        #
-        # if label == 'neg':
-        #     filter_indices = []
-        #     for index, row in src_df.iterrows():
-        #         image_id = row['image_id']x
-        #         if image_id in unique_pos_img:
-        #             pass
-        #         else:
-        #             filter_indices.append(index)
-        #
-        # filtered_df = src_df.iloc[filter_indices]
-        # filtered_df = filtered_df.reset_index(drop=True)
-        # subset = Vindr_CXR(image_dir=self.train_image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES,
-        #                    transforms=transforms, img_size=self.img_size, with_BBox=self.with_bb)
-        #return subset
 
     def split(self, df, train_ratio, shuffle=True):
         image_list = df['image_id'].tolist()
@@ -283,7 +324,7 @@ if __name__ == '__main__':
 
     data_default_params = {
         "split_ratio": 0.8,
-        "resplit": True,
+        "resplit": False,
         "img_size": 320,
     }
 
@@ -298,46 +339,48 @@ if __name__ == '__main__':
     valid_loader = datamodule.valid_dataloader(batch_size=4)
     test_loader = datamodule.test_dataloader(batch_size=4)
 
-    print(len(train_loader.dataset))
-    print(len(valid_loader.dataset))
-    print(len(test_loader.dataset))
+    print("len(train_loader.dataset) in main", len(train_loader.dataset))
+    print("len(valid_loader.dataset) in main", len(valid_loader.dataset))
+    print("len(test_loader.dataset) in main", len(test_loader.dataset))
 
     train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+
     for disease in vindr_cxr_withBBdict["train_diseases"]:
         print(disease)
         count = 0
         for c in ['neg', 'pos']:
             print(c)
             disease_dataloader = train_dataloaders[c][disease]
-            print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
+            print('len(disease_dataloader.dataset)_' + c  , len(disease_dataloader.dataset))
             count += len(disease_dataloader.dataset)
         print('count', count)
 
-    #loader = train_dataloaders['neg']['Cardiomegaly']
-    loader = test_loader
+    loader = train_dataloaders['pos']['Cardiomegaly']
+    # loader = test_loader
 
-    # for idx in tqdm(range(500)):
-    #     print(idx)
-    #     data = loader.dataset[idx]
-    #     img = data['img']
-    #     label = data['label']
-    #     bbox = data['BBox']
-    #     if np.sum(bbox)!=0 and label[1] == 1:
-    #         print("cardiomegealy")
-    #         BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
-    #         x_min = int(bbox[0].item())
-    #         y_min = int(bbox[1].item())
-    #         x_max = x_min + int(bbox[2].item())
-    #         y_max = y_min + int(bbox[3].item())
-    #
-    #         img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
-    #         draw = ImageDraw.Draw(img)
-    #         draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
-    #         draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
-    #         img.show()
-    #
-    #         BBmask = Image.fromarray(BBmask * 255).convert('RGB')
-    #         BBmask.show()
+    for idx in tqdm(range(500)):
+        print(idx)
+        data = loader.dataset[idx]
+        img = data['img']
+        label = data['label']
+        bbox = data['BBox'][1].astype(int)
+        print("label: ", label)
+        if np.sum(bbox)!=0 and label[1] == 1:
+            print("cardiomegealy")
+            BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
+            x_min = int(bbox[0].item())
+            y_min = int(bbox[1].item())
+            x_max = x_min + int(bbox[2].item())
+            y_max = y_min + int(bbox[3].item())
+
+            img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
+            draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
+            img.show()
+
+            BBmask = Image.fromarray(BBmask * 255).convert('RGB')
+            BBmask.show()
 # #
 # #
 # #

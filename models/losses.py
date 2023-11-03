@@ -61,7 +61,7 @@ class EnergyPointingGameBBMultipleLoss:
     def __call__(self, attributions, bb_coordinates):
         pos_attributions = torch.abs(attributions)  # modified code, adapted to attri-net.
         bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
-        xmin, ymin, width, height = bb_coordinates.numpy()  # modified code, adapted to attri-net.
+        xmin, ymin, width, height = bb_coordinates.numpy().astype(int)  # modified code, adapted to attri-net.
         xmax = xmin + width
         ymax = ymin + height
         bb_mask[:,ymin:ymax, xmin:xmax] = 1

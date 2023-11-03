@@ -48,7 +48,7 @@ echo "-------- PYTHON OUTPUT ----------"
 # python3 main.py --manual_seed 21
 # python3 main.py --manual_seed 4294438
 
-python3 main.py --lambda_localizationloss 5
+python3 main.py --lambda_localizationloss 1
 
 echo "---------------------------------"
 
