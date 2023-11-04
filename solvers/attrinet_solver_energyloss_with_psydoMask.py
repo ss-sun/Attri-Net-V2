@@ -129,7 +129,7 @@ class task_switch_solver(object):
 
     def prepare_pseudoMask(self):
         pseudoMask = {}
-        file_path = "/mnt/qb/work/baumgartner/sun22/github_projects/tmi/data/pseudo_bboxs.json"
+        file_path = "/mnt/qb/work/baumgartner/sun22/github_projects/tmi/data/pseudo_masks.json"
         with open(file_path) as json_file:
             data = json.load(json_file)
             for disease in self.TRAIN_DISEASES:
