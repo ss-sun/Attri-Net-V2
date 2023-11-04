@@ -27,6 +27,7 @@ class pixel_sensitivity_analyser():
         self.top_k = config.top_k
         self.dataset = config.dataset # different dataset has different gt annotation format
         self.attr_method = config.attr_method
+        self.process_mask = config.process_mask
         self.solver = solver
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.result_dir = os.path.join(config.result_dir, self.attr_method)
@@ -238,7 +239,9 @@ class pixel_sensitivity_analyser():
                             attr_raw = self.solver.get_attributes(img, label_idx)
                             attr_raw = to_numpy(attr_raw).squeeze()
 
-                            if attr_method == 'attri-net':
+                            # process_mask, choices = ['abs(mx)', 'sum(abs(mx))', 'previous']
+
+                            if attr_method == 'attri-net' and self.process_mask != 'sum(abs(mx))':
                                 attr = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
                             else:
                                 attr = attr_raw
@@ -341,7 +344,7 @@ class pixel_sensitivity_analyser():
 
         if self.dataset == "nih_chestxray" or self.dataset == "vindr_cxr" or self.dataset == "skmtea":
 
-            self.compute_hit_nih_vindr_skmtea(attr_method)
+            # self.compute_hit_nih_vindr_skmtea(attr_method)
             self.compute_EPG_nih_vindr_skmtea(attr_method)
 
         # if self.dataset == "vindr":
@@ -453,7 +456,7 @@ def argument_parser():
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
-    parser.add_argument('--process_mask', type=str, default='abs(mx)', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+    parser.add_argument('--process_mask', type=str, default='sum(abs(mx))', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--top_k', type=int, default=1, help="top k pixels to be considered as hit")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')

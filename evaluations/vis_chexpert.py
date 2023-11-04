@@ -27,6 +27,7 @@ class vis_analyser():
         self.top_k = config.top_k
         self.dataset = config.dataset # different dataset has different gt annotation format
         self.attr_method = config.attr_method
+        self.process_mask = config.process_mask
         self.solver = solver
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.result_dir = os.path.join(config.result_dir, self.attr_method)
@@ -92,14 +93,15 @@ class vis_analyser():
         mask_img.putalpha(50)
         src_img.paste(mask_img, (0, 0), mask_img)
         src_img.save(os.path.join(output_dir, prefix + '_src.jpg'))
-        attr = to_numpy(-attr * 0.5 + 0.5).squeeze()
-        attri_img = plt.cm.bwr(attr)
+
+        if self.process_mask == "previous":
+            attr = to_numpy(-attr * 0.5 + 0.5).squeeze()
+        else:
+            attr = to_numpy(attr * 0.5 + 0.5).squeeze()
+        attri_img = plt.cm.bwr(attr) # use bwr color map, here negative values are blue, positive values are red, 0 is white. need to convert to value (0,1), negative values corrsponding to (0-0.5), positive to (0.5,1), white=0.5
         attri_img = Image.fromarray((attri_img * 255).astype(np.uint8)).convert('RGB')
         attri_img.paste(mask_img, (0, 0), mask_img)
         attri_img.save(os.path.join(output_dir, prefix + '_attri.jpg'))
-
-
-
 
     def plot_hit(self, attri, attri_mask, gt_mask, src_img, pos, prefix):
         src_img = to_numpy(src_img * 0.5 + 0.5).squeeze()
@@ -177,30 +179,8 @@ class vis_analyser():
 
 
 
-
-
-
-
-
-
-
-
     def compute_pixel_sensitivity(self, attr_method):
-
-        # if self.dataset == "nih_chestxray" or self.dataset == "vindr_cxr" or self.dataset == "skmtea":
-        #
-        #     self.compute_hit_nih_vindr_skmtea(attr_method)
-        #     self.compute_EPG_nih_vindr_skmtea(attr_method)
-        #
-        # # if self.dataset == "vindr":
-        # #     self.compute_hit_vindr(attr_method)
-        #
-        #
-        # if self.dataset == "skmtea":
-        #     self.compute_hit_skmtae(attr_method)
-
         if self.dataset == "chexpert":
-            # self.compute_hit_chexpert(attr_method)
             self.vis_chexpert(attr_method)
 
 
@@ -246,6 +226,8 @@ def argument_parser():
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
+    parser.add_argument('--process_mask', type=str, default='sum(abs(mx))',
+                        choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--top_k', type=int, default=1, help="top k pixels to be considered as hit")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
@@ -269,7 +251,8 @@ def get_arguments():
 
     if exp_configs.exp_name == 'attri-net':
         print("evaluating our model")
-        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+        # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask]
         print("evaluate model: " + exp_configs.model_path)
 
         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")

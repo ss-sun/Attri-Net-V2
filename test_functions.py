@@ -73,19 +73,61 @@
 # print(gt_seg_dict['patient64744_study1_view1_frontal']['Cardiomegaly'])
 
 
+# import numpy as np
+# import matplotlib.pyplot as plt
+#
+# # Create a sample image (replace this with your bwr image data)
+# bwr_image = np.random.rand(100, 100)  # Replace with your bwr image data
+#
+# # Create a sample green mask (replace this with your mask data)
+# green_mask = np.zeros_like(bwr_image)
+# green_mask[40:60, 40:60] = 1  # Example: Set a region to be green
+#
+# # Overlay the green mask on top of the bwr image
+# overlay_image = np.stack([green_mask, bwr_image, bwr_image], axis=-1)
+#
+# # Display the overlay image
+# plt.imshow(overlay_image)
+# plt.show()
+
+
+
+
+# get statics of the chexpert mask dataset.
+
+import json
+from pycocotools import mask
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Create a sample image (replace this with your bwr image data)
-bwr_image = np.random.rand(100, 100)  # Replace with your bwr image data
+gt_seg_file_test = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
+gt_seg_file_valid = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
+disease_list = ['Cardiomegaly', 'Edema', 'Consolidation', 'Atelectasis', 'Pleural Effusion']
 
-# Create a sample green mask (replace this with your mask data)
-green_mask = np.zeros_like(bwr_image)
-green_mask[40:60, 40:60] = 1  # Example: Set a region to be green
+with open(gt_seg_file_valid) as json_file:
+    gt_seg_dict = json.load(json_file)
 
-# Overlay the green mask on top of the bwr image
-overlay_image = np.stack([green_mask, bwr_image, bwr_image], axis=-1)
+def get_gt_mask(gt_seg_dict, cxr_id, disease):
+    gt_item = gt_seg_dict[cxr_id][disease]
+    gt_mask = mask.decode(gt_item)
+    return gt_mask
 
-# Display the overlay image
-plt.imshow(overlay_image)
-plt.show()
+print(len(gt_seg_dict.keys())) # 499 unique cxr ids in test set, 187 images in valid set
+
+count = 0
+
+for cxr_id in gt_seg_dict.keys():
+    # print(cxr_id)
+    if "lateral" in cxr_id:
+        continue
+    for disease in disease_list:
+        # print(disease)
+        gt_mask = get_gt_mask(gt_seg_dict, cxr_id, disease)
+        if np.sum(gt_mask) != 0:
+            count += 1
+print("count: ", count)
+# 522 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
+# 279 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
+
+
+
+

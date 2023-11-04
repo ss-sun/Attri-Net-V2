@@ -1,7 +1,8 @@
 from solvers.resnet_solver import resnet_solver
 # from solvers.attrinet_solver import task_switch_solver
 # from solvers.attrinet_solver_g_withoutcl import task_switch_solver
-from solvers.attrinet_solver_energyloss import task_switch_solver
+# from solvers.attrinet_solver_energyloss import task_switch_solver
+from solvers.attrinet_solver_energyloss_with_psydoMask import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 import logging
 from experiment_utils import init_seed, init_experiment, init_wandb
