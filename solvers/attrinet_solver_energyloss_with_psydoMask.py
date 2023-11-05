@@ -142,7 +142,7 @@ class task_switch_solver(object):
         """
         loss = 0
         for i in range(len(pos_masks)):
-            pos_mask = pos_masks[i].squeeze()
+            pos_mask = torch.abs(pos_masks[i]).squeeze()
             num = pos_mask[np.where(psydo_mask == 1)].sum()
             den = pos_mask.sum()
             if den < 1e-7:
@@ -150,7 +150,6 @@ class task_switch_solver(object):
             else:
                 energy_loss = 1 - num / den
             loss += energy_loss
-
         return loss
 
 

@@ -43,6 +43,7 @@ class class_sensitivity_analyser():
             self.best_threshold = solver.get_optimal_thresholds(save_result=True, result_dir=self.result_dir)
         pred_file = os.path.join(self.result_dir,"test_pred.txt")
 
+
         if os.path.exists(pred_file):
             print("prediction of test set already made")
             self.test_pred = np.loadtxt(os.path.join(self.result_dir,"test_pred.txt"))
@@ -183,12 +184,12 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='shap',
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
-
+    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--dataset', type=str, default='skmtea', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
+    parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs'])
     parser.add_argument("--batch_size", default=8,
                         type=int, help="Batch size for the data loader.")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')

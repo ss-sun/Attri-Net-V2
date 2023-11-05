@@ -37,5 +37,6 @@ attrinet_model_path_dict = {
         "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-09-22 13:19:07--skmtea--bs=4--lg_ds=32--l_cri=1.0--l1=500.0--l2=1000.0--l3=500.0--l_ctr=0.01",
         "chexpert_abs(mx)":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-28 19:51:00--chexpert--process_mask=abs(mx)--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
         "chexpert_sum(abs(mx))":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-29 17:13:06--chexpert--process_mask=sum(abs(mx))--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
+        "airogs": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-02 14:56:36--airogs--process_mask=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
 
 }  # new models

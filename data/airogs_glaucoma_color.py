@@ -63,7 +63,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
             'train': tfs.Compose([ # I want to add scale here, because the fundus images vary in size, some are bigger
                 tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-                tfs.Resize(336),
+                # tfs.Resize(336), images already resized to 336 in preprocessing, so no need to resize again
                 tfs.CenterCrop(320),
                 # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
@@ -71,7 +71,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
 
             ]),
             'test': tfs.Compose([
-                tfs.Resize(336),
+                # tfs.Resize(336), images already resized to 336 in preprocessing, so no need to resize again
                 tfs.CenterCrop(320),
                 # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
@@ -121,7 +121,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
         return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle)
 
     def test_dataloader(self, concat_testset=False, batch_size=1, shuffle=False):
-        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
+        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle)
 
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):
