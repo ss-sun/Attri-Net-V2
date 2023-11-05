@@ -7,7 +7,7 @@ def attrinet_get_parser():
     parser = argparse.ArgumentParser()
 
     # Experiment configuration.
-    parser.add_argument('--debug', type=str2bool, default=True,
+    parser.add_argument('--debug', type=str2bool, default=False,
                         help='if true, will automatically set d_iters = 1, set savefrequency=1, easy to run all train step for functional test')
 
     parser.add_argument('--exp_name', type=str, default='attri-net')
