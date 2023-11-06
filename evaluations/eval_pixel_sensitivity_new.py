@@ -7,7 +7,8 @@ import cv2
 import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
+from solvers.attrinet_solver_energyloss import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
@@ -342,7 +343,7 @@ class pixel_sensitivity_analyser():
 
     def compute_pixel_sensitivity(self, attr_method):
 
-        if self.dataset == "nih_chestxray" or self.dataset == "vindr_cxr" or self.dataset == "skmtea":
+        if self.dataset == "nih_chestxray" or "vindr_cxr" in self.dataset or self.dataset == "skmtea":
 
             # self.compute_hit_nih_vindr_skmtea(attr_method)
             self.compute_EPG_nih_vindr_skmtea(attr_method)
@@ -455,8 +456,9 @@ def argument_parser():
     parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
-    parser.add_argument('--process_mask', type=str, default='sum(abs(mx))', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+    parser.add_argument('--dataset', type=str, default='vindr_cxr', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
+    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+    parser.add_argument('--lambda_localizationloss', type=int, default=10, choices=[1, 5, 10, 20, 100])
     parser.add_argument('--top_k', type=int, default=1, help="top k pixels to be considered as hit")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
@@ -481,7 +483,7 @@ def get_arguments():
     if exp_configs.exp_name == 'attri-net':
         print("evaluating our model")
         # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask]
+        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask + "_" + str(exp_configs.lambda_localizationloss)]
         print("evaluate model: " + exp_configs.model_path)
 
         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")

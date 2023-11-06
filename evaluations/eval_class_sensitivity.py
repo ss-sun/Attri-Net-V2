@@ -26,6 +26,10 @@ class class_sensitivity_analyser():
         os.makedirs(self.result_dir, exist_ok=True)
         self.attr_dir = os.path.join(self.result_dir, self.attr_method)
         os.makedirs(self.attr_dir, exist_ok=True)
+        self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_class_sensitivity_plots')
+        os.makedirs(self.plots_dir, exist_ok=True)
+
+        self.plot = False
 
         print('compute class sensitivity on dataset ' + config.dataset)
         print('use explainer: ' + self.attr_method)
@@ -34,7 +38,7 @@ class class_sensitivity_analyser():
         threshold_path = os.path.join(self.result_dir,"best_threshold.txt")
         if os.path.exists(threshold_path):
             print("threshold alreay computed, load threshold")
-            threshold = np.loadtxt(open(threshold_path))
+            threshold = np.loadtxt(open(threshold_path)).reshape(1,)
             for c in range(len(self.solver.TRAIN_DISEASES)):
                 disease = self.solver.TRAIN_DISEASES[c]
                 self.best_threshold[disease] = threshold[c]
@@ -53,6 +57,8 @@ class class_sensitivity_analyser():
             print('test_class_auc', class_auc)
 
     def filter_correct_pred(self, test_pred, test_true, train_disease, best_threshold):
+        test_pred = test_pred.reshape(test_pred.shape[0],-1)
+        test_true = test_true.reshape(test_true.shape[0],-1)
         pred = np.zeros(test_pred.shape)
         for i in range(len(train_disease)):
             disease = train_disease[i]
@@ -107,11 +113,14 @@ class class_sensitivity_analyser():
     def compute_localization_score(self, idx_grids, attr_methods):
         scores = {}
         mean = 0
+        self.plot = True
+
         for disease in idx_grids.keys():
             score_list = []
             blocks = idx_grids[disease]
             for i in tqdm(range(len(blocks))):
-
+                if i > 10:
+                    self.plot = False
                 b = blocks[i]
                 sc = self.compute_sc(b, disease, attr_methods)
                 score_list.append(sc)
@@ -127,10 +136,11 @@ class class_sensitivity_analyser():
 
 
     def compute_sc(self, index_list, disease, attr_methods):
-        plot = False
+
 
         label_idx = self.solver.TRAIN_DISEASES.index(disease)
         pixel_counts = []
+        count = 0
         for idx in index_list:
             data = self.solver.test_loader.dataset[int(idx)]
             img = data['img']
@@ -142,18 +152,21 @@ class class_sensitivity_analyser():
             if attr_methods in ['lime', 'GB', 'GCam', 'shap', 'gifsplanation','bcos']:
                 sum_pixel = np.sum(attr)
 
-            if plot:
+            if self.plot:
                 if attr_methods in ['attri-net']:
                     attr = attr * 0.5+0.5
                     attr_img = Image.fromarray((attr * 255).astype(np.uint8))
-                    attr_img.show()
+                    # attr_img.show()
+                    file_name = 'attri-net_' + str(count) + '_' +  str(idx)
+                    attr_img.save(os.path.join(self.plots_dir, file_name + '.jpg'))
+
                 else:
                     v_max = np.max(attr)
                     v_min = np.min(attr)
                     attr = (attr - v_min) / (v_max - v_min)
                     attr_img = Image.fromarray((attr * 255).astype(np.uint8))
-                    attr_img.show()
-
+                    #attr_img.show()
+            count += 1
             pixel_counts.append(sum_pixel)
 
         if np.sum(np.array(pixel_counts)) !=0 :

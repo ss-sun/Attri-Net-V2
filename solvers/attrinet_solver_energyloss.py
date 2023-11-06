@@ -27,7 +27,7 @@ class task_switch_solver(object):
         Initialize solver
         """
         print("using the task switch solver with energy loss")
-        self.debug = exp_configs.debug
+
 
         # Initialize configurations.
         self.exp_configs = exp_configs
@@ -57,7 +57,7 @@ class task_switch_solver(object):
         # Configurations of classifiers.
         self.logreg_dsratio = exp_configs.lgs_downsample_ratio
         if self.mode == "train":
-
+            self.debug = exp_configs.debug
             # Training configurations.
             self.lambda_critic = exp_configs.lambda_critic
             self.lambda_1 = exp_configs.lambda_1
@@ -116,6 +116,7 @@ class task_switch_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
             self.model_path = exp_configs.model_path
+            self.process_mask = exp_configs.process_mask
 
             # Create latent code for self.TRAIN_DISEASES tasks
             self.latent_z_task = self.create_task_code()

@@ -68,10 +68,15 @@ if __name__ == '__main__':
         # print(disease)
         pseudo_masks[disease] = np.where(pseudo_masks[disease] > 0, 1, 0).astype(int)
 
+        BBmask = Image.fromarray((pseudo_masks[disease] * 255).astype(np.uint8))
+        BBmask.show()
+
         x_min = np.where(pseudo_masks[disease] > 0)[1].min()
         y_min = np.where(pseudo_masks[disease] > 0)[0].min()
         x_max = np.where(pseudo_masks[disease] > 0)[1].max()
         y_max = np.where(pseudo_masks[disease] > 0)[0].max()
+
+
 
         pseudo_masks[disease] = pseudo_masks[disease].tolist()
         pseudo_bboxs[disease] = np.array([x_min, y_min, x_max-x_min, y_max-y_min]).astype(int).tolist() # save as x, y, w, h

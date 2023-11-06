@@ -38,5 +38,10 @@ attrinet_model_path_dict = {
         "chexpert_abs(mx)":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-28 19:51:00--chexpert--process_mask=abs(mx)--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
         "chexpert_sum(abs(mx))":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-29 17:13:06--chexpert--process_mask=sum(abs(mx))--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
         "airogs": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-02 14:56:36--airogs--process_mask=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42",
+        "vindr_cxr_previous_1":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:50:41--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=1.0--seed=42",
+        "vindr_cxr_previous_5":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:50:53--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=5.0--seed=42",
+        "vindr_cxr_previous_10":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:50:53--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=10.0--seed=42",
+        "vindr_cxr_previous_20":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:51:47--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=20.0--seed=42",
+        "vindr_cxr_previous_100":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:51:51--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=100.0--seed=42",
 
 }  # new models

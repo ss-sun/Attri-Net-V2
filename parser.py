@@ -14,7 +14,7 @@ def attrinet_get_parser():
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'contam20','contam50','airogs', 'vindr_cxr_withBB'])
+    parser.add_argument('--dataset', type=str, default='vindr_cxr_withBB', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'contam20','contam50','airogs', 'vindr_cxr_withBB'])
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
