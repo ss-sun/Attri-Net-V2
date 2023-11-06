@@ -9,18 +9,17 @@
 #SBATCH --output=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.out  # File to which STDOUT will be written
 #SBATCH --error=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.err   # File to which STDERR will be written
 #SBATCH --mail-type=FAIL           # Type of email notification- BEGIN,END,FAIL,ALL
-#SBATCH --mail-user=<susu.sun@fau.de>  # Email to which notifications will be sent
+#SBATCH --mail-user=<susu.sun@uni-tuebingen.de>  # Email to which notifications will be sent
+#SBATCH --array=40,80   # array of cityscapes random seeds
 
 
-# print info about current job
-scontrol show job $SLURM_JOB_ID
 
 # insert your commands here
 
 
 # print info about current job
 echo "---------- JOB INFOS ------------"
-scontrol show job $SLURM_JOB_ID 
+scontrol show job $SLURM_JOB_ID
 echo -e "---------------------------------\n"
 
 
@@ -30,7 +29,7 @@ source /mnt/qb/home/baumgartner/sun22/.bashrc
 # cd /mnt/qb/work/baumgartner/sun22/project/tmi
 cd /mnt/qb/work/baumgartner/sun22/github_projects/tmi
 
-# Next activate the conda environment 
+# Next activate the conda environment
 conda activate tt_interaction
 
 
@@ -48,7 +47,7 @@ echo "-------- PYTHON OUTPUT ----------"
 # python3 main.py --manual_seed 21
 # python3 main.py --manual_seed 4294438
 
-python3 main.py --debug "False" --lambda_localizationloss 75
+python3 main.py --debug "False" --lambda_localizationloss ${SLURM_ARRAY_TASK_ID}
 
 echo "---------------------------------"
 
