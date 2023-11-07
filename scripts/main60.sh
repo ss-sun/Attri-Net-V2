@@ -9,7 +9,7 @@
 #SBATCH --output=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.out  # File to which STDOUT will be written
 #SBATCH --error=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.err   # File to which STDERR will be written
 #SBATCH --mail-type=FAIL           # Type of email notification- BEGIN,END,FAIL,ALL
-#SBATCH --mail-user=<susu.sun@fau.de>  # Email to which notifications will be sent
+#SBATCH --mail-user=<susu.sun@uni-tuebingen.de>  # Email to which notifications will be sent
 
 
 # print info about current job

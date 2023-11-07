@@ -25,13 +25,10 @@ class AIROGS_color_fundus(Dataset):
         data = {}
         img_path = os.path.join(self.image_dir, self.df.iloc[idx]['challenge_id']+'.jpg')
         img = Image.open(img_path)
-
-        plt.imshow(img)
-        plt.show()
-
+        # plt.imshow(img)
+        # plt.show()
         if self.transforms is not None:
             img = self.transforms(img)  # return image in range (0,1)
-
         # img = np.mean(np.array(img),axis=0, keepdims=True)
         # img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
         # Get labels from the dataframe for current image

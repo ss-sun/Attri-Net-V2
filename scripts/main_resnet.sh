@@ -9,7 +9,7 @@
 #SBATCH --output=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.out  # File to which STDOUT will be written
 #SBATCH --error=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.err   # File to which STDERR will be written
 #SBATCH --mail-type=FAIL           # Type of email notification- BEGIN,END,FAIL,ALL
-#SBATCH --mail-user=<susu.sun@fau.de>  # Email to which notifications will be sent
+#SBATCH --mail-user=<susu.sun@uni-tuebingen.de>  # Email to which notifications will be sent
 
 
 # print info about current job
@@ -36,19 +36,8 @@ conda activate tt_interaction
 
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
-# python3 main.py --use_wandb False
-# python3 main.py --lambda_1 100 --lambda_2 300 --lambda_3 100 --use_wandb False
-# python3 main.py --lambda_1 500 --lambda_2 1000 --lambda_3 500 --use_wandb True
-# python3 main.py --lambda_1 200 --lambda_2 400 --lambda_3 200
-# python3 main.py --dataset contam50
-# python3 main.py
-# python3 main.py --manual_seed 12345
-# python3 main.py --manual_seed 2023
-# python3 main.py --manual_seed 8675309
-# python3 main.py --manual_seed 21
-# python3 main.py --manual_seed 4294438
 
-python3 main_resnet.py --debug "False"
+python3 main_resnet.py --dataset "airogs"
 
 echo "---------------------------------"
 

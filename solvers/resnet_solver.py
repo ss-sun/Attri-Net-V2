@@ -25,6 +25,7 @@ class resnet_solver(object):
         else:
             self.device = torch.device("cpu")
         self.use_wandb = exp_configs.use_wandb
+        self.img_mode = exp_configs.img_mode
         if exp_configs.mode == "train":
             self.img_size = exp_configs.image_size
             self.epochs = exp_configs.epochs
@@ -51,7 +52,8 @@ class resnet_solver(object):
     def init_model(self):
         # Prepare model, input dim=1 because input x-ray images are gray scale.
         model = resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES))
-        model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        if self.img_mode == 'gray':
+            model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         model = model.to(self.device)
         return model
 

@@ -114,6 +114,7 @@ dataset_dict = {
     "contam50": Cardiomegaly_tag_degree50_dict,
     "airogs": airogs_fundus_dict,
     "vindr_cxr_withBB":vindr_cxr_withBBdict,
+    "airogs_color": airogs_fundus_dict
 }
 
 

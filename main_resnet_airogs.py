@@ -21,9 +21,10 @@ def resnet_get_parser():
     # Experiment configuration.
     parser.add_argument('--exp_name', type=str, default='resnet')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
+    parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray']) # will change to color if dataset is airogs_color
 
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='skmtea', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color'])
+    parser.add_argument('--dataset', type=str, default='airogs_color', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color'])
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=8, help='mini-batch size')
 
@@ -60,6 +61,8 @@ def prepare_exps(exp_configs):
 
 def main(exp_configs):
     from data.dataset_params import dataset_dict, data_default_params
+    if 'color' in exp_configs.dataset:
+        exp_configs.img_mode == 'color'
     prepare_exps(exp_configs)
     print("experiment folder: " + exp_configs.exp_dir)
     datamodule = prepare_datamodule(exp_configs, dataset_dict, data_default_params)
