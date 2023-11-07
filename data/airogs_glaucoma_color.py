@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from data.data_utils import normalize_image, map_image_to_intensity_range
 import matplotlib.pyplot as plt
 
-class AIROGS_fundus(Dataset):
+class AIROGS_color_fundus(Dataset):
     def __init__(self, image_dir, df, train_diseases, transforms):
         self.image_dir = image_dir
         self.df = df
@@ -25,11 +25,15 @@ class AIROGS_fundus(Dataset):
         data = {}
         img_path = os.path.join(self.image_dir, self.df.iloc[idx]['challenge_id']+'.jpg')
         img = Image.open(img_path)
+
+        plt.imshow(img)
+        plt.show()
+
         if self.transforms is not None:
             img = self.transforms(img)  # return image in range (0,1)
 
-        img = np.mean(np.array(img),axis=0, keepdims=True)
-        img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+        # img = np.mean(np.array(img),axis=0, keepdims=True)
+        # img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
         # Get labels from the dataframe for current image
         label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
         label = np.asfarray(label)
@@ -41,12 +45,12 @@ class AIROGS_fundus(Dataset):
 
 
 
-class AIROGS_fundusDataModule(LightningDataModule):
+class AIROGS_color_fundusDataModule(LightningDataModule):
 
     def __init__(self, dataset_params, split_ratio=0.8, resplit=False, img_size=320, seed=42):
         self.root_dir = dataset_params["root_dir"]
         # self.image_dir = os.path.join(self.root_dir, 'train')
-        self.image_dir = os.path.join(self.root_dir, 'train_scaled')
+        self.image_dir = os.path.join(self.root_dir, 'train_scaled_336')
         self.train_csv_file = dataset_params["train_csv_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
         self.split_ratio = split_ratio
@@ -56,18 +60,18 @@ class AIROGS_fundusDataModule(LightningDataModule):
         self.split_df_dir = os.path.join(self.root_dir, 'split_df')
 
         # Define the mean and standard deviation values
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
+        # mean = [0.485, 0.456, 0.406]
+        # std = [0.229, 0.224, 0.225]
 
         self.data_transforms = {
             'train': tfs.Compose([ # I want to add scale here, because the fundus images vary in size, some are bigger
-                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
-                tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
+                # tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
+                # tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
                 # tfs.Resize(336), images already resized to 336 in preprocessing, so no need to resize again
                 tfs.CenterCrop(320),
                 # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
-                tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
+                # tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
 
             ]),
             'test': tfs.Compose([
@@ -75,7 +79,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
                 tfs.CenterCrop(320),
                 # tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
-                tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
+                # tfs.Normalize(mean=mean, std=std)  # Normalize the tensor
 
             ]),
         }
@@ -100,9 +104,9 @@ class AIROGS_fundusDataModule(LightningDataModule):
             # split the train dataframe into train and valid dataframe, and save to csv file
             self.train_df, self.valid_df, self.test_df = self.split(df=train_df, train_ratio=self.split_ratio, seed=self.seed, shuffle=True)
 
-        self.train_set = AIROGS_fundus(image_dir=self.image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
-        self.valid_set = AIROGS_fundus(image_dir=self.image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
-        self.test_set = AIROGS_fundus(image_dir=self.image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
+        self.train_set = AIROGS_color_fundus(image_dir=self.image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
+        self.valid_set = AIROGS_color_fundus(image_dir=self.image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
+        self.test_set = AIROGS_color_fundus(image_dir=self.image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
 
         # To train Attri-Net, we need to get pos_dataloader and neg_dataloader for each disease.
         self.single_disease_train_sets = self.create_trainsets()
@@ -182,7 +186,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
             idx = np.where(src_df[disease] == 0)[0]
         filtered_df = src_df.iloc[idx]
         filtered_df = filtered_df.reset_index(drop=True)
-        subset = AIROGS_fundus(image_dir=self.image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES, transforms=transforms)
+        subset = AIROGS_color_fundus(image_dir=self.image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES, transforms=transforms)
         return subset
 
 
@@ -242,7 +246,7 @@ if __name__ == '__main__':
         "batch_size": 4,
     }
 
-    datamodule = AIROGS_fundusDataModule(airogs_fundus_dict,
+    datamodule = AIROGS_color_fundusDataModule(airogs_fundus_dict,
                                     img_size=data_default_params['img_size'],
                                     seed=42)
 
@@ -271,12 +275,12 @@ if __name__ == '__main__':
             count += len(disease_dataloader.dataset)
         print('count', count)
 
-    # for i in range(10):
-    #     print(i)
-    #     data = test_loaders.dataset[i]
-    #     img = data['img']
-    #     lbl = data['label']
-    #     img = img.squeeze()
-    #     print('img.shape', img.shape)
-    #     plt.imshow(img,cmap='gray')
-    #     plt.show()
+    for i in range(10):
+        print(i)
+        data = test_loaders.dataset[i]
+        img = data['img']
+        lbl = data['label']
+        img = img.squeeze().permute(1, 2, 0).numpy()
+        print('img.shape', img.shape)
+        plt.imshow(img)
+        plt.show()

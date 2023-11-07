@@ -45,6 +45,7 @@ airogs_fundus_dict = {
     "train_diseases": ["RG"],
 }
 
+
 vindr_cxr_withBBdict = {
         "root_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
         "train_image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train_pngs_rescaled_320*320",

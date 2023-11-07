@@ -9,6 +9,7 @@ from data.vindr_cxr import Vindr_CXRDataModule
 from data.skm_tea_mri import SKMTEADataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
 from data.airogs_glaucoma import AIROGS_fundusDataModule
+from data.airogs_glaucoma_color import AIROGS_color_fundusDataModule
 from data.vindr_cxr_withBB import Vindr_CXR_BB_DataModule
 
 
@@ -48,6 +49,11 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
                                         seed=exp_configs.manual_seed)  # use official split
     if exp_configs.dataset == 'airogs':
         datamodule = AIROGS_fundusDataModule(dataset_params,
+                                             img_size=data_default_params['img_size'],
+                                             seed=42)
+
+    if exp_configs.dataset == 'airogs_color':
+        datamodule = AIROGS_color_fundusDataModule(dataset_params,
                                              img_size=data_default_params['img_size'],
                                              seed=42)
 

@@ -46,7 +46,7 @@ class AIROGS_fundusDataModule(LightningDataModule):
     def __init__(self, dataset_params, split_ratio=0.8, resplit=False, img_size=320, seed=42):
         self.root_dir = dataset_params["root_dir"]
         # self.image_dir = os.path.join(self.root_dir, 'train')
-        self.image_dir = os.path.join(self.root_dir, 'train_scaled')
+        self.image_dir = os.path.join(self.root_dir, 'train_scaled_336')
         self.train_csv_file = dataset_params["train_csv_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
         self.split_ratio = split_ratio
