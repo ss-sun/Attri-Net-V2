@@ -195,7 +195,7 @@ class Generator_with_Ada(nn.Module):
     """
     Generator network.
     """
-    def __init__(self, num_classes, img_size, num_masks, act_func, n_fc=8, dim_latent=512, conv_dim=64, in_channels=1, repeat_num=6, type="previous"):
+    def __init__(self, num_classes, img_size, act_func, n_fc=8, dim_latent=512, conv_dim=64, in_channels=1, out_channels=1, repeat_num=6, type="previous"):
         super(Generator_with_Ada, self).__init__()
 
         self.num_classes = num_classes
@@ -203,6 +203,8 @@ class Generator_with_Ada(nn.Module):
         self.repeat_num = repeat_num
         self.dim_latent = dim_latent
         self.type = type
+        self.in_channels = in_channels
+        self.out_channels = out_channels
 
         if act_func == "relu":
             activation_func = nn.ReLU(inplace=True)  # original starGAN model use relu
@@ -240,7 +242,7 @@ class Generator_with_Ada(nn.Module):
         curr_dim = curr_dim // 2
         self.up2 = transconvrelu(curr_dim, curr_dim // 2, kernel=4, stride=2, padding=1, dim_latent=dim_latent, bias=False, act_func=activation_func)
         curr_dim = curr_dim // 2
-        self.conv1 = nn.Conv2d(curr_dim, num_masks, kernel_size=7, stride=1, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(curr_dim, out_channels, kernel_size=7, stride=1, padding=3, bias=False)
 
 
 
@@ -288,7 +290,7 @@ class Discriminator_with_Ada(nn.Module):
     Discriminator network.
     """
 
-    def __init__(self, act_func, conv_dim = 64, n_fc=8, dim_latent=512, repeat_num=6):
+    def __init__(self, act_func, in_channels, conv_dim = 64, n_fc=8, dim_latent=512, repeat_num=6):
         super(Discriminator_with_Ada, self).__init__()
 
         if act_func == "relu":
@@ -296,10 +298,14 @@ class Discriminator_with_Ada(nn.Module):
         if act_func == "leakyrelu":
             activation_func = nn.LeakyReLU()  # original task switching model use leakyrelu
 
+        self.in_channels = in_channels
+
         # Task embedding layers.
         self.fcs = Intermediate_Generator(n_fc, dim_latent)
 
-        self.layer0 = convrelu(1, conv_dim, kernel=4, stride=1, padding=1, dim_latent=dim_latent, bias=False, act_func=activation_func)
+        #self.layer0 = convrelu(1, conv_dim, kernel=4, stride=1, padding=1, dim_latent=dim_latent, bias=False, act_func=activation_func)
+        self.layer0 = convrelu(in_channels, conv_dim, kernel=4, stride=1, padding=1, dim_latent=dim_latent, bias=False, act_func=activation_func)
+
         curr_dim = conv_dim
         self.layer1 = convrelu(curr_dim, curr_dim * 2, kernel=4, stride=2, padding=1,dim_latent=dim_latent, bias=False, act_func=activation_func)
         curr_dim = curr_dim * 2

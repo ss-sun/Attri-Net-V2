@@ -33,6 +33,7 @@ class task_switch_solver(object):
         self.exp_configs = exp_configs
         self.use_gpu = exp_configs.use_gpu
         self.mode = exp_configs.mode
+        self.img_mode = exp_configs.img_mode
 
         # Set device.
         if self.use_gpu and torch.cuda.is_available():

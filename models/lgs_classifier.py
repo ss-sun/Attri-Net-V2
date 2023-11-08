@@ -20,6 +20,7 @@ class LogisticRegressionModel(nn.Module):
 
     def forward(self, x):
         if self.type != 'sum(abs(mx))':
+            x = torch.mean(x, dim=1, keepdim=True)
             x = self.down(x)
             x = torch.flatten(x, start_dim=1)
             out = self.linear(x)

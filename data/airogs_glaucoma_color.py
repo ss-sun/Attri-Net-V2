@@ -29,8 +29,8 @@ class AIROGS_color_fundus(Dataset):
         # plt.show()
         if self.transforms is not None:
             img = self.transforms(img)  # return image in range (0,1)
-        # img = np.mean(np.array(img),axis=0, keepdims=True)
-        # img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+        img = np.array(img)
+        img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
         # Get labels from the dataframe for current image
         label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
         label = np.asfarray(label)
@@ -277,7 +277,8 @@ if __name__ == '__main__':
         data = test_loaders.dataset[i]
         img = data['img']
         lbl = data['label']
-        img = img.squeeze().permute(1, 2, 0).numpy()
+        img = img*0.5+0.5
+        img = img.squeeze().swapaxes(0, 2).swapaxes(0, 1)
         print('img.shape', img.shape)
         plt.imshow(img)
         plt.show()

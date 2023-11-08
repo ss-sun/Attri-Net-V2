@@ -56,6 +56,8 @@ class task_switch_solver(object):
         self.logreg_dsratio = exp_configs.lgs_downsample_ratio
         if self.mode == "train":
 
+            self.debug = exp_configs.debug
+            self.max_val_batches = 500
             # Training configurations.
             self.lambda_critic = exp_configs.lambda_critic
             self.lambda_1 = exp_configs.lambda_1
@@ -127,10 +129,14 @@ class task_switch_solver(object):
         """
         Initialize centerlosses for each task.
         """
+        if self.img_mode == 'gray':
+            feat_dim = self.img_size * self.img_size
+        if self.img_mode == 'color':
+            feat_dim = self.img_size * self.img_size * 3
         center_losses = {}
         optimizer_centloss = {}
         for disease in self.TRAIN_DISEASES:
-            loss = CenterLoss(num_classes=2, feat_dim=self.img_size*self.img_size, device=self.device)
+            loss = CenterLoss(num_classes=2, feat_dim=feat_dim, device=self.device)
             opt = torch.optim.SGD(loss.parameters(), lr=0.1)
             center_losses[disease] = loss
             optimizer_centloss[disease] = opt
@@ -168,10 +174,16 @@ class task_switch_solver(object):
         Initialize generator, disciminator and classifiers.
         """
         print('Initialize networks.')
-        self.net_g = Generator_with_Ada(num_classes=self.num_class, img_size=self.img_size, num_masks=1,
+
+        if self.img_mode == 'gray':
+            in_channels = 1
+        if self.img_mode == 'color':
+            in_channels = 3
+
+        self.net_g = Generator_with_Ada(num_classes=self.num_class, img_size=self.img_size,
                                         act_func="relu", n_fc=8, dim_latent=self.num_class * self.n_ones,
-                                        conv_dim=64, in_channels=1, repeat_num=6, type=self.process_mask)
-        self.net_d = Discriminator_with_Ada(act_func="relu", conv_dim=64, dim_latent=self.num_class * self.n_ones,
+                                        conv_dim=64, in_channels=in_channels, out_channels=in_channels, repeat_num=6, type=self.process_mask)
+        self.net_d = Discriminator_with_Ada(act_func="relu", in_channels=in_channels, conv_dim=64, dim_latent=self.num_class * self.n_ones,
                                        repeat_num=6)
 
         self.net_g.to(device)
@@ -350,6 +362,8 @@ class task_switch_solver(object):
             save_batch(to_numpy(samples * 0.5 + 0.5), to_numpy(lbls), None, path) # change values in samples to range [0,1] for visualization
 
 
+
+
     def save_disease_masks(self, gen_iterations):
         """
         Visualize the disease masks and the dest images during training.
@@ -371,6 +385,7 @@ class task_switch_solver(object):
             masks = torch.cat((masks_pos, masks_neg))
             dests = torch.cat((dests_pos, dests_neg))
             lbls = torch.cat((pos_lbls, neg_lbls))
+
             if self.process_mask != "sum(abs(mx))":
                 y_pred = classifier(masks)
             if self.process_mask == "sum(abs(mx))":
@@ -449,6 +464,7 @@ class task_switch_solver(object):
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
         imgs, lbls = batch['img'], batch['label']
+
         imgs = imgs.to(self.device)
         lbls = lbls.to(self.device)
         return imgs, lbls
@@ -483,6 +499,12 @@ class task_switch_solver(object):
             else:
                 d_iters = self.d_iters
 
+            ### only for test
+            if self.debug:
+                d_iters = 1
+                self.sample_step = 1
+                self.model_valid_step = 1
+                self.max_val_batches = 50
             # =================================================================================== #
             #                             1. Train the discriminator                              #
             # =================================================================================== #
@@ -658,7 +680,7 @@ class task_switch_solver(object):
             # every model_valid_step, do validation
             if gen_iterations % self.model_valid_step == 0:
                 print(" - model validation-")
-                auc, _, _ = self.validation(max_batches=500)
+                auc, _, _ = self.validation(max_batches=self.max_val_batches)
                 valid_auc.append(auc)
                 print("validation AUC: ", auc)
                 print("current best AUC: ", best_auc)

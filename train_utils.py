@@ -104,8 +104,11 @@ def to_numpy(tensor):
 
 def save_batch(img_batch, label_batch, pred_batch=None, out_dir=''):
 
-    vmax = np.abs(img_batch).flatten().max()
-    vmin = np.abs(img_batch).flatten().min()
+    # vmax = np.abs(img_batch).flatten().max()
+    # vmin = np.abs(img_batch).flatten().min()
+    vmax = 1
+    vmin = -1
+    n_channels = img_batch.shape[1]
 
     cols = int(img_batch.shape[0] / 2)
     rows = 2
@@ -121,7 +124,10 @@ def save_batch(img_batch, label_batch, pred_batch=None, out_dir=''):
             title = title + '  pred: '+ str(pred.squeeze())[:4]
         plt.title(title)
         plt.axis("off")
-        plt.imshow(img.squeeze(), cmap="gray", vmin=vmin, vmax=vmax)
+        if n_channels == 1:
+            plt.imshow(img.squeeze(), cmap="gray", vmin=vmin, vmax=vmax)
+        if n_channels == 3:
+            plt.imshow(img.squeeze().transpose(1, 2, 0))
 
     plt.savefig(out_dir, bbox_inches='tight')
 
