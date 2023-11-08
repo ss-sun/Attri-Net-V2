@@ -48,7 +48,7 @@ echo "-------- PYTHON OUTPUT ----------"
 # python3 main.py --manual_seed 21
 # python3 main.py --manual_seed 4294438
 
-python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID}
+python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
 echo "---------------------------------"
 
