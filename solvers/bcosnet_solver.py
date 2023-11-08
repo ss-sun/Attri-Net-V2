@@ -22,6 +22,9 @@ class bcos_resnet_solver(object):
         self.use_gpu = exp_configs.use_gpu
         self.use_wandb = exp_configs.use_wandb
         self.dataloaders = data_loader
+
+        self.img_mode = exp_configs.img_mode
+
         if self.use_gpu and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
@@ -54,8 +57,10 @@ class bcos_resnet_solver(object):
 
     def init_model(self):
         # Prepare model, input dim=1 because input x-ray images are gray scale.
-        model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES))
-        # model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        if self.img_mode == 'gray':
+            model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES), in_chans=2)
+        if self.img_mode == 'color':
+            model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES), in_chans=6)
         model = model.to(self.device)
         return model
 

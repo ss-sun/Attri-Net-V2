@@ -13,9 +13,12 @@ def bcos_resnet_get_parser():
     # Experiment configuration.
     parser.add_argument('--exp_name', type=str, default='bcos_resnet')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
+    parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray'])  # will change to color if dataset is airogs_color
 
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB'])
+    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB'])
+    parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=8, help='mini-batch size')
 
@@ -37,9 +40,6 @@ def bcos_resnet_get_parser():
 
 
 
-
-
-
 def prepare_exps(exp_configs):
     if exp_configs.mode == 'train':
         print("training model: ")
@@ -51,8 +51,10 @@ def prepare_exps(exp_configs):
 
 def main(exp_configs):
     from data.dataset_params import dataset_dict, data_default_params
+
     prepare_exps(exp_configs)
     print("experiment folder: " + exp_configs.exp_dir)
+
     datamodule = prepare_datamodule(exp_configs, dataset_dict, data_default_params)
     print(exp_configs)
 
@@ -85,4 +87,11 @@ def main(exp_configs):
 if __name__ == '__main__':
     parser = bcos_resnet_get_parser()
     config = parser.parse_args()
+
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB']
+    config.dataset = datasets[config.dataset_idx]
+    if 'color' in config.dataset:
+        config.img_mode = 'color'
+
+
     main(config)

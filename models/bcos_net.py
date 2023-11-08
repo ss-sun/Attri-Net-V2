@@ -353,7 +353,8 @@ class BcosResNet(BcosUtilMixin, nn.Module):
         )
         self.logit_layer = LogitLayer(
             logit_temperature=logit_temperature,
-            logit_bias=logit_bias or -math.log(num_classes - 1),
+            #logit_bias=logit_bias or -math.log(num_classes - 1),
+            logit_bias=logit_bias,
         )
 
         for m in self.modules():
