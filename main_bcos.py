@@ -16,7 +16,7 @@ def bcos_resnet_get_parser():
     parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray'])  # will change to color if dataset is airogs_color
 
     # Data configuration.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB'])
+    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
     parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser = bcos_resnet_get_parser()
     config = parser.parse_args()
 
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB']
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
     config.dataset = datasets[config.dataset_idx]
     if 'color' in config.dataset:
         config.img_mode = 'color'

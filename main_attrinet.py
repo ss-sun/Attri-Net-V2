@@ -1,7 +1,7 @@
 from solvers.resnet_solver import resnet_solver
-# from solvers.attrinet_solver import task_switch_solver
+from solvers.attrinet_solver import task_switch_solver
 # from solvers.attrinet_solver_g_withoutcl import task_switch_solver
-from solvers.attrinet_solver_energyloss import task_switch_solver
+# from solvers.attrinet_solver_energyloss import task_switch_solver
 # from solvers.attrinet_solver_energyloss_with_psydoMask import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 import logging
@@ -23,8 +23,12 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
+    parser.add_argument('--img_mode', type=str, default='gray',
+                        choices=['color', 'gray'])  # will change to color if dataset is airogs_color
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='vindr_cxr_withBB', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'contam20','contam50','airogs', 'airogs_color', 'vindr_cxr_withBB'])
+    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
+    parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
@@ -125,4 +129,10 @@ def main(exp_configs):
 if __name__ == '__main__':
     parser = attrinet_get_parser()
     config = parser.parse_args()
+
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
+    config.dataset = datasets[config.dataset_idx]
+    if 'color' in config.dataset:
+        config.img_mode = 'color'
+
     main(config)
