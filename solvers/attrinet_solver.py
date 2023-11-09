@@ -409,16 +409,25 @@ class task_switch_solver(object):
             loss_module = self.center_losses[disease]
             neg_center = loss_module.centers[0].data
             pos_center = loss_module.centers[1].data
-            neg_center = to_numpy(neg_center).reshape((self.img_size, self.img_size))
-            pos_center = to_numpy(pos_center).reshape((self.img_size, self.img_size))
+            size = neg_center.size()[0]
+            n_channels = int(size/(self.img_size*self.img_size))
+            neg_center = to_numpy(neg_center).reshape((self.img_size, self.img_size, n_channels)).squeeze()
+            pos_center = to_numpy(pos_center).reshape((self.img_size, self.img_size, n_channels)).squeeze()
             filename = str(gen_iterations) + "_" + disease + "_centers.png"
             out_dir = os.path.join(self.ckpt_dir, filename)
             fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4 * 2, 4 * 1))
-            axs[0].imshow(neg_center, cmap="gray")
+
+            if n_channels == 1:
+                axs[0].imshow(neg_center, cmap="gray")
+            if n_channels == 3:
+                axs[0].imshow(neg_center)
             title = "neg center of " + disease
             axs[0].set_title(title)
             axs[0].axis('off')
-            axs[1].imshow(pos_center, cmap="gray")
+            if n_channels == 1:
+                axs[1].imshow(pos_center, cmap="gray")
+            if n_channels == 3:
+                axs[1].imshow(pos_center)
             title = "pos center of " + disease
             axs[1].set_title(title)
             axs[1].axis('off')

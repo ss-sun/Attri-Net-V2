@@ -45,3 +45,16 @@ attrinet_model_path_dict = {
         "vindr_cxr_previous_100":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-03 12:51:51--vindr_cxr_withBB--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=100.0--seed=42",
 
 }  # new models
+
+
+attrinet_with_psydomask_dict_unfinished={
+    "lambda1": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-05 14:01:21--chexpert--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=1.0--seed=42",
+    "lambda5": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-05 14:03:09--chexpert--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=5.0--seed=42",
+    "lambda10": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-05 14:04:01--chexpert--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=10.0--seed=42",
+    "lambda20": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-05 14:04:59--chexpert--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=20.0--seed=42",
+    "lambda100": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-05 14:05:01--chexpert--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=100.0--seed=42",
+}
+
+attrinet_vindrBB_different_lambda_dict={
+
+}

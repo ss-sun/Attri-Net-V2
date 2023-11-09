@@ -17,7 +17,7 @@ def attrinet_get_parser():
     parser = argparse.ArgumentParser()
 
     # Experiment configuration.
-    parser.add_argument('--debug', type=str2bool, default=False,
+    parser.add_argument('--debug', type=str2bool, default=True,
                         help='if true, will automatically set d_iters = 1, set savefrequency=1, easy to run all train step for functional test')
 
     parser.add_argument('--exp_name', type=str, default='attri-net')
@@ -27,7 +27,7 @@ def attrinet_get_parser():
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=4, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
