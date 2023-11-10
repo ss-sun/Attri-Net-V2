@@ -9,10 +9,10 @@ from train_utils import to_numpy
 from sklearn.metrics import roc_curve, roc_auc_score
 from tqdm import tqdm
 from captum.attr import InputXGradient
-from explainers.captum_explainers import GCam_explainer, GB_explainer
-from explainers.lime_explainer import lime_explainer
-from explainers.shap_explainer import shap_explainer
-from explainers.gif_explainer import gif_explainer
+import json
+from models.losses import EnergyPointingGameBBMultipleLoss, PseudoEnergyLoss
+from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
+
 
 class bcos_resnet_solver(object):
     # Train and test ResNet50.
@@ -24,6 +24,11 @@ class bcos_resnet_solver(object):
         self.dataloaders = data_loader
 
         self.img_mode = exp_configs.img_mode
+
+
+        if exp_configs.dataset == "vindr_cxr_withBB":
+            assert self.guidance_mode == "bbox"
+
 
         if self.use_gpu and torch.cuda.is_available():
             self.device = torch.device("cuda")
@@ -39,6 +44,12 @@ class bcos_resnet_solver(object):
             self.train_loader = data_loader['train']
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
+
+            if self.guidance_mode == "pseudo_mask":
+                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                self.local_loss = PseudoEnergyLoss()
+            if self.guidance_mode == "bbox":
+                self.local_loss = EnergyPointingGameBBMultipleLoss()
             # Initialize model.
             self.model = self.init_model()
             self.loss = torch.nn.BCEWithLogitsLoss()
@@ -51,6 +62,14 @@ class bcos_resnet_solver(object):
             self.model = self.init_model()
             self.load_model(self.model_path)
 
+    def prepare_pseudoMask(self, dataset):
+        pseudoMask = {}
+        file_path = pseudo_mask_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                pseudoMask[disease] = np.array(data[disease])
+        return pseudoMask
 
     def extend_channels(self, img):
         return torch.cat((img, 1-img), dim=1)

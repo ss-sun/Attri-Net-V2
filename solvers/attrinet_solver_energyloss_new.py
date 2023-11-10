@@ -143,21 +143,21 @@ class task_switch_solver(object):
                 pseudoMask[disease] = np.array(data[disease])
         return pseudoMask
 
-    def psydo_local_loss(self, pos_masks, psydo_mask):
-        """
-        Compute localization loss with psydo mask.
-        """
-        loss = 0
-        for i in range(len(pos_masks)):
-            pos_mask = torch.abs(pos_masks[i]).squeeze()
-            num = pos_mask[np.where(psydo_mask == 1)].sum()
-            den = pos_mask.sum()
-            if den < 1e-7:
-                energy_loss = 1 - num
-            else:
-                energy_loss = 1 - num / den
-            loss += energy_loss
-        return loss
+    # def psydo_local_loss(self, pos_masks, psydo_mask):
+    #     """
+    #     Compute localization loss with psydo mask.
+    #     """
+    #     loss = 0
+    #     for i in range(len(pos_masks)):
+    #         pos_mask = torch.abs(pos_masks[i]).squeeze()
+    #         num = pos_mask[np.where(psydo_mask == 1)].sum()
+    #         den = pos_mask.sum()
+    #         if den < 1e-7:
+    #             energy_loss = 1 - num
+    #         else:
+    #             energy_loss = 1 - num / den
+    #         loss += energy_loss
+    #     return loss
 
 
     def init_centerlosses(self):
