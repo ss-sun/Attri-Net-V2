@@ -51,7 +51,10 @@ echo "-------- PYTHON OUTPUT ----------"
 # python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False" # train attrinet on gray and color glocuma images
 # python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --lambda_3 0 --lambda_centerloss 0 --lambda_localizationloss 0 --use_wandb "False" # train attrinet on gray and color glocuma images wihtout classifiers loss
 
-python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
+# python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
+
+python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --lambda_localizationloss 30 --use_wandb "False"
+
 
 echo "---------------------------------"
 
