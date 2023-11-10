@@ -80,7 +80,7 @@ def attrinet_get_parser():
     parser.add_argument('--test_model_path', type=str, default=None, help='path of the models')
 
     # Miscellaneous.
-    parser.add_argument('--use_wandb', type=str2bool, default=True)
+    parser.add_argument('--use_wandb', type=str2bool, default=False)
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
 
     return parser
