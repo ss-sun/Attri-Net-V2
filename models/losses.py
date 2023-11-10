@@ -71,6 +71,29 @@ class EnergyPointingGameBBMultipleLoss:
             return 1 - num
         return 1 - num / den
 
+class PseudoEnergyLoss:
+    def __init__(self):
+        super().__init__()
+        self.only_positive = False
+        self.binarize = False
+
+    def __call__(self, attributions, psydo_mask):
+        """
+        Compute localization loss with psydo mask.
+        """
+        pos_attributions = torch.abs(attributions)  # modified code, adapted to attri-net.
+        psydo_mask = torch.from_numpy(psydo_mask).unsqueeze(0).cuda()
+        num = pos_attributions[torch.where(psydo_mask == 1)].sum()
+        den = pos_attributions.sum()
+        if den < 1e-7:
+            return 1-num
+
+        return 1-num/den
+
+
+
+
+
 
 class RRRBBMultipleLoss(BBMultipleLoss):
 

@@ -17,6 +17,9 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit
 from pycocotools import mask
+from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict
+
+
 
 def str2bool(v):
     return v.lower() in ('true')
@@ -42,7 +45,8 @@ class pixel_sensitivity_analyser():
                 self.gt_seg_dict = json.load(json_file)
 
     def run(self):
-        self.compute_pixel_sensitivity(attr_method=self.attr_method)
+        results = self.compute_pixel_sensitivity(attr_method=self.attr_method)
+        return results
 
     def create_mask_fromBB(self, img_size, bbox):
         #bbox: [x, y, w, h]
@@ -208,6 +212,8 @@ class pixel_sensitivity_analyser():
         result_file_path = os.path.join(self.result_dir, "avg_EPG_results.json")
         with open(result_file_path, 'w') as json_file:
             json.dump(avg_EPG_score, json_file, indent=4)
+        return avg_EPG_score
+
 
 
     def compute_EPG_chexpert(self, attr_method):
@@ -346,21 +352,14 @@ class pixel_sensitivity_analyser():
         if self.dataset == "nih_chestxray" or "vindr_cxr" in self.dataset or self.dataset == "skmtea":
 
             # self.compute_hit_nih_vindr_skmtea(attr_method)
-            self.compute_EPG_nih_vindr_skmtea(attr_method)
-
-        # if self.dataset == "vindr":
-        #     self.compute_hit_vindr(attr_method)
-
-
-        if self.dataset == "skmtea":
-            self.compute_hit_skmtae(attr_method)
+            avg_EPG_score = self.compute_EPG_nih_vindr_skmtea(attr_method)
 
 
         if self.dataset == "chexpert":
             # self.compute_hit_chexpert(attr_method)
-            self.compute_EPG_chexpert(attr_method)
+            avg_EPG_score = self.compute_EPG_chexpert(attr_method)
 
-
+        return avg_EPG_score
 
 
     def get_hit_topK(self, attr_map, gt_annotation, top_k=1):
@@ -426,23 +425,6 @@ class pixel_sensitivity_analyser():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def argument_parser():
     """
     Create a parser with run_experiments arguments.
@@ -466,11 +448,8 @@ def argument_parser():
     return parser
 
 
-def get_arguments():
+def update_arguments():
     #from model_dict import resnet_models, attrinet_models
-    from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict
-    parser = argument_parser()
-    exp_configs = parser.parse_args()
 
     if exp_configs.exp_name == 'resnet_cls':
         exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]
@@ -503,7 +482,36 @@ def get_arguments():
     return exp_configs
 
 
+def update_arguments_evaluate_lambdas(model_name):
+
+    if exp_configs.exp_name == 'attri-net':
+        print("evaluating our model")
+        # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+        exp_configs.model_path = attrinet_vindrBB_different_lambda_dict[model_name]
+        print("evaluate model: " + exp_configs.model_path)
+
+        exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+        # configurations of generator
+        exp_configs.image_size = 320
+        exp_configs.generator_type = 'stargan'
+        exp_configs.deep_supervise = False
+
+        # configurations of latent code generator
+        exp_configs.n_fc = 8
+        exp_configs.n_ones = 20
+        exp_configs.num_out_channels = 1
+
+        # configurations of classifiers
+        exp_configs.lgs_downsample_ratio = 32
+
+    return exp_configs
+
+
+
+
+
 def prep_solver(datamodule, exp_configs):
+
     data_loader = {}
     if "resnet" in exp_configs.exp_name:
 
@@ -543,13 +551,29 @@ def prep_solver(datamodule, exp_configs):
 
 def main(config):
     from data.dataset_params import dataset_dict, data_default_params
+
     datamodule = prepare_datamodule(config, dataset_dict, data_default_params)
     solver = prep_solver(datamodule, config)
     analyser = pixel_sensitivity_analyser(solver, config)
-    analyser.run()
+    results = analyser.run()
+
+    return results
 
 
 if __name__ == "__main__":
+    parser = argument_parser()
+    exp_configs = parser.parse_args()
+    results_dict = {}
+    for key, value in attrinet_vindrBB_different_lambda_dict.items():
+        model_name = key
+        print(model_name)
+        params = update_arguments_evaluate_lambdas(model_name)
+        results = main(params)
+        results_dict[model_name] = results
+    print(results_dict)
 
-    params = get_arguments()
-    main(params)
+    file_name = "vindr_cxr_bbox_lambda_results.json"
+    output_path = os.path.join("./results", file_name)
+
+    with open(output_path, 'w') as json_file:
+        json.dump(results_dict, json_file, indent=4)

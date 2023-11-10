@@ -5,13 +5,13 @@ import torch.optim as optim
 import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve
 from train_utils import to_numpy, save_batch, logscalar
-# from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, CenterLoss
-from models.attrinet_modules_previous import Discriminator_with_Ada, Generator_with_Ada, CenterLoss
-# from models.lgs_classifier import LogisticRegressionModel
-from models.lgs_classifier_previous import LogisticRegressionModel
+from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, CenterLoss
+from models.lgs_classifier import LogisticRegressionModel
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from models.losses import EnergyPointingGameBBMultipleLoss
+from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
+import json
+from models.losses import EnergyPointingGameBBMultipleLoss, PseudoEnergyLoss
 
 
 
@@ -28,13 +28,15 @@ class task_switch_solver(object):
         """
         Initialize solver
         """
-        print("using the task switch solver with energy loss")
-
 
         # Initialize configurations.
         self.exp_configs = exp_configs
         self.use_gpu = exp_configs.use_gpu
         self.mode = exp_configs.mode
+        self.img_mode = exp_configs.img_mode
+        self.guidance_mode = exp_configs.guidance_mode # "bbox" or "pseudo_mask"
+        if exp_configs.dataset == "vindr_cxr_withBB":
+            assert self.guidance_mode == "bbox"
 
         # Set device.
         if self.use_gpu and torch.cuda.is_available():
@@ -59,14 +61,15 @@ class task_switch_solver(object):
         # Configurations of classifiers.
         self.logreg_dsratio = exp_configs.lgs_downsample_ratio
         if self.mode == "train":
+
             self.debug = exp_configs.debug
+            self.max_val_batches = 500
             # Training configurations.
             self.lambda_critic = exp_configs.lambda_critic
             self.lambda_1 = exp_configs.lambda_1
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
             self.lambda_ctr = exp_configs.lambda_centerloss
-            self.lambda_loc = exp_configs.lambda_localizationloss
             self.process_mask = exp_configs.process_mask
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
             self.cls_iteration = exp_configs.cls_iteration # more classifier steps for one generator step
@@ -78,7 +81,11 @@ class task_switch_solver(object):
             self.weight_decay_lgs = exp_configs.weight_decay_lgs
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
-
+            if self.guidance_mode == "pseudo_mask":
+                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                self.local_loss = PseudoEnergyLoss()
+            if self.guidance_mode == "bbox":
+                self.local_loss = EnergyPointingGameBBMultipleLoss()
             # Step size.
             self.sample_step = exp_configs.sample_step
             self.model_valid_step = exp_configs.model_valid_step
@@ -92,7 +99,6 @@ class task_switch_solver(object):
             self.dloader_pos = data_loader['train_pos']
             self.dloader_neg = data_loader['train_neg']
             self.valid_loader = data_loader['valid']
-            self.max_val_batches = 500
             self.vis_loader_pos = data_loader['vis_pos']
             self.vis_loader_neg = data_loader['vis_neg']
 
@@ -105,7 +111,6 @@ class task_switch_solver(object):
             self.net_d.apply(self.weights_init)
             self.optim_g, self.optim_d, self.optim_lgs = self.init_optimizer(self.net_g, self.net_d, self.net_lgs)
             self.lgs_loss = torch.nn.BCEWithLogitsLoss()
-            self.local_loss = EnergyPointingGameBBMultipleLoss()
             if self.process_mask != 'sum(abs(mx))':
                 self.center_losses, self.optimizer_centloss = self.init_centerlosses()
 
@@ -129,15 +134,44 @@ class task_switch_solver(object):
             self.load_model(self.model_path, is_best=True)
 
 
+    def prepare_pseudoMask(self, dataset):
+        pseudoMask = {}
+        file_path = pseudo_mask_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                pseudoMask[disease] = np.array(data[disease])
+        return pseudoMask
+
+    def psydo_local_loss(self, pos_masks, psydo_mask):
+        """
+        Compute localization loss with psydo mask.
+        """
+        loss = 0
+        for i in range(len(pos_masks)):
+            pos_mask = torch.abs(pos_masks[i]).squeeze()
+            num = pos_mask[np.where(psydo_mask == 1)].sum()
+            den = pos_mask.sum()
+            if den < 1e-7:
+                energy_loss = 1 - num
+            else:
+                energy_loss = 1 - num / den
+            loss += energy_loss
+        return loss
+
 
     def init_centerlosses(self):
         """
         Initialize centerlosses for each task.
         """
+        if self.img_mode == 'gray':
+            feat_dim = self.img_size * self.img_size
+        if self.img_mode == 'color':
+            feat_dim = self.img_size * self.img_size * 3
         center_losses = {}
         optimizer_centloss = {}
         for disease in self.TRAIN_DISEASES:
-            loss = CenterLoss(num_classes=2, feat_dim=self.img_size*self.img_size, device=self.device)
+            loss = CenterLoss(num_classes=2, feat_dim=feat_dim, device=self.device)
             opt = torch.optim.SGD(loss.parameters(), lr=0.1)
             center_losses[disease] = loss
             optimizer_centloss[disease] = opt
@@ -175,10 +209,16 @@ class task_switch_solver(object):
         Initialize generator, disciminator and classifiers.
         """
         print('Initialize networks.')
-        self.net_g = Generator_with_Ada(num_classes=self.num_class, img_size=self.img_size, num_masks=1,
+
+        if self.img_mode == 'gray':
+            in_channels = 1
+        if self.img_mode == 'color':
+            in_channels = 3
+
+        self.net_g = Generator_with_Ada(num_classes=self.num_class, img_size=self.img_size,
                                         act_func="relu", n_fc=8, dim_latent=self.num_class * self.n_ones,
-                                        conv_dim=64, in_channels=1, repeat_num=6, type=self.process_mask)
-        self.net_d = Discriminator_with_Ada(act_func="relu", conv_dim=64, dim_latent=self.num_class * self.n_ones,
+                                        conv_dim=64, in_channels=in_channels, out_channels=in_channels, repeat_num=6, type=self.process_mask)
+        self.net_d = Discriminator_with_Ada(act_func="relu", in_channels=in_channels, conv_dim=64, dim_latent=self.num_class * self.n_ones,
                                        repeat_num=6)
 
         self.net_g.to(device)
@@ -357,6 +397,8 @@ class task_switch_solver(object):
             save_batch(to_numpy(samples * 0.5 + 0.5), to_numpy(lbls), None, path) # change values in samples to range [0,1] for visualization
 
 
+
+
     def save_disease_masks(self, gen_iterations):
         """
         Visualize the disease masks and the dest images during training.
@@ -378,6 +420,7 @@ class task_switch_solver(object):
             masks = torch.cat((masks_pos, masks_neg))
             dests = torch.cat((dests_pos, dests_neg))
             lbls = torch.cat((pos_lbls, neg_lbls))
+
             if self.process_mask != "sum(abs(mx))":
                 y_pred = classifier(masks)
             if self.process_mask == "sum(abs(mx))":
@@ -401,16 +444,25 @@ class task_switch_solver(object):
             loss_module = self.center_losses[disease]
             neg_center = loss_module.centers[0].data
             pos_center = loss_module.centers[1].data
-            neg_center = to_numpy(neg_center).reshape((self.img_size, self.img_size))
-            pos_center = to_numpy(pos_center).reshape((self.img_size, self.img_size))
+            size = neg_center.size()[0]
+            n_channels = int(size/(self.img_size*self.img_size))
+            neg_center = to_numpy(neg_center).reshape((self.img_size, self.img_size, n_channels)).squeeze()
+            pos_center = to_numpy(pos_center).reshape((self.img_size, self.img_size, n_channels)).squeeze()
             filename = str(gen_iterations) + "_" + disease + "_centers.png"
             out_dir = os.path.join(self.ckpt_dir, filename)
             fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(4 * 2, 4 * 1))
-            axs[0].imshow(neg_center, cmap="gray")
+
+            if n_channels == 1:
+                axs[0].imshow(neg_center, cmap="gray")
+            if n_channels == 3:
+                axs[0].imshow(neg_center)
             title = "neg center of " + disease
             axs[0].set_title(title)
             axs[0].axis('off')
-            axs[1].imshow(pos_center, cmap="gray")
+            if n_channels == 1:
+                axs[1].imshow(pos_center, cmap="gray")
+            if n_channels == 3:
+                axs[1].imshow(pos_center)
             title = "pos center of " + disease
             axs[1].set_title(title)
             axs[1].axis('off')
@@ -455,12 +507,19 @@ class task_switch_solver(object):
                     self.dloader_neg[current_training_disease])
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
-        imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
-        imgs = imgs.to(self.device)
-        lbls = lbls.to(self.device)
-        disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
-        bbox = bboxs[:, disease_idx, :]
-        return imgs, lbls, bbox
+        if self.guidance_mode == "bbox":
+            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
+            bbox = bboxs[:, disease_idx, :]
+            return imgs, lbls, bbox
+
+        else:
+            imgs, lbls = batch['img'], batch['label']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            return imgs, lbls, None
 
 
     def train(self):
@@ -547,7 +606,6 @@ class task_switch_solver(object):
             gen_loss_d = - self.net_d(pos_dests, task_code).mean() * self.lambda_critic
 
             # Regularization terms.
-
             l1_anomaly = torch.mean(torch.abs(torch.mean(pos_masks, dim=1, keepdim=True))) * self.lambda_1
             l1_health = torch.mean(torch.abs(torch.mean(neg_masks, dim=1, keepdim=True))) * self.lambda_2
 
@@ -556,25 +614,33 @@ class task_switch_solver(object):
             lbls_all = torch.cat((lbls_neg, lbls_pos))
             disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
             classifier = self.net_lgs[self.current_training_disease]
+
             if self.process_mask != "sum(abs(mx))":
                 pred_all = classifier(masks_all)
             if self.process_mask == "sum(abs(mx))":
                 pred_all = classifier(masks_all.sum(dim=(1, 2, 3), keepdim=True))
+
             classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
             classifiers_loss = classifiers_loss * self.lambda_3
 
             # compute localization loss
             localization_loss = 0
-            for img_idx in range(len(imgs_pos)):
-                bb_list = bbox_pos[img_idx]
-                localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
+            if self.guidance_mode == "bbox":
+                for img_idx in range(len(imgs_pos)):
+                    bb_list = bbox_pos[img_idx]
+                    localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
+            if self.guidance_mode == "pseudo_mask":
+                pseudo_mask = self.pseudoMask[self.current_training_disease]
+                for img_idx in range(len(imgs_pos)):
+                    localization_loss += self.local_loss(pos_masks[img_idx], pseudo_mask)
+
 
             if self.process_mask != "sum(abs(mx))":
                 # Get center loss.
                 center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
                                                                                 lbls_all[:, disease_idx]) * self.lambda_ctr
                 # Total loss.
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss + localization_loss * self.lambda_loc
+                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss
 
                 logdict = {
                     "gen_loss": gen_loss,
@@ -582,8 +648,7 @@ class task_switch_solver(object):
                     "l1_anomaly": l1_anomaly,
                     "l1_health": l1_health,
                     "classifiers_loss": classifiers_loss,
-                    "center_loss": center_loss,
-                    "localization_loss": localization_loss
+                    "center_loss": center_loss
                 }
                 if self.use_wandb:
                     for n, v in logdict.items():
@@ -624,7 +689,6 @@ class task_switch_solver(object):
                 gen_loss.backward()
                 self.optim_g.step()
                 gen_iterations += 1
-                # print("gen_iterations", gen_iterations)
 
                 # =================================================================================== #
             #                               3. Train the classifiers                              #

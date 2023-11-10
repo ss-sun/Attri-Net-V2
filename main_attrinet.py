@@ -1,10 +1,10 @@
-from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
 # from solvers.attrinet_solver_g_withoutcl import task_switch_solver
 # from solvers.attrinet_solver_energyloss import task_switch_solver
 # from solvers.attrinet_solver_energyloss_with_psydoMask import task_switch_solver
-from solvers.bcosnet_solver import bcos_resnet_solver
+from solvers.attrinet_solver_energyloss_new import task_switch_solver
 import logging
+
 from experiment_utils import init_seed, init_experiment, init_wandb
 from train_utils import prepare_datamodule
 
@@ -25,9 +25,13 @@ def attrinet_get_parser():
 
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
+
+    parser.add_argument('--guidance_mode', type=str, default='pseudo_mask',
+                        choices=['bbox', 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=4, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=1, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -48,7 +52,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_2', type=float, default=200, help='weight for l1 loss of healthy mask')
     parser.add_argument('--lambda_3', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
-    parser.add_argument('--lambda_localizationloss', type=float, default=1, help='weight for center loss of disease mask')
+    parser.add_argument('--lambda_localizationloss', type=float, default=25, help='weight for center loss of disease mask')
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
 
     # Training configuration.
@@ -134,5 +138,6 @@ if __name__ == '__main__':
     config.dataset = datasets[config.dataset_idx]
     if 'color' in config.dataset:
         config.img_mode = 'color'
-
+    if config.dataset == 'vindr_cxr_withBB':
+        assert config.guidance_mode == 'bbox'
     main(config)

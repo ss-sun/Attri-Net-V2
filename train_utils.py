@@ -130,4 +130,5 @@ def save_batch(img_batch, label_batch, pred_batch=None, out_dir=''):
             plt.imshow(img.squeeze().transpose(1, 2, 0))
 
     plt.savefig(out_dir, bbox_inches='tight')
+    plt.close()
 

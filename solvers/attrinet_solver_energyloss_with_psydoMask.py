@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from models.losses import EnergyPointingGameBBMultipleLoss
 import json
+from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
 
 
 

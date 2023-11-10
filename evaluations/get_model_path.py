@@ -1,4 +1,5 @@
 import os
+import json
 
 src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
 
@@ -13,9 +14,17 @@ def filt_files(src_dir, keywords):
 
 if __name__ == '__main__':
     src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
-    keywords = ["attri-net2023-11-05", "chexpert", "--l_loc="]
+    keywords = ["attri-net2023-11-06", "vindr_cxr_withBB", "--l_loc="]
     pathes = filt_files(src_dir, keywords)
     for path in pathes:
         print(path)
+
+    # results_dict = {}
+    # for i in range(1, 11):
+    #     key = "lambda_" + str(i)
+    #     values = {"t1": 1, "t2": 2}
+    #     results_dict[key] = values
+    #
+
 
 
