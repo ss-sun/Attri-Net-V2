@@ -24,6 +24,7 @@ class bcos_resnet_solver(object):
         self.dataloaders = data_loader
 
         self.img_mode = exp_configs.img_mode
+        self.lambda_loc = exp_configs.lambda_localizationloss
 
 
         if exp_configs.dataset == "vindr_cxr_withBB":

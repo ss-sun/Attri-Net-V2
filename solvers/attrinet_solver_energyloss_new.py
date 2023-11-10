@@ -70,6 +70,7 @@ class task_switch_solver(object):
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
             self.lambda_ctr = exp_configs.lambda_centerloss
+            self.lambda_loc = exp_configs.lambda_localizationloss
             self.process_mask = exp_configs.process_mask
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
             self.cls_iteration = exp_configs.cls_iteration # more classifier steps for one generator step
@@ -640,7 +641,7 @@ class task_switch_solver(object):
                 center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
                                                                                 lbls_all[:, disease_idx]) * self.lambda_ctr
                 # Total loss.
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss
+                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss + localization_loss * self.lambda_loc
 
                 logdict = {
                     "gen_loss": gen_loss,
@@ -648,7 +649,8 @@ class task_switch_solver(object):
                     "l1_anomaly": l1_anomaly,
                     "l1_health": l1_health,
                     "classifiers_loss": classifiers_loss,
-                    "center_loss": center_loss
+                    "center_loss": center_loss,
+                    "localization_loss": localization_loss
                 }
                 if self.use_wandb:
                     for n, v in logdict.items():
