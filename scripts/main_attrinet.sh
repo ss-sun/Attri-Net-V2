@@ -53,7 +53,7 @@ echo "-------- PYTHON OUTPUT ----------"
 
 # python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
-python3 main_attrinet.py --debug "False" --dataset_idx 0 --lambda_localizationloss 40 --use_wandb "False"
+python3 main_attrinet.py --debug "False" --dataset_idx 1 --lambda_localizationloss 40 --use_wandb "False"
 
 
 echo "---------------------------------"
