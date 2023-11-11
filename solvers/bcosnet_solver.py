@@ -147,8 +147,6 @@ class bcos_resnet_solver(object):
                     if len(local_loss_list) > 0:
                         localization_loss = torch.mean(torch.stack(local_loss_list))* self.lambda_loc
 
-                    train_loss += localization_loss
-
 
                 if self.guidance_mode == "pseudo_mask"and torch.sum(train_labels) > 0:
                     local_loss_list = []
