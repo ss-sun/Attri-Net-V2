@@ -10,7 +10,7 @@
 #SBATCH --error=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.err   # File to which STDERR will be written
 #SBATCH --mail-type=FAIL           # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=<susu.sun@uni-tuebingen.de>  # Email to which notifications will be sent
-#SBATCH --array=4,5   # dataset index
+#SBATCH --array=1,0.5,0.1,0.05   # dataset index
 
 # print info about current job
 scontrol show job $SLURM_JOB_ID 
@@ -37,7 +37,9 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_bcos.py --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
+# python3 main_bcos.py --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
+
+python3 main_bcos.py --guidance_mode "pseudo_mask" --dataset_idx 0  --use_wandb "False"
 
 echo "---------------------------------"
 

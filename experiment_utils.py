@@ -27,6 +27,10 @@ def create_expname(exp_configs):
         exp_name += f"-bs={exp_configs.batch_size}"
         exp_name += f"-lr={exp_configs.lr}"
         exp_name += f"-weight_decay={exp_configs.weight_decay}"
+        if exp_configs.exp_name == "bcos_resnet":
+            exp_name += f"-lambda_localizationloss={exp_configs.lambda_localizationloss}"
+
+
 
     if exp_configs.exp_name == "attri-net":
         exp_name = exp_configs.exp_name + str(current_time)[:-7]

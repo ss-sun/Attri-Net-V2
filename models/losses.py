@@ -30,25 +30,59 @@ class BBMultipleLoss:
         return bb_mask
 
 
-# class EnergyPointingGameBBMultipleLoss:
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.only_positive = False
-#         self.binarize = False
-#
-#     def __call__(self, attributions, bb_coordinates):
-#         pos_attributions = attributions.clamp(min=0) # original code
-#         bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
-#
-#         for coords in bb_coordinates: # original code
-#             xmin, ymin, xmax, ymax = coords
-#             bb_mask[ymin:ymax, xmin:xmax] = 1
-#         num = pos_attributions[torch.where(bb_mask == 1)].sum()
-#         den = pos_attributions.sum()
-#         if den < 1e-7:
-#             return 1-num
-#         return 1-num/den
+class EnergyPointingGameBBMultipleLoss_multilabel:
+
+    def __init__(self):
+        super().__init__()
+        self.only_positive = False
+        self.binarize = False
+
+    def __call__(self, attributions, bb_coordinates):
+        loss_list = []
+        for i in range(len(bb_coordinates)):
+            pos_attribution = attributions[i].clamp(min=0) # original code
+            bb_mask = torch.zeros_like(pos_attribution, dtype=torch.long)
+            coord = bb_coordinates[i]
+            xmin, ymin, width, height = coord
+            bb_mask[:, int(ymin):int(ymin+height), int(xmin):int(xmin+width)] = 1
+            num = pos_attribution[torch.where(bb_mask == 1)].sum()
+            den = pos_attribution.sum()
+            if den < 1e-7:
+                loss = 1-num
+            else:
+                loss = 1-num/den
+            loss_list.append(loss)
+        return sum(loss_list)/len(loss_list)
+
+
+class PseudoEnergyLoss_multilabel:
+
+    def __init__(self):
+        super().__init__()
+        self.only_positive = False
+        self.binarize = False
+
+    def __call__(self, attributions, psydo_mask):
+        """
+        Compute localization loss with psydo mask.
+        """
+        loss_list = []
+        for i in range(len(psydo_mask)):
+            pos_attribution = attributions[i].clamp(min=0)  # original code
+            mask = torch.from_numpy(psydo_mask[i]).unsqueeze(0)
+            num = pos_attribution[torch.where(mask == 1)].sum()
+            den = pos_attribution.sum()
+            if den < 1e-7:
+                loss = 1 - num
+            else:
+                loss = 1 - num / den
+            loss_list.append(loss)
+        return sum(loss_list) / len(loss_list)
+
+
+
+
+
 
 
 class EnergyPointingGameBBMultipleLoss:

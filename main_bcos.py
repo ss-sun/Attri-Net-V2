@@ -11,21 +11,24 @@ def bcos_resnet_get_parser():
     parser = argparse.ArgumentParser()
 
     # Experiment configuration.
+    parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
+
     parser.add_argument('--exp_name', type=str, default='bcos_resnet')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
+
     parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray'])  # will change to color if dataset is airogs_color
 
     parser.add_argument('--guidance_mode', type=str, default='pseudo_mask',
                         choices=['bbox','pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
+
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=0, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=8, help='mini-batch size')
-
-    parser.add_argument("--localization_loss_lambda", type=float, default=1.0, help="Lambda to use to weight localization loss.")
+    parser.add_argument("--lambda_localizationloss", type=float, default=1.0, help="Lambda to use to weight localization loss.")
     # Training configuration.
     parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
@@ -37,7 +40,7 @@ def bcos_resnet_get_parser():
     parser.add_argument('--test_model_path', type=str, default='/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet', help='path of the models')
 
     # Miscellaneous.
-    parser.add_argument('--use_wandb', type=str2bool, default=True)
+    parser.add_argument('--use_wandb', type=str2bool, default=False)
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
 
     return parser
