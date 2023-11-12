@@ -15,7 +15,7 @@ from tqdm import tqdm
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
-from eval_utils import get_weighted_map, draw_BB, draw_hit
+from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples
 from pycocotools import mask
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict
 
@@ -38,7 +38,7 @@ class pixel_sensitivity_analyser():
         os.makedirs(self.result_dir, exist_ok=True)
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
-        self.draw = False
+        self.draw = True
         if self.dataset == "chexpert":
             gt_seg_file = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
             with open(gt_seg_file) as json_file:
@@ -189,12 +189,17 @@ class pixel_sensitivity_analyser():
                     attr_raw = self.solver.get_attributes(img, label_idx)
                     attr_raw = to_numpy(attr_raw).squeeze()
 
-
                     if attr_method == 'attri-net':
                         attr = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
                     else:
                         attr = attr_raw
                     gt_mask = self.create_mask_fromBB(img_size=attr.shape, bbox=bbox)
+
+
+                    if self.draw:
+                        prefix = img_id + '_' + attr_method + '_' + disease
+                        vis_samples(src_img=img, attr=attr, gt_annotation=gt_mask, prefix=prefix, output_dir= self.plots_dir)
+
                     score = self.get_EPG_score(attr, gt_mask)
                     EPG_score[disease].append(score)
 
@@ -335,13 +340,6 @@ class pixel_sensitivity_analyser():
             json.dump([ {"hits": hits, "total": total, "hits/total": hits/total}, samples_per_disease, hits_per_disease, pixel_localization_accuracy], json_file, indent=4)
 
         return pixel_localization_accuracy
-
-
-
-
-
-
-
 
 
 
@@ -571,9 +569,9 @@ if __name__ == "__main__":
         results = main(params)
         results_dict[model_name] = results
     print(results_dict)
-
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
     file_name = "vindr_cxr_bbox_lambda_results.json"
-    output_path = os.path.join("./results", file_name)
+    output_path = os.path.join(out_dir, file_name)
 
     with open(output_path, 'w') as json_file:
         json.dump(results_dict, json_file, indent=4)
