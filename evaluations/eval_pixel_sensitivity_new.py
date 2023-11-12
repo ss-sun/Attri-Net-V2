@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
 import json
 import numpy as np
 import torch

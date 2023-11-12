@@ -133,3 +133,5 @@ def draw_hit(pos, attr_map, gt_annotation, prefix, output_dir, gt="bbox"):
         attr_img.paste(img, (0, 0), img)
         # src_img.show()
         attr_img.save(os.path.join(output_dir, prefix + '.jpg'))
+
+
