@@ -7,12 +7,11 @@ import torch
 import random
 import cv2
 import argparse
-from train_utils import prepare_datamodule
+from train_utils import prepare_datamodule, to_numpy
 from solvers.resnet_solver import resnet_solver
 # from solvers.attrinet_solver import task_switch_solver
 from solvers.attrinet_solver_energyloss import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
-from train_utils import to_numpy
 from tqdm import tqdm
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -20,6 +19,14 @@ from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples
 from pycocotools import mask
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict
+
+
+
+
+
+
+
+
 
 
 

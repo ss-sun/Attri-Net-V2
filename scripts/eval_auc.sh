@@ -26,8 +26,8 @@ echo -e "---------------------------------\n"
 
 # Due to a potential bug, we need to manually load our bash configurations first
 source /mnt/qb/home/baumgartner/sun22/.bashrc
+cd /mnt/qb/work/baumgartner/sun22/github_projects/tmi
 
-cd /mnt/qb/work/baumgartner/sun22/project/tmi
 
 # Next activate the conda environment 
 conda activate tt_interaction
