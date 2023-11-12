@@ -62,7 +62,7 @@ def create_mask_fromBB(img_size, bbox):
 
 
 
-def vis_samples(src_img, attr, gt_annotation, prefix, output_dir):
+def vis_samples(src_img, attr, dests, gt_annotation, prefix, output_dir):
     gt_mask = gt_annotation
     src_img = to_numpy(src_img * 0.5 + 0.5).squeeze()
     src_img = Image.fromarray(src_img * 255).convert('RGB')
@@ -71,15 +71,25 @@ def vis_samples(src_img, attr, gt_annotation, prefix, output_dir):
     mask_img = Image.fromarray(rgb_mask).convert('RGB')
     mask_img.putalpha(50)
     src_img.paste(mask_img, (0, 0), mask_img)
-    src_img.show()
+    # src_img.show()
     src_img.save(os.path.join(output_dir, prefix + '_src.jpg'))
 
     attr = to_numpy(-attr * 0.5 + 0.5).squeeze()
     attri_img = plt.cm.bwr(attr) # use bwr color map, here negative values are blue, positive values are red, 0 is white. need to convert to value (0,1), negative values corrsponding to (0-0.5), positive to (0.5,1), white=0.5
     attri_img = Image.fromarray((attri_img * 255).astype(np.uint8)).convert('RGB')
     attri_img.paste(mask_img, (0, 0), mask_img)
-    attri_img.show()
+    # attri_img.show()
     attri_img.save(os.path.join(output_dir, prefix + '_attri.jpg'))
+
+    dest_img = to_numpy(dests * 0.5 + 0.5).squeeze()
+    dest_img = Image.fromarray(dest_img * 255).convert('RGB')
+    rgb_mask = np.zeros((gt_mask.shape[0], gt_mask.shape[1], 3), dtype=np.uint8)
+    rgb_mask[:, :, 1] = gt_mask * 255
+    mask_img = Image.fromarray(rgb_mask).convert('RGB')
+    mask_img.putalpha(50)
+    dest_img.paste(mask_img, (0, 0), mask_img)
+    # dest_img.show()
+    dest_img.save(os.path.join(output_dir, prefix + '_dest.jpg'))
 
 
 

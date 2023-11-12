@@ -186,7 +186,7 @@ class pixel_sensitivity_analyser():
                     img = data["img"]
                     bbox = data["BBox"]
                     img = torch.from_numpy(img[None])
-                    attr_raw = self.solver.get_attributes(img, label_idx)
+                    dests, attr_raw = self.solver.get_attributes(img, label_idx)
                     attr_raw = to_numpy(attr_raw).squeeze()
 
                     if attr_method == 'attri-net':
@@ -198,7 +198,7 @@ class pixel_sensitivity_analyser():
 
                     if self.draw:
                         prefix = img_id + '_' + attr_method + '_' + disease
-                        vis_samples(src_img=img, attr=attr, gt_annotation=gt_mask, prefix=prefix, output_dir= self.plots_dir)
+                        vis_samples(src_img=img, attr=attr, dests = dests, gt_annotation=gt_mask, prefix=prefix, output_dir= self.plots_dir)
 
                     score = self.get_EPG_score(attr, gt_mask)
                     EPG_score[disease].append(score)
