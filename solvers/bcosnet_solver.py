@@ -18,7 +18,7 @@ class bcos_resnet_solver(object):
     # Train and test ResNet50.
     def __init__(self, exp_configs, data_loader):
         # self.debug = exp_configs.debug
-        self.debug = False
+        self.debug = exp_configs.debug
         self.print_loss = False
         self.exp_configs = exp_configs
         self.TRAIN_DISEASES = exp_configs.train_diseases
