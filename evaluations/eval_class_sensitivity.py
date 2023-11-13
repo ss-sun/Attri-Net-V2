@@ -202,7 +202,11 @@ def argument_parser():
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs'])
+    parser.add_argument('--img_mode', type=str, default='color',
+                        choices=['color', 'gray'])  # will change to color if dataset is airogs_color
+    parser.add_argument('--dataset_idx', type=int, default=5,
+                        help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs'])
     parser.add_argument("--batch_size", default=8,
                         type=int, help="Batch size for the data loader.")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
@@ -215,6 +219,9 @@ def get_arguments():
     from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict
     parser = argument_parser()
     exp_configs = parser.parse_args()
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
+                'contam20', 'contam50']
+    exp_configs.dataset = datasets[exp_configs.dataset_idx]
 
     if exp_configs.exp_name == 'resnet':
         exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]

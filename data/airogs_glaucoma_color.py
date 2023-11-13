@@ -116,13 +116,13 @@ class AIROGS_color_fundusDataModule(LightningDataModule):
         return df
 
     def train_dataloader(self, batch_size, shuffle=True):
-        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def valid_dataloader(self, batch_size, shuffle=False):
-        return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def test_dataloader(self, concat_testset=False, batch_size=1, shuffle=False):
-        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):

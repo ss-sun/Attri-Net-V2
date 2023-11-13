@@ -17,7 +17,8 @@ from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
 class bcos_resnet_solver(object):
     # Train and test ResNet50.
     def __init__(self, exp_configs, data_loader):
-        self.debug = exp_configs.debug
+        # self.debug = exp_configs.debug
+        self.debug = False
         self.print_loss = False
         self.exp_configs = exp_configs
         self.TRAIN_DISEASES = exp_configs.train_diseases
@@ -25,8 +26,8 @@ class bcos_resnet_solver(object):
         self.use_wandb = exp_configs.use_wandb
         self.dataloaders = data_loader
         self.img_mode = exp_configs.img_mode
-        self.lambda_loc = exp_configs.lambda_localizationloss
-        self.guidance_mode = exp_configs.guidance_mode
+
+
 
 
         if exp_configs.dataset == "vindr_cxr_withBB":
@@ -38,6 +39,8 @@ class bcos_resnet_solver(object):
             self.device = torch.device("cpu")
 
         if exp_configs.mode == "train":
+            self.lambda_loc = exp_configs.lambda_localizationloss
+            self.guidance_mode = exp_configs.guidance_mode
             self.img_size = exp_configs.image_size
             self.epochs = exp_configs.epochs
             self.lr = exp_configs.lr
