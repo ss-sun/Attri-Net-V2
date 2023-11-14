@@ -149,7 +149,7 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
         train_df = pd.read_csv(self.train_csv_file)
         test_df = pd.read_csv(self.test_csv_file)
         print('len(train_df): ',len(train_df))
-        print('len(train_df): ',len(test_df))
+        print('len(test_df): ',len(test_df))
         self.diagnoses = np.unique(np.asarray(train_df['class_name'].tolist())).tolist()
 
         # Preprocess csv file

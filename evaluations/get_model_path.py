@@ -13,11 +13,21 @@ def filt_files(src_dir, keywords):
 
 
 if __name__ == '__main__':
-    src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
-    keywords = ["attri-net2023-11-06", "vindr_cxr_withBB", "--l_loc="]
+    # src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
+    # keywords = ["attri-net2023-11-06", "vindr_cxr_withBB", "--l_loc="]
+
+    src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet"
+    keywords = ["bcos_resnet2023-11-11", "20:38", "vindr_cxr_withBB", "lambda_localizationloss="]
+
     pathes = filt_files(src_dir, keywords)
     for path in pathes:
         print(path)
+
+
+
+# "bcos_resnet2023-11-11 20:38:18-vindr_cxr_withBB-bs=8-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.05"
+
+
 
     # results_dict = {}
     # for i in range(1, 11):

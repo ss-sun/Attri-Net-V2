@@ -7,6 +7,10 @@ from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
 from solvers.attrinet_solver import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
+from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict
+import json
+import datetime
+
 
 def str2bool(v):
     return v.lower() in ('true')
@@ -28,14 +32,15 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
+    parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
     parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--img_mode', type=str, default='color',
+    parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=5,
+    parser.add_argument('--dataset_idx', type=int, default=6,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     # parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
@@ -47,15 +52,17 @@ def argument_parser():
     return parser
 
 
-def get_arguments():
-    parser = argument_parser()
-    opts = parser.parse_args()
+def update_attrinet_params(opts):
 
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
-                'contam20', 'contam50']
-    opts.dataset = datasets[opts.dataset_idx]
-    if 'color' in opts.dataset:
-        opts.img_mode = 'color'
+    # Configurations of networks
+    opts.image_size = 320
+    opts.n_fc = 8
+    opts.n_ones = 20
+    opts.num_out_channels = 1
+    opts.lgs_downsample_ratio = 32
+
+    return opts
+
 
     # change the path to your own path.
     # resnet_model_path_dict = {
@@ -70,51 +77,53 @@ def get_arguments():
     #     "vindr_cxr": "/path/to/your/attrinet_model/on/vindr_cxr"
     # }
 
-    resnet_model_path_dict = {
-        "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-07-28 13:27:38-chexpert--official_datasplit-orientation=Frontal-augmentation=previous-bs=4-lr=0.0001-weight_decay=1e-05",
-        "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/repo_exps/resnet/resnet2023-04-13 18:16:22-nih_chestxray-bs=8-lr=0.0001-weight_decay=1e-05",
-        "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/repo_exps/resnet/resnet2023-04-13 18:16:34-vindr_cxr-bs=8-lr=0.0001-weight_decay=1e-05",
-        "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-09-22 16:20:52-skmtea-bs=8-lr=0.0001-weight_decay=1e-05",
-        "airogs_color": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-11-08 10:59:24-airogs_color-bs=8-lr=0.0001-weight_decay=1e-05",
-    }
+    # resnet_model_path_dict = {
+    #     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-07-28 13:27:38-chexpert--official_datasplit-orientation=Frontal-augmentation=previous-bs=4-lr=0.0001-weight_decay=1e-05",
+    #     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/repo_exps/resnet/resnet2023-04-13 18:16:22-nih_chestxray-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/repo_exps/resnet/resnet2023-04-13 18:16:34-vindr_cxr-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-09-22 16:20:52-skmtea-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "airogs_color": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-11-08 10:59:24-airogs_color-bs=8-lr=0.0001-weight_decay=1e-05",
+    # }
+    #
+    # bcos_resnet_model_path_dict = {
+    #     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:18:35-chexpert-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:19:08-nih_chestxray-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:17:29-vindr_cxr-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-22 16:24:51-skmtea-bs=8-lr=0.0001-weight_decay=1e-05",
+    #     "airogs_color":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-08 11:32:21-airogs_color-bs=8-lr=0.0001-weight_decay=1e-05",
+    # }
+    #
+    #
+    # attrinet_model_path_dict = {
+    #     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-08-01 18:43:37--chexpert--official_datasplit-orientation=Frontal-image_size=320-augmentation=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
+    #     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-14 10:57:38--nih_chestxray--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
+    #     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-13 18:10:38--vindr_cxr--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
+    #     "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-09-22 13:19:07--skmtea--bs=4--lg_ds=32--l_cri=1.0--l1=500.0--l2=1000.0--l3=500.0--l_ctr=0.01",
+    #     "airogs_color": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-09 11:46:23--airogs_color--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=1--seed=42",
+    # }
 
-    bcos_resnet_model_path_dict = {
-        "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:18:35-chexpert-bs=8-lr=0.0001-weight_decay=1e-05",
-        "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:19:08-nih_chestxray-bs=8-lr=0.0001-weight_decay=1e-05",
-        "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-02 20:17:29-vindr_cxr-bs=8-lr=0.0001-weight_decay=1e-05",
-        "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-09-22 16:24:51-skmtea-bs=8-lr=0.0001-weight_decay=1e-05",
-        "airogs_color":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-08 11:32:21-airogs_color-bs=8-lr=0.0001-weight_decay=1e-05",
-    }
 
-
-    attrinet_model_path_dict = {
-        "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-08-01 18:43:37--chexpert--official_datasplit-orientation=Frontal-image_size=320-augmentation=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
-        "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-14 10:57:38--nih_chestxray--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
-        "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/repo_exps/attri-net/attri-net2023-04-13 18:10:38--vindr_cxr--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01",
-        "skmtea": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-09-22 13:19:07--skmtea--bs=4--lg_ds=32--l_cri=1.0--l1=500.0--l2=1000.0--l3=500.0--l_ctr=0.01",
-        "airogs_color": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-11-09 11:46:23--airogs_color--process_mask=previous--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--l_loc=1--seed=42",
-    }
-
-
-    if opts.exp_name == 'resnet':
-        opts.model_path = resnet_model_path_dict[opts.dataset]
-        print("evaluate resnet model: " + opts.model_path)
-
-    if opts.exp_name == 'bcos_resnet':
-        opts.model_path = bcos_resnet_model_path_dict[opts.dataset]
-        print("evaluate resnet model: " + opts.model_path)
-
-    if opts.exp_name == 'attri-net':
-        opts.model_path = attrinet_model_path_dict[opts.dataset]
-        print("evaluate attri-net model: " + opts.model_path)
-
-        # Configurations of networks
-        opts.image_size = 320
-        opts.n_fc = 8
-        opts.n_ones = 20
-        opts.num_out_channels = 1
-        opts.lgs_downsample_ratio = 32
-    return opts
+    #
+    # if 'resnet' in opts.exp_name and "bcos_resnet" not in opts.exp_name:
+    #     opts.model_path = resnet_model_path_dict[opts.dataset]
+    #     print("evaluate resnet model: " + opts.model_path)
+    #
+    # if 'bcos_resnet' in opts.exp_name:
+    #     opts.model_path = bcos_resnet_model_path_dict[opts.dataset]
+    #     print("evaluate resnet model: " + opts.model_path)
+    #
+    # if 'attri-net' in opts.exp_name:
+    #     opts.model_path = attrinet_model_path_dict[opts.dataset]
+    #     print("evaluate attri-net model: " + opts.model_path)
+    #
+    #     # Configurations of networks
+    #     opts.image_size = 320
+    #     opts.n_fc = 8
+    #     opts.n_ones = 20
+    #     opts.num_out_channels = 1
+    #     opts.lgs_downsample_ratio = 32
+    #
+    # return opts
 
 
 def prep_solver(datamodule, exp_configs):
@@ -151,10 +160,39 @@ def main(config):
     datamodule = prepare_datamodule(config, dataset_dict, data_default_params)
     solver = prep_solver(datamodule, config)
     analyser = classification_analyser(solver)
-    analyser.run()
+    result = analyser.run()
+    return result
 
 
 if __name__ == "__main__":
 
-    params = get_arguments()
-    main(params)
+
+    # set the variables here:
+    evaluated_models = bcos_vindr_with_guidance_dict
+    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"bcos_vindr_with_guidance_dict"+".json"
+    # set above variables
+
+    parser = argument_parser()
+    opts = parser.parse_args()
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
+                'contam20', 'contam50']
+    opts.dataset = datasets[opts.dataset_idx]
+    if 'color' in opts.dataset:
+        opts.img_mode = 'color'
+
+    results_dict = {}
+    for key, value in evaluated_models.items():
+        model_path = value
+        print("Now evaluating model: " + model_path)
+        opts.model_path = model_path
+        if 'attri-net' in model_path:
+            opts = update_attrinet_params(opts)
+        results = main(opts)
+        results_dict[key] = results
+    print(results_dict)
+
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
+    output_path = os.path.join(out_dir, file_name)
+
+    with open(output_path, 'w') as json_file:
+        json.dump(results_dict, json_file, indent=4)

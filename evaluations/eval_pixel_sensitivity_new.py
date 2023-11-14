@@ -18,14 +18,8 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples
 from pycocotools import mask
-from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict
-
-
-
-
-
-
-
+from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict
+import datetime
 
 
 
@@ -455,63 +449,77 @@ def argument_parser():
     return parser
 
 
-def update_arguments():
-    #from model_dict import resnet_models, attrinet_models
 
-    if exp_configs.exp_name == 'resnet_cls':
-        exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+def update_attrinet_params(opts):
 
-    if exp_configs.exp_name == 'bcos_resnet':
-        exp_configs.model_path = bcos_resnet_model_path_dict[exp_configs.dataset]
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+    # Configurations of networks
+    opts.image_size = 320
+    opts.n_fc = 8
+    opts.n_ones = 20
+    opts.num_out_channels = 1
+    opts.lgs_downsample_ratio = 32
 
-    if exp_configs.exp_name == 'attri-net':
-        print("evaluating our model")
-        # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask + "_" + str(exp_configs.lambda_localizationloss)]
-        print("evaluate model: " + exp_configs.model_path)
-
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-        # configurations of generator
-        exp_configs.image_size = 320
-        exp_configs.generator_type = 'stargan'
-        exp_configs.deep_supervise = False
-
-        # configurations of latent code generator
-        exp_configs.n_fc = 8
-        exp_configs.n_ones = 20
-        exp_configs.num_out_channels = 1
-
-        # configurations of classifiers
-        exp_configs.lgs_downsample_ratio = 32
-
-    return exp_configs
+    return opts
 
 
-def update_arguments_evaluate_lambdas(model_name):
 
-    if exp_configs.exp_name == 'attri-net':
-        print("evaluating our model")
-        # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-        exp_configs.model_path = attrinet_vindrBB_different_lambda_dict[model_name]
-        print("evaluate model: " + exp_configs.model_path)
-
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-        # configurations of generator
-        exp_configs.image_size = 320
-        exp_configs.generator_type = 'stargan'
-        exp_configs.deep_supervise = False
-
-        # configurations of latent code generator
-        exp_configs.n_fc = 8
-        exp_configs.n_ones = 20
-        exp_configs.num_out_channels = 1
-
-        # configurations of classifiers
-        exp_configs.lgs_downsample_ratio = 32
-
-    return exp_configs
+# def update_arguments():
+#     #from model_dict import resnet_models, attrinet_models
+#
+#     if exp_configs.exp_name == 'resnet_cls':
+#         exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]
+#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+#
+#     if exp_configs.exp_name == 'bcos_resnet':
+#         exp_configs.model_path = bcos_resnet_model_path_dict[exp_configs.dataset]
+#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+#
+#     if exp_configs.exp_name == 'attri-net':
+#         print("evaluating our model")
+#         # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+#         exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask + "_" + str(exp_configs.lambda_localizationloss)]
+#         print("evaluate model: " + exp_configs.model_path)
+#
+#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+#         # configurations of generator
+#         exp_configs.image_size = 320
+#         exp_configs.generator_type = 'stargan'
+#         exp_configs.deep_supervise = False
+#
+#         # configurations of latent code generator
+#         exp_configs.n_fc = 8
+#         exp_configs.n_ones = 20
+#         exp_configs.num_out_channels = 1
+#
+#         # configurations of classifiers
+#         exp_configs.lgs_downsample_ratio = 32
+#
+#     return exp_configs
+#
+#
+# def update_arguments_evaluate_lambdas(model_name):
+#
+#     if exp_configs.exp_name == 'attri-net':
+#         print("evaluating our model")
+#         # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
+#         exp_configs.model_path = attrinet_vindrBB_different_lambda_dict[model_name]
+#         print("evaluate model: " + exp_configs.model_path)
+#
+#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
+#         # configurations of generator
+#         exp_configs.image_size = 320
+#         exp_configs.generator_type = 'stargan'
+#         exp_configs.deep_supervise = False
+#
+#         # configurations of latent code generator
+#         exp_configs.n_fc = 8
+#         exp_configs.n_ones = 20
+#         exp_configs.num_out_channels = 1
+#
+#         # configurations of classifiers
+#         exp_configs.lgs_downsample_ratio = 32
+#
+#     return exp_configs
 
 
 
@@ -568,19 +576,35 @@ def main(config):
 
 
 if __name__ == "__main__":
-    parser = argument_parser()
-    exp_configs = parser.parse_args()
-    results_dict = {}
-    for key, value in attrinet_vindrBB_different_lambda_dict.items():
-        model_name = key
-        print(model_name)
-        params = update_arguments_evaluate_lambdas(model_name)
-        results = main(params)
-        results_dict[model_name] = results
-    print(results_dict)
-    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
-    file_name = "vindr_cxr_bbox_lambda_results.json"
-    output_path = os.path.join(out_dir, file_name)
 
+    # set the variables here:
+    evaluated_models = bcos_vindr_with_guidance_dict
+    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "bcos_vindr_with_guidance_dict" + ".json"
+    # set above variables
+
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
+    parser = argument_parser()
+    opts = parser.parse_args()
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
+                'contam20', 'contam50']
+    opts.dataset = datasets[opts.dataset_idx]
+    if 'color' in opts.dataset:
+        opts.img_mode = 'color'
+
+
+    results_dict = {}
+    for key, value in evaluated_models.items():
+        model_path = value
+        print("Now evaluating model: " + model_path)
+        opts.model_path = model_path
+        if 'attri-net' in model_path:
+            opts = update_attrinet_params(opts)
+        results = main(opts)
+        results_dict[key] = results
+
+
+
+    print(results_dict)
+    output_path = os.path.join(out_dir, file_name)
     with open(output_path, 'w') as json_file:
         json.dump(results_dict, json_file, indent=4)

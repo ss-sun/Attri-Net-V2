@@ -74,3 +74,10 @@ glaucoma_dict={
     "resnet_airogs_color": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-11-08 10:59:24-airogs_color-bs=8-lr=0.0001-weight_decay=1e-05",
 }
 
+
+bcos_vindr_with_guidance_dict={
+    "lambda1":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-11 20:38:25-vindr_cxr_withBB-bs=8-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=1",
+    "lambda0.5":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-11 20:38:25-vindr_cxr_withBB-bs=8-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.5",
+    "lambda0.1":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-11 20:38:25-vindr_cxr_withBB-bs=8-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+    "lambda0.05":"/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-11-11 20:38:18-vindr_cxr_withBB-bs=8-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.05",
+}

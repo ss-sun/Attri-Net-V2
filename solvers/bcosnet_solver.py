@@ -27,18 +27,13 @@ class bcos_resnet_solver(object):
         self.dataloaders = data_loader
         self.img_mode = exp_configs.img_mode
 
-
-
-
-        if exp_configs.dataset == "vindr_cxr_withBB":
-            assert self.guidance_mode == "bbox"
-
         if self.use_gpu and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device = torch.device("cpu")
 
         if exp_configs.mode == "train":
+
             self.lambda_loc = exp_configs.lambda_localizationloss
             self.guidance_mode = exp_configs.guidance_mode
             self.img_size = exp_configs.image_size
@@ -50,6 +45,8 @@ class bcos_resnet_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
 
+            if exp_configs.dataset == "vindr_cxr_withBB":
+                assert self.guidance_mode == "bbox"
             if self.guidance_mode == "pseudo_mask":
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss = PseudoEnergyLoss_multilabel()
