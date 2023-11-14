@@ -36,7 +36,7 @@ conda activate tt_interaction
 
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
-python3 main_resnet.py --img_mode 'color' --dataset "airogs_color"
+python3 main_resnet.py --img_mode 'color' --dataset_idx 5 --use_wandb "False"
 echo "---------------------------------"
 
 
