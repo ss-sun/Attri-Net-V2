@@ -13,56 +13,56 @@ from PIL import Image, ImageDraw
 
 
 
-# class Vindr_CXR_BBOX(Dataset):
-#     def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_style="single-label"):
-#         self.image_dir = image_dir
-#         self.df = df
-#         self.TRAIN_DISEASES = train_diseases
-#         self.transforms = transforms
-#         self.img_size = img_size
-#         self.lbl_type = lbl_style
-#
-#     def __len__(self):
-#         return len(self.df)
-#         # return len(self.image_list)
-#
-#     def __getitem__(self, idx):
-#
-#         data = {}
-#         if self.lbl_type == "single-label":
-#             img_id = self.df.iloc[idx]['image_id']
-#             img_path = os.path.join(self.image_dir, img_id + '.png')
-#             img = Image.open(img_path)  # value (0,255)
-#             if self.transforms is not None:
-#                 img = self.transforms(img)  # return image in range (0,1)
-#             img = normalize_image(img)
-#             img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
-#             data['img'] = img
-#
-#             label = np.zeros(len(self.TRAIN_DISEASES))
-#             bbox = np.zeros(4)
-#
-#             lesion_type = self.df.iloc[idx]['class_name']
-#             if lesion_type in self.TRAIN_DISEASES:
-#                 disease_idx = self.TRAIN_DISEASES.index(lesion_type)
-#                 label[disease_idx] = 1
-#                 # note: the x,y coordinates of the bounding box corrspond to the top left corner of the bounding box, and the width and height of the bounding box.
-#                 x_min = int(self.df.iloc[idx]['x_min'])  # original 'x_min' is the width coordinate of the bounding box
-#                 y_min = int(self.df.iloc[idx]['y_min'])  # original 'y_min' is the height coordinate of the bounding box
-#                 x_max = int(self.df.iloc[idx]['x_max'])
-#                 y_max = int(self.df.iloc[idx]['y_max'])
-#                 x = x_min
-#                 y = y_min
-#                 w = x_max - x_min
-#                 h = y_max - y_min
-#                 bbox = np.array([x, y, w, h])  # change bbox to [x_min, y_min, width, height]
-#
-#             data['label'] = label
-#             data['BBox'] = bbox
-#
-#
-#
-#         return data
+class Vindr_CXR_BBOX_TEST(Dataset):
+    # this dataset is only used for pixel sensitivity analysis.
+    # the diffierence between this dataset and Vindr_CXR_BBOX is that this dataset does not provide bbox for multi-labels.
+    # it is consistent with the original Vindr_CXR dataset and NIH bbox data with format img_id, class_name, x_min, y_min, x_max, y_max.
+
+    def __init__(self, image_dir, df, train_diseases, transforms, img_size, lbl_style="single-label"):
+        self.image_dir = image_dir
+        self.df = df
+        self.TRAIN_DISEASES = train_diseases
+        self.transforms = transforms
+        self.img_size = img_size
+        self.lbl_type = lbl_style
+
+    def __len__(self):
+        return len(self.df) # length of the dataframe, but not the total number of unique images. because one image may have multiple labels.
+
+    def __getitem__(self, idx):
+
+        data = {}
+        if self.lbl_type == "single-label":
+            img_id = self.df.iloc[idx]['image_id']
+            img_path = os.path.join(self.image_dir, img_id + '.png')
+            img = Image.open(img_path)  # value (0,255)
+            if self.transforms is not None:
+                img = self.transforms(img)  # return image in range (0,1)
+            img = normalize_image(img)
+            img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+            data['img'] = img
+
+            label = np.zeros(len(self.TRAIN_DISEASES))
+            bbox = np.zeros(4)
+
+            lesion_type = self.df.iloc[idx]['class_name']
+            if lesion_type in self.TRAIN_DISEASES:
+                disease_idx = self.TRAIN_DISEASES.index(lesion_type)
+                label[disease_idx] = 1
+                # note: the x,y coordinates of the bounding box corrspond to the top left corner of the bounding box, and the width and height of the bounding box.
+                x_min = int(self.df.iloc[idx]['x_min'])  # original 'x_min' is the width coordinate of the bounding box
+                y_min = int(self.df.iloc[idx]['y_min'])  # original 'y_min' is the height coordinate of the bounding box
+                x_max = int(self.df.iloc[idx]['x_max'])
+                y_max = int(self.df.iloc[idx]['y_max'])
+                x = x_min
+                y = y_min
+                w = x_max - x_min
+                h = y_max - y_min
+                bbox = np.array([x, y, w, h])  # change bbox to [x_min, y_min, width, height]
+
+            data['label'] = label
+            data['BBox'] = bbox
+        return data
 
 
 
@@ -78,6 +78,7 @@ class Vindr_CXR_BBOX(Dataset):
         self.image_list = np.unique(np.asarray(img_id))
 
     def __len__(self):
+        # total number of unique images. suitable for multi-label classification and guidance.
         return len(self.image_list)
 
     def __getitem__(self, idx):
@@ -180,6 +181,8 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
         self.test_set = Vindr_CXR_BBOX(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES,
                                   transforms=self.data_transforms['test'], img_size=self.img_size)
 
+        self.bbox_test_set = Vindr_CXR_BBOX_TEST(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES,
+                                  transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style = "single-label")
 
         self.single_disease_train_sets = self.create_trainsets()
         self.single_disease_vis_sets = self.create_vissets()
@@ -193,6 +196,9 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
 
     def test_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle)
+
+    def BBox_test_dataloader(self, batch_size, shuffle=False):
+        return DataLoader(self.bbox_test_set, batch_size=batch_size, shuffle=False)
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):
         train_dataloaders = {}

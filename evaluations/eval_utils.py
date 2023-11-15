@@ -81,15 +81,15 @@ def vis_samples(src_img, attr, dests, gt_annotation, prefix, output_dir):
     # attri_img.show()
     attri_img.save(os.path.join(output_dir, prefix + '_attri.jpg'))
 
-    dest_img = to_numpy(dests * 0.5 + 0.5).squeeze()
-    dest_img = Image.fromarray(dest_img * 255).convert('RGB')
-    rgb_mask = np.zeros((gt_mask.shape[0], gt_mask.shape[1], 3), dtype=np.uint8)
-    rgb_mask[:, :, 1] = gt_mask * 255
-    mask_img = Image.fromarray(rgb_mask).convert('RGB')
-    mask_img.putalpha(50)
-    dest_img.paste(mask_img, (0, 0), mask_img)
-    # dest_img.show()
-    dest_img.save(os.path.join(output_dir, prefix + '_dest.jpg'))
+    if dests is not None:
+        dest_img = to_numpy(dests * 0.5 + 0.5).squeeze()
+        dest_img = Image.fromarray(dest_img * 255).convert('RGB')
+        rgb_mask = np.zeros((gt_mask.shape[0], gt_mask.shape[1], 3), dtype=np.uint8)
+        rgb_mask[:, :, 1] = gt_mask * 255
+        mask_img = Image.fromarray(rgb_mask).convert('RGB')
+        mask_img.putalpha(50)
+        dest_img.paste(mask_img, (0, 0), mask_img)
+        dest_img.save(os.path.join(output_dir, prefix + '_dest.jpg'))
 
 
 

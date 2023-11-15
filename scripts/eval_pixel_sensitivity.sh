@@ -36,7 +36,8 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 ./evaluations/eval_pixel_sensitivity_new.py --exp_name attri-net --dataset vindr_cxr
+# python3 ./evaluations/eval_pixel_sensitivity_new.py --exp_name attri-net --dataset vindr_cxr
+python3 ./evaluations/eval_pixel_sensitivity_new.py --exp_name bcos_resnet --dataset_idx 6
 
 echo "---------------------------------"
 
