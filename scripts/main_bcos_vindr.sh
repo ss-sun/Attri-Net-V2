@@ -39,7 +39,7 @@ echo "-------- PYTHON OUTPUT ----------"
 
 # python3 main_bcos.py --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
-python3 main_bcos.py --guidance_mode "bbox" --dataset_idx 6  --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "True"
+python3 main_bcos.py --guidance_mode "bbox" --dataset_idx 6  --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
 echo "---------------------------------"
 

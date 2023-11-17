@@ -138,6 +138,8 @@ def vis_samples(src_img, attr, dests, prefix, output_dir, attr_method):
         attr = to_numpy(attr).squeeze()  # for other attributions, we keep all positive attributions.
         vmax = np.max(attr)
         scaled_attr = attr / vmax # convert to (0,1)
+        if len(scaled_attr.shape) == 3:
+            scaled_attr = np.mean(scaled_attr, axis=0).squeeze()
         attri_img = plt.cm.bwr(scaled_attr * 0.5+0.5)  # use bwr color map, we want negative values are blue, positive values are red, 0 is white. need to convert to value (0,1), negative values corrsponding to (0-0.5), positive to (0.5,1), white=0.5
         attri_img = Image.fromarray((attri_img * 255).astype(np.uint8)).convert('RGB')
         # attri_img.show()
