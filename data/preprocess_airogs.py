@@ -7,7 +7,7 @@ import tqdm as tqdm
 # we scale the image to the size of 512, i.e the minimum dimension of the image is 512. And keep the original aspect ratio.
 # Images from these two datasets have large dimensions that affect the training speed if we scale during training.
 
-def preprocess(src_dir, dest_dir, basesize=336):
+def preprocess_resize(src_dir, dest_dir, basesize=336):
     # Clear dest_dir
     try:
         shutil.rmtree(dest_dir)
@@ -34,4 +34,4 @@ def preprocess(src_dir, dest_dir, basesize=336):
 if __name__ == '__main__':
     src_dir = "/mnt/qb/work/baumgartner/sun22/data/5793241/train"
     dest_dir = "/mnt/qb/work/baumgartner/sun22/data/5793241/train_scaled_336"
-    preprocess(src_dir, dest_dir)
+    preprocess_resize(src_dir, dest_dir)

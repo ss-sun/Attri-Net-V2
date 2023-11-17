@@ -40,7 +40,7 @@ def bcos_resnet_get_parser():
     parser.add_argument('--test_model_path', type=str, default='/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet', help='path of the models')
 
     # Miscellaneous.
-    parser.add_argument('--use_wandb', type=str2bool, default=False)
+    parser.add_argument('--use_wandb', type=str2bool, default=True)
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
 
     return parser
@@ -66,7 +66,7 @@ def main(exp_configs):
     print(exp_configs)
 
     # Prepare data loaders and solver.
-    print("working on resnet")
+    print("working on bcos_resnet")
     data_loader = {}
     data_loader["train"] = datamodule.train_dataloader(batch_size=exp_configs.batch_size, shuffle=True)
     data_loader["valid"] = datamodule.valid_dataloader(batch_size=exp_configs.batch_size, shuffle=False)
@@ -102,6 +102,7 @@ if __name__ == '__main__':
 
     if 'color' in config.dataset:
         config.img_mode = 'color'
+        config.lambda_localizationloss = 0
 
 
     main(config)

@@ -16,8 +16,15 @@ if __name__ == '__main__':
     # src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
     # keywords = ["attri-net2023-11-06", "vindr_cxr_withBB", "--l_loc="]
 
-    src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet"
-    keywords = ["bcos_resnet2023-11-11", "20:38", "vindr_cxr_withBB", "lambda_localizationloss="]
+    # src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet"
+    # keywords = ["bcos_resnet2023-11-11", "20:25", "nih", "lambda_localizationloss="]
+
+    # src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
+    # keywords = ["attri-net2023-11-10", "21:03", "chexpert", "--l_loc="]
+
+    src_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net"
+    keywords = ["attri-net2023-11-10", "21:04:", "nih_chestxray", "--l_loc="]
+
 
     pathes = filt_files(src_dir, keywords)
     for path in pathes:

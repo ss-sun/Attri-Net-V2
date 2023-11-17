@@ -16,9 +16,12 @@ from tqdm import tqdm
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
-from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples
+from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
-from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict
+from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
+    attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
+    bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
+    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict
 import datetime
 
 def str2bool(v):
@@ -34,7 +37,7 @@ class pixel_sensitivity_analyser():
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.result_dir = os.path.join(config.model_path, "pixel_sensitivity_result_dir", self.attr_method)
         os.makedirs(self.result_dir, exist_ok=True)
-        self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots')
+        self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots_pos')
         os.makedirs(self.plots_dir, exist_ok=True)
         self.draw = True
         if self.dataset == "chexpert":
@@ -52,10 +55,8 @@ class pixel_sensitivity_analyser():
             avg_EPG_score = self.compute_EPG_nih_vindr(attr_method)
         if self.dataset == "chexpert":
             avg_EPG_score = self.compute_EPG_chexpert(attr_method)
+
         return avg_EPG_score
-
-
-
 
 
 
@@ -90,10 +91,11 @@ class pixel_sensitivity_analyser():
 
                     img = torch.from_numpy(img[None])
 
-                    if attr_method == 'attri-net':
+                    if attr_method in ['attri-net']:
                         dests, attr_raw = self.solver.get_attributes(img, label_idx)
                         attr_raw = to_numpy(attr_raw).squeeze()
-                        attr = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
+                        attr_weighted = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
+                        attr = np.where(attr_weighted > 0, attr_weighted, 0)
                     else:
                         attr_raw = self.solver.get_attributes(img, label_idx)
                         attr = to_numpy(attr_raw).squeeze()
@@ -104,7 +106,7 @@ class pixel_sensitivity_analyser():
 
                     if self.draw:
                         prefix = img_id + '_' + attr_method + '_' + disease
-                        vis_samples(src_img=img, attr=attr, dests=dests, gt_annotation=gt_mask, prefix=prefix, output_dir= self.plots_dir)
+                        vis_samples_withMask(src_img=img, attr=attr, dests=dests, gt_annotation=gt_mask, prefix=prefix, output_dir= self.plots_dir, attr_method=self.attr_method)
 
 
 
@@ -153,17 +155,26 @@ class pixel_sensitivity_analyser():
                             # samples_per_disease[disease] += 1
                             # total += 1
                             label_idx = self.solver.TRAIN_DISEASES.index(disease)
-                            attr_raw = self.solver.get_attributes(img, label_idx)
-                            attr_raw = to_numpy(attr_raw).squeeze()
 
-                            # process_mask, choices = ['abs(mx)', 'sum(abs(mx))', 'previous']
-
-                            if attr_method == 'attri-net' and self.process_mask != 'sum(abs(mx))':
-                                attr = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
+                            if attr_method in ['attri-net']:
+                                dests, attr_raw = self.solver.get_attributes(img, label_idx)
+                                attr_raw = to_numpy(attr_raw).squeeze()
+                                attr_weighted = get_weighted_map(attr_raw, lgs=self.solver.net_lgs[disease])
+                                attr = np.where(attr_weighted > 0, attr_weighted, 0)
                             else:
-                                attr = attr_raw
+                                attr_raw = self.solver.get_attributes(img, label_idx)
+                                attr = to_numpy(attr_raw).squeeze()
+                                dests = None
+
                             score = self.get_EPG_score(attr, gt_mask)
                             EPG_score[disease].append(score)
+
+                            if self.draw:
+                                prefix = cxr_id + '_' + attr_method + '_' + disease
+                                vis_samples_withMask(src_img=img, attr=attr, dests=dests, gt_annotation=gt_mask,
+                                                   prefix=prefix, output_dir=self.plots_dir,
+                                                   attr_method=self.attr_method)
+
         avg_scores = []
         for disease in self.solver.TRAIN_DISEASES:
             scores = EPG_score[disease]
@@ -178,13 +189,14 @@ class pixel_sensitivity_analyser():
         result_file_path = os.path.join(self.result_dir, "avg_EPG_results.json")
         with open(result_file_path, 'w') as json_file:
             json.dump(avg_EPG_score, json_file, indent=4)
+        return avg_EPG_score
 
 
 
 
-    def get_EPG_score(self, attr_map, gt_annotation):
+    def get_EPG_score(self, attr, gt_annotation):
         # here we only consider the positive contribution. since attribution maps from attri-net are already weighted, therefore, positive value means positive contribution.
-        attr = np.where(attr_map > 0, attr_map, 0)
+        #
         # scale to [0,1]
         attr_max = np.max(attr)
         attr_min = np.min(attr)
@@ -251,15 +263,18 @@ def argument_parser():
     Returns:
         argparse.ArgumentParser:
     """
-    parser = argparse.ArgumentParser(description="classification metric analyser.")
+    parser = argparse.ArgumentParser(description="pixel sensitivitiy metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='bcos_resnet',
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+    parser.add_argument('--guidance_mode', type=str, default='bbox',
+                        choices=['bbox',
+                                 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
     parser.add_argument('--dataset_idx', type=int, default=6,
@@ -328,8 +343,8 @@ def main(config):
 if __name__ == "__main__":
 
     # set the variables here:
-    evaluated_models = bcos_vindr_with_guidance_dict
-    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "bcos_vindr_with_guidance_dict" + ".json"
+    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
     # set above variables
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
@@ -346,6 +361,7 @@ if __name__ == "__main__":
         model_path = value
         print("Now evaluating model: " + model_path)
         opts.model_path = model_path
+        assert opts.dataset in model_path
         if 'attri-net' in model_path:
             opts = update_attrinet_params(opts)
         results = main(opts)

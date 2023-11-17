@@ -5,11 +5,20 @@ import random
 import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
+from solvers.attrinet_solver_energyloss_new import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
+from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict,\
+    attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
+    bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
+    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict
+import datetime
+from eval_utils import get_weighted_map, vis_samples
+import json
+
 
 
 def str2bool(v):
@@ -18,8 +27,9 @@ def str2bool(v):
 
 class class_sensitivity_analyser():
     def __init__(self, solver, config):
+        self.dataset = config.dataset  # different dataset has differnt annotation dataframe format.
         self.solver = solver
-        self.result_dir = config.result_dir
+        self.result_dir = os.path.join(config.model_path, "class_sensitivity_result_dir")
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.best_threshold = {}
         self.attr_method = config.attr_method
@@ -28,9 +38,7 @@ class class_sensitivity_analyser():
         os.makedirs(self.attr_dir, exist_ok=True)
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_class_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
-
-        self.plot = False
-
+        self.draw = True
         print('compute class sensitivity on dataset ' + config.dataset)
         print('use explainer: ' + self.attr_method)
 
@@ -38,16 +46,16 @@ class class_sensitivity_analyser():
         threshold_path = os.path.join(self.result_dir,"best_threshold.txt")
         if os.path.exists(threshold_path):
             print("threshold alreay computed, load threshold")
-            threshold = np.loadtxt(open(threshold_path)).reshape(1,)
+            #threshold = np.loadtxt(open(threshold_path)).reshape(1,)
+            threshold = np.loadtxt(open(threshold_path))
             for c in range(len(self.solver.TRAIN_DISEASES)):
                 disease = self.solver.TRAIN_DISEASES[c]
                 self.best_threshold[disease] = threshold[c]
 
         else:
             self.best_threshold = solver.get_optimal_thresholds(save_result=True, result_dir=self.result_dir)
+
         pred_file = os.path.join(self.result_dir,"test_pred.txt")
-
-
         if os.path.exists(pred_file):
             print("prediction of test set already made")
             self.test_pred = np.loadtxt(os.path.join(self.result_dir,"test_pred.txt"))
@@ -110,23 +118,22 @@ class class_sensitivity_analyser():
             grids[disease] = blocks
         return grids
 
-    def compute_localization_score(self, idx_grids, attr_methods):
+    def compute_localization_score(self, idx_grids, attr_method):
         scores = {}
         mean = 0
-        self.plot = True
-
         for disease in idx_grids.keys():
+            self.draw = True
             score_list = []
             blocks = idx_grids[disease]
             for i in tqdm(range(len(blocks))):
                 if i > 10:
-                    self.plot = False
+                    self.draw = False
                 b = blocks[i]
-                sc = self.compute_sc(b, disease, attr_methods)
+                sc = self.compute_sc(i, b, disease, attr_method)
                 score_list.append(sc)
 
             avg_score = np.mean(np.array(score_list))
-            scores[disease] = avg_score
+            scores[disease] = str(avg_score)
             mean += avg_score
 
         mean = mean / (len(idx_grids.keys()))
@@ -134,38 +141,55 @@ class class_sensitivity_analyser():
 
         return scores
 
+    def get_img_id(self, idx):
+        df = self.solver.test_loader.dataset.df
+        if self.dataset == "nih_chestxray":
+            img_id = df.iloc[idx]['Image Index']
+        if self.dataset == "vindr_cxr_withBB":
+            img_id = self.solver.test_loader.dataset.image_list[idx] # one unique image id may have multiple bounding boxes corresponding to different entries in the dataframe
+        if self.dataset == "chexpert":
+            img_path = df.iloc[idx]['Path'].split('/')
+            img_id = img_path[1]+'_' + img_path[2] + '_' + img_path[3][:-4]
+        return img_id
 
-    def compute_sc(self, index_list, disease, attr_methods):
 
+
+
+    def compute_sc(self, rank, index_list, disease, attr_method):
 
         label_idx = self.solver.TRAIN_DISEASES.index(disease)
         pixel_counts = []
         count = 0
         for idx in index_list:
             data = self.solver.test_loader.dataset[int(idx)]
+            img_id = self.get_img_id(int(idx))
             img = data['img']
             img = torch.from_numpy(img[None])
-            attr = self.solver.get_attributes(img, label_idx)
-            attr = to_numpy(attr).squeeze()
-            if attr_methods in ['attri-net']:
+
+            if attr_method in ['attri-net']:
+                # dests, attr = self.solver.get_attributes(img, label_idx)
+                # attr = to_numpy(attr).squeeze()
+                # sum_pixel = np.sum(abs(attr))
+                dests, attr_raw = self.solver.get_attributes(img, label_idx)
+                '''
+                weighted_map = get_weighted_map(to_numpy(attr_raw).squeeze(), lgs=self.solver.net_lgs[disease])
+                # after multiplying with weighted map, the positive values in weighted map means postive contribution and negative values means negative contribution.
+                attr = np.where(weighted_map > 0, weighted_map, 0)
+                sum_pixel = np.sum(attr)
+                '''
+                attr = to_numpy(attr_raw).squeeze()
                 sum_pixel = np.sum(abs(attr))
-            if attr_methods in ['lime', 'GB', 'GCam', 'shap', 'gifsplanation','bcos']:
+
+            else:
+                attr = self.solver.get_attributes(img, label_idx)
+                dests = None
+                attr = to_numpy(attr).squeeze()
                 sum_pixel = np.sum(attr)
 
-            if self.plot:
-                if attr_methods in ['attri-net']:
-                    attr = attr * 0.5+0.5
-                    attr_img = Image.fromarray((attr * 255).astype(np.uint8))
-                    # attr_img.show()
-                    file_name = 'attri-net_' + str(count) + '_' +  str(idx)
-                    attr_img.save(os.path.join(self.plots_dir, file_name + '.jpg'))
-
-                else:
-                    v_max = np.max(attr)
-                    v_min = np.min(attr)
-                    attr = (attr - v_min) / (v_max - v_min)
-                    attr_img = Image.fromarray((attr * 255).astype(np.uint8))
-                    #attr_img.show()
+            if self.draw:
+                prefix = 'rank' + str(rank) + '_' + str(count) + '_' + img_id + '_' + attr_method + '_' + disease
+                vis_samples(src_img=img, attr=attr, dests=dests, prefix=prefix,
+                            output_dir=self.plots_dir, attr_method=self.attr_method)
             count += 1
             pixel_counts.append(sum_pixel)
 
@@ -182,8 +206,9 @@ class class_sensitivity_analyser():
         # Creating 2*2 blocks
         idx_grids = self.create_grids(2, filter_results, self.train_diseases, num_imgs=200)
         # Compute class sensitivity score.
-        local_score = self.compute_localization_score(idx_grids, attr_methods=self.attr_method)
+        local_score = self.compute_localization_score(idx_grids, attr_method=self.attr_method)
         print(local_score)
+        return local_score
 
 
 
@@ -197,16 +222,20 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
+    parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
     parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--img_mode', type=str, default='color',
+    parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-    parser.add_argument('--dataset_idx', type=int, default=5,
+    parser.add_argument('--guidance_mode', type=str, default='bbox',
+                        choices=['bbox',
+                                 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
+    parser.add_argument('--dataset_idx', type=int, default=6,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs'])
     parser.add_argument("--batch_size", default=8,
                         type=int, help="Batch size for the data loader.")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
@@ -215,35 +244,15 @@ def argument_parser():
     return parser
 
 
-def get_arguments():
-    from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict
-    parser = argument_parser()
-    exp_configs = parser.parse_args()
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
-                'contam20', 'contam50']
-    exp_configs.dataset = datasets[exp_configs.dataset_idx]
+def update_attrinet_params(opts):
 
-    if exp_configs.exp_name == 'resnet':
-        exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]
-        print("evaluate resnet model: " + exp_configs.model_path)
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "result_dir")
-
-    if exp_configs.exp_name == 'bcos_resnet':
-        exp_configs.model_path = bcos_resnet_model_path_dict[exp_configs.dataset]
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "result_dir")
-
-    if exp_configs.exp_name == 'attri-net':
-        exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-        print("evaluate attri-net model: " + exp_configs.model_path)
-        exp_configs.result_dir = os.path.join(exp_configs.model_path, "result_dir")
-        # Configurations of networks
-        exp_configs.image_size = 320
-        exp_configs.n_fc = 8
-        exp_configs.n_ones = 20
-        exp_configs.num_out_channels = 1
-        exp_configs.lgs_downsample_ratio = 32
-
-    return exp_configs
+    # Configurations of networks
+    opts.image_size = 320
+    opts.n_fc = 8
+    opts.n_ones = 20
+    opts.num_out_channels = 1
+    opts.lgs_downsample_ratio = 32
+    return opts
 
 
 def prep_solver(datamodule, exp_configs):
@@ -279,9 +288,37 @@ def main(config):
     datamodule = prepare_datamodule(config, dataset_dict, data_default_params)
     solver = prep_solver(datamodule, config)
     analyser = class_sensitivity_analyser(solver, config)
-    analyser.run()
+    results = analyser.run()
+    return results
 
 
 if __name__ == "__main__":
-    params = get_arguments()
-    main(params)
+    # set the variables here:
+    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
+
+    parser = argument_parser()
+    opts = parser.parse_args()
+    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
+                'contam20', 'contam50']
+    opts.dataset = datasets[opts.dataset_idx]
+    if 'color' in opts.dataset:
+        opts.img_mode = 'color'
+
+    results_dict = {}
+    for key, value in evaluated_models.items():
+        model_path = value
+        print("Now evaluating model: " + model_path)
+        assert opts.dataset in model_path
+        opts.model_path = model_path
+        if 'attri-net' in model_path:
+            opts = update_attrinet_params(opts)
+        results = main(opts)
+        results_dict[key] = results
+
+    print(results_dict)
+
+    output_path = os.path.join(out_dir, file_name)
+    with open(output_path, 'w') as json_file:
+        json.dump(results_dict, json_file, indent=4)

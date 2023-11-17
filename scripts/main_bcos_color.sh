@@ -39,7 +39,7 @@ echo "-------- PYTHON OUTPUT ----------"
 
 # python3 main_bcos.py --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
-python3 main_bcos.py  --img_mode 'color' --guidance_mode 'None' --dataset_idx 5   --use_wandb "False"
+python3 main_bcos.py  --img_mode 'color' --guidance_mode 'None' --dataset_idx 5   --use_wandb "True"
 
 echo "---------------------------------"
 

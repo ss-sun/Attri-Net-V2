@@ -463,67 +463,6 @@ def update_attrinet_params(opts):
 
 
 
-# def update_arguments():
-#     #from model_dict import resnet_models, attrinet_models
-#
-#     if exp_configs.exp_name == 'resnet_cls':
-#         exp_configs.model_path = resnet_model_path_dict[exp_configs.dataset]
-#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-#
-#     if exp_configs.exp_name == 'bcos_resnet':
-#         exp_configs.model_path = bcos_resnet_model_path_dict[exp_configs.dataset]
-#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-#
-#     if exp_configs.exp_name == 'attri-net':
-#         print("evaluating our model")
-#         # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-#         exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset+"_" + exp_configs.process_mask + "_" + str(exp_configs.lambda_localizationloss)]
-#         print("evaluate model: " + exp_configs.model_path)
-#
-#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-#         # configurations of generator
-#         exp_configs.image_size = 320
-#         exp_configs.generator_type = 'stargan'
-#         exp_configs.deep_supervise = False
-#
-#         # configurations of latent code generator
-#         exp_configs.n_fc = 8
-#         exp_configs.n_ones = 20
-#         exp_configs.num_out_channels = 1
-#
-#         # configurations of classifiers
-#         exp_configs.lgs_downsample_ratio = 32
-#
-#     return exp_configs
-#
-#
-# def update_arguments_evaluate_lambdas(model_name):
-#
-#     if exp_configs.exp_name == 'attri-net':
-#         print("evaluating our model")
-#         # exp_configs.model_path = attrinet_model_path_dict[exp_configs.dataset]
-#         exp_configs.model_path = attrinet_vindrBB_different_lambda_dict[model_name]
-#         print("evaluate model: " + exp_configs.model_path)
-#
-#         exp_configs.result_dir = os.path.join(exp_configs.model_path, "pixel_sensitivity_result_dir")
-#         # configurations of generator
-#         exp_configs.image_size = 320
-#         exp_configs.generator_type = 'stargan'
-#         exp_configs.deep_supervise = False
-#
-#         # configurations of latent code generator
-#         exp_configs.n_fc = 8
-#         exp_configs.n_ones = 20
-#         exp_configs.num_out_channels = 1
-#
-#         # configurations of classifiers
-#         exp_configs.lgs_downsample_ratio = 32
-#
-#     return exp_configs
-
-
-
-
 
 def prep_solver(datamodule, exp_configs):
 
