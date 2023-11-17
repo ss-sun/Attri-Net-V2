@@ -26,12 +26,12 @@ def attrinet_get_parser():
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
 
-    parser.add_argument('--guidance_mode', type=str, default='pseudo_mask',
+    parser.add_argument('--guidance_mode', type=str, default='bbox',
                         choices=['bbox', 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=1, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=6, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -80,7 +80,7 @@ def attrinet_get_parser():
     parser.add_argument('--test_model_path', type=str, default=None, help='path of the models')
 
     # Miscellaneous.
-    parser.add_argument('--use_wandb', type=str2bool, default=False)
+    parser.add_argument('--use_wandb', type=str2bool, default=True)
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
 
     return parser

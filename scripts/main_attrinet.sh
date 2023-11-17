@@ -10,7 +10,7 @@
 #SBATCH --error=/mnt/qb/work/baumgartner/sun22/logs/hostname_%j.err   # File to which STDERR will be written
 #SBATCH --mail-type=FAIL           # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=<susu.sun@uni-tuebingen.de>  # Email to which notifications will be sent
-#SBATCH --array=25,30,35,40   #
+#SBATCH --array=0,5,10,15,20   #
 
 # print info about current job
 scontrol show job $SLURM_JOB_ID 
@@ -53,7 +53,7 @@ echo "-------- PYTHON OUTPUT ----------"
 
 # python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
-python3 main_attrinet.py --debug "False" --dataset_idx 1 --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
+python3 main_attrinet.py --debug "False" --guidance_mode 'bbox' --dataset_idx 6 --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
 
 echo "---------------------------------"
