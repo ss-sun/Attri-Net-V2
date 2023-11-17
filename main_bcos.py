@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
     config.dataset = datasets[config.dataset_idx]
-    lambdas = [1, 0.5, 0.1, 0.05]
+    lambdas = [0.02, 0.01, 0.0075, 0.005, 0.0025, 0]
     config.lambda_localizationloss = lambdas[int(config.lambda_localizationloss)-1]
 
     if 'color' in config.dataset:

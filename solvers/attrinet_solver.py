@@ -917,8 +917,8 @@ class task_switch_solver(object):
         disease = self.TRAIN_DISEASES[label_idx]
         task_code = self.latent_z_task[disease].to(self.device)
         input = input.to(self.device)
-        attrs = self.net_g(input, task_code)[1]
-        return attrs
+        dests, attrs = self.net_g(input, task_code)
+        return dests, attrs
 
     def get_probs(self, inputs, label_idx):
         """
@@ -926,7 +926,7 @@ class task_switch_solver(object):
         """
         disease = self.TRAIN_DISEASES[label_idx]
         classifier = self.net_lgs[disease]
-        attrs = self.get_attributes(inputs, label_idx)
+        _, attrs = self.get_attributes(inputs, label_idx)
 
         # pred_logits = classifier(attrs)
         if self.process_mask != "sum(abs(mx))":

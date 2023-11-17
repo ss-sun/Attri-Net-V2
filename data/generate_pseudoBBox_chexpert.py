@@ -36,7 +36,7 @@ def scale_mask(mask, target_size):
 # 522 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
 # 279 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
 
-
+#
 if __name__ == '__main__':
     gt_seg_file_valid = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
     disease_list = ['Cardiomegaly', 'Edema', 'Consolidation', 'Atelectasis', 'Pleural Effusion']
@@ -92,3 +92,4 @@ if __name__ == '__main__':
         json.dump(pseudo_bboxs, json_file)
 
     # save pseudo bboxs and masks
+

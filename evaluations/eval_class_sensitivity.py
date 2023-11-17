@@ -5,8 +5,8 @@ import random
 import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
-# from solvers.attrinet_solver import task_switch_solver
-from solvers.attrinet_solver_energyloss_new import task_switch_solver
+from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver_energyloss_new import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict,\
     attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
     bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
-    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict
+    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict, glaucoma_dict
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -46,8 +46,8 @@ class class_sensitivity_analyser():
         threshold_path = os.path.join(self.result_dir,"best_threshold.txt")
         if os.path.exists(threshold_path):
             print("threshold alreay computed, load threshold")
-            #threshold = np.loadtxt(open(threshold_path)).reshape(1,)
-            threshold = np.loadtxt(open(threshold_path))
+            threshold = np.loadtxt(open(threshold_path)).reshape(1,)
+            # threshold = np.loadtxt(open(threshold_path))
             for c in range(len(self.solver.TRAIN_DISEASES)):
                 disease = self.solver.TRAIN_DISEASES[c]
                 self.best_threshold[disease] = threshold[c]
@@ -150,6 +150,9 @@ class class_sensitivity_analyser():
         if self.dataset == "chexpert":
             img_path = df.iloc[idx]['Path'].split('/')
             img_id = img_path[1]+'_' + img_path[2] + '_' + img_path[3][:-4]
+        if "airogs" in self.dataset:
+            img_id = df.iloc[idx]['challenge_id']
+
         return img_id
 
 
@@ -167,18 +170,18 @@ class class_sensitivity_analyser():
             img = torch.from_numpy(img[None])
 
             if attr_method in ['attri-net']:
-                # dests, attr = self.solver.get_attributes(img, label_idx)
-                # attr = to_numpy(attr).squeeze()
-                # sum_pixel = np.sum(abs(attr))
+
                 dests, attr_raw = self.solver.get_attributes(img, label_idx)
-                '''
+                if attr_raw.shape[1] == 3:
+                    attr_raw = torch.mean(attr_raw, dim=1, keepdim=True)
+
                 weighted_map = get_weighted_map(to_numpy(attr_raw).squeeze(), lgs=self.solver.net_lgs[disease])
                 # after multiplying with weighted map, the positive values in weighted map means postive contribution and negative values means negative contribution.
                 attr = np.where(weighted_map > 0, weighted_map, 0)
                 sum_pixel = np.sum(attr)
-                '''
-                attr = to_numpy(attr_raw).squeeze()
-                sum_pixel = np.sum(abs(attr))
+
+                # attr = to_numpy(attr_raw).squeeze()
+                # sum_pixel = np.sum(abs(attr))
 
             else:
                 attr = self.solver.get_attributes(img, label_idx)
@@ -223,18 +226,18 @@ def argument_parser():
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='attri-net',
+    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='GCam',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--img_mode', type=str, default='gray',
+    parser.add_argument('--img_mode', type=str, default='color',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-    parser.add_argument('--guidance_mode', type=str, default='bbox',
+    parser.add_argument('--guidance_mode', type=str, default='None',
                         choices=['bbox',
                                  'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6,
+    parser.add_argument('--dataset_idx', type=int, default=5,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
     parser.add_argument("--batch_size", default=8,
                         type=int, help="Batch size for the data loader.")
@@ -294,8 +297,13 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+    # evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+
+    evaluated_models = {}
+    evaluated_models["resnet_airogs_color"] = glaucoma_dict["resnet_airogs_color"]
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "glaucoma_dict_resnet_airogs_color" + ".json"
+
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
 
     parser = argument_parser()

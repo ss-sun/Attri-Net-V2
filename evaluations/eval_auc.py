@@ -112,9 +112,9 @@ if __name__ == "__main__":
 
     # evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
     evaluated_models = {}
-    evaluated_models["resnet_airogs_color"] = glaucoma_dict["resnet_airogs_color"]
+    evaluated_models["vagan_color"] = glaucoma_dict["vagan_color"]
 
-    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"glaucoma_dict_resnet_airogs_color"+".json"
+    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"glaucoma_dict_vagan_color"+".json"
 
     # set above variables
 

@@ -107,7 +107,12 @@ def vis_samples_withMask(src_img, attr, dests, gt_annotation, prefix, output_dir
 def vis_samples(src_img, attr, dests, prefix, output_dir, attr_method):
 
     src_img = to_numpy(src_img * 0.5 + 0.5).squeeze()
-    src_img = Image.fromarray(src_img * 255).convert('RGB')
+    if len(src_img.shape) == 2:
+        src_img = Image.fromarray(src_img * 255).convert('RGB')
+    else:
+        src_img = (src_img * 255).astype(np.uint8)
+        src_img = src_img.transpose((1, 2, 0))
+        src_img = Image.fromarray(src_img)
     # src_img.show()
     src_img.save(os.path.join(output_dir, prefix + '_src.jpg'))
 
@@ -120,7 +125,13 @@ def vis_samples(src_img, attr, dests, prefix, output_dir, attr_method):
         attri_img.save(os.path.join(output_dir, prefix + '_attri.jpg'))
 
         dest_img = to_numpy(dests * 0.5 + 0.5).squeeze()
-        dest_img = Image.fromarray(dest_img * 255).convert('RGB')
+        if len(dest_img.shape) == 2:
+            dest_img = Image.fromarray(dest_img * 255).convert('RGB')
+        else:
+            dest_img = (dest_img * 255).astype(np.uint8)
+            dest_img = dest_img.transpose((1, 2, 0))
+            dest_img = Image.fromarray(dest_img)
+        # dest_img.show()
         dest_img.save(os.path.join(output_dir, prefix + '_dest.jpg'))
 
     else:
