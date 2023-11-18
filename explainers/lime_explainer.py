@@ -61,13 +61,13 @@ class lime_explainer():
         #                                          top_labels=None,
         #                                          hide_color=0,
         #                                          num_samples=100)
-        explanation = self.explainer.explain_instance(to_numpy(input[0].permute(1, 2, 0)),
+        explanation = self.explainer.explain_instance(to_numpy(input.squeeze()).transpose(1, 2, 0),
                                                       self.batch_predict,  # Classification function
-                                                      labels=self.labels,  # labels=(0, 1, 2, 3, 4, 5),
-                                                      top_labels=None,
+                                                      # labels=self.labels,  # labels=(0, 1, 2, 3, 4, 5),
+                                                      top_labels=1,
                                                       hide_color=0,
                                                       num_samples=100)
-        temp, mask = explanation.get_image_and_mask(label=target_label_idx, positive_only=positive_only, num_features=5, hide_rest=True)
+        temp, mask = explanation.get_image_and_mask(label=target_label_idx, positive_only=positive_only, num_features=50, hide_rest=True)
         return mask
 
     def batch_predict(self, images):
@@ -84,13 +84,14 @@ class lime_explainer():
         # return probs.detach().cpu().numpy()
 
         preprocess_transform = get_preprocess_transform()
-        images_resized = resize_img(images, img_size=320)
+        # images_resized = resize_img(images, img_size=320)
         self.model.eval()
-        batch = torch.stack(tuple(preprocess_transform(i) for i in images_resized), dim=0)
+        batch = torch.stack(tuple(preprocess_transform(i) for i in images), dim=0)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
         batch = batch.float()
         batch = batch.to(device)
         logits = self.model(batch)
-        probs = F.softmax(logits, dim=1)
+        # probs = F.softmax(logits, dim=1)
+        probs = F.sigmoid(logits)
         return probs.detach().cpu().numpy()

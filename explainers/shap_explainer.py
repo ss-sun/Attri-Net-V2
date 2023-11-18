@@ -14,17 +14,33 @@ import shap
 
 def nhwc_to_nchw(x: torch.Tensor) -> torch.Tensor:
     if x.dim() == 4:
-        x = x if x.shape[1] == 1 else x.permute(0, 3, 1, 2)
+        if x.shape[1] == 1 or x.shape[1] == 3:
+            x = x
+        else:
+            x = x.permute(0, 3, 1, 2)
+        # x = x if x.shape[1] == 1 else x.permute(0, 3, 1, 2)
     elif x.dim() == 3:
-        x = x if x.shape[0] == 1 else x.permute(2, 0, 1)
+        if x.shape[0] == 1 or x.shape[0] == 3:
+            x = x
+        else:
+            x = x.permute(2, 0, 1)
+        # x = x if x.shape[0] == 1 else x.permute(2, 0, 1)
     return x
 
 def nchw_to_nhwc(x: torch.Tensor) -> torch.Tensor:
 
     if x.dim() == 4:
-        x = x if x.shape[3] == 1 else x.permute(0, 2, 3, 1)
+        if x.shape[1] == 1 or x.shape[1] == 3:
+            x = x
+        else:
+            x = x.permute(0, 2, 3, 1)
+        # x = x if x.shape[3] == 1 else x.permute(0, 2, 3, 1)
     elif x.dim() == 3:
-        x = x if x.shape[2] == 1 else x.permute(1, 2, 0)
+        if x.shape[2] == 1 or x.shape[2] == 3:
+            x = x
+        else:
+            x = x.permute(1, 2, 0)
+        # x = x if x.shape[2] == 1 else x.permute(1, 2, 0)
     return x
 
 
@@ -32,7 +48,8 @@ class shap_explainer():
 
     def __init__(self, model, labels):
         # Define a masker that is used to mask out partitions of the input image.
-        masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 1))
+        # masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 1)) # for grayscale
+        masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 3)) # for color images
         self.explainer = shap.Explainer(self.predict, masker_blur, output_names=labels)
         self.model = model
         self.labels = labels
