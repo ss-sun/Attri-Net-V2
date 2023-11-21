@@ -5,8 +5,8 @@ import random
 import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
-# from solvers.attrinet_solver_energyloss_new import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
+from solvers.attrinet_solver_energyloss_new import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
@@ -226,18 +226,18 @@ def argument_parser():
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='shap',
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
-    parser.add_argument('--img_mode', type=str, default='color',
+    parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-    parser.add_argument('--guidance_mode', type=str, default='None',
+    parser.add_argument('--guidance_mode', type=str, default='bbox',
                         choices=['bbox',
                                  'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=5,
+    parser.add_argument('--dataset_idx', type=int, default=6,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
     parser.add_argument("--batch_size", default=8,
                         type=int, help="Batch size for the data loader.")
@@ -297,12 +297,12 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    # evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
 
-    evaluated_models = {}
-    evaluated_models["resnet_airogs_color"] = glaucoma_dict["resnet_airogs_color"]
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "glaucoma_dict_resnet_airogs_color" + ".json"
+    # evaluated_models = {}
+    # evaluated_models["resnet_airogs_color"] = glaucoma_dict["resnet_airogs_color"]
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "glaucoma_dict_resnet_airogs_color" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
 

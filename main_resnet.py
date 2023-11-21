@@ -25,7 +25,7 @@ def resnet_get_parser():
 
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=5, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=6, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')

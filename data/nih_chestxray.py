@@ -359,31 +359,31 @@ if __name__== '__main__':
     print(len(train_loader.dataset))
     print(len(valid_loader.dataset))
     print(len(test_loader.dataset))
-    print(len(train_loader.dataset)+len(valid_loader.dataset)+len(test_loader.dataset))
-
-    for idx in tqdm(range(4)):
-        print(idx)
-        data = BBox_test_dataloader.dataset[idx]
-        img = data['img']
-        label = data['label']
-        bbox = data['BBox']
-        BBmask = create_mask_fromBB(img_size=(320,320), bbox=bbox)
-
-        x_min = int(bbox[0].item())
-        y_min = int(bbox[1].item())
-        x_max = x_min + int(bbox[2].item())
-        y_max = y_min + int(bbox[3].item())
-
-        img = Image.fromarray((np.squeeze(img)*0.5+0.5) * 255).convert('RGB')
-        draw = ImageDraw.Draw(img)
-        draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
-        # draw.rectangle((0, 280, 100, 290), fill=None, outline=(0, 255, 0)) # a test rectangle if not sure about x, y coordinates
-        img.show()
-
-        BBmask = Image.fromarray(BBmask*255).convert('RGB')
-        BBmask.show()
-
-
+    # print(len(train_loader.dataset)+len(valid_loader.dataset)+len(test_loader.dataset))
+    #
+    # for idx in tqdm(range(4)):
+    #     print(idx)
+    #     data = BBox_test_dataloader.dataset[idx]
+    #     img = data['img']
+    #     label = data['label']
+    #     bbox = data['BBox']
+    #     BBmask = create_mask_fromBB(img_size=(320,320), bbox=bbox)
+    #
+    #     x_min = int(bbox[0].item())
+    #     y_min = int(bbox[1].item())
+    #     x_max = x_min + int(bbox[2].item())
+    #     y_max = y_min + int(bbox[3].item())
+    #
+    #     img = Image.fromarray((np.squeeze(img)*0.5+0.5) * 255).convert('RGB')
+    #     draw = ImageDraw.Draw(img)
+    #     draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
+    #     # draw.rectangle((0, 280, 100, 290), fill=None, outline=(0, 255, 0)) # a test rectangle if not sure about x, y coordinates
+    #     img.show()
+    #
+    #     BBmask = Image.fromarray(BBmask*255).convert('RGB')
+    #     BBmask.show()
+    #
+    #
 
 
 

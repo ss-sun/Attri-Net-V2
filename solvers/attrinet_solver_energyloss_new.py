@@ -34,9 +34,6 @@ class task_switch_solver(object):
         self.use_gpu = exp_configs.use_gpu
         self.mode = exp_configs.mode
         self.img_mode = exp_configs.img_mode
-        self.guidance_mode = exp_configs.guidance_mode # "bbox" or "pseudo_mask"
-        if exp_configs.dataset == "vindr_cxr_withBB":
-            assert self.guidance_mode == "bbox"
 
         # Set device.
         if self.use_gpu and torch.cuda.is_available():
@@ -82,6 +79,11 @@ class task_switch_solver(object):
             self.weight_decay_lgs = exp_configs.weight_decay_lgs
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
+
+            self.guidance_mode = exp_configs.guidance_mode  # "bbox" or "pseudo_mask"
+            if exp_configs.dataset == "vindr_cxr_withBB":
+                assert self.guidance_mode == "bbox"
+
             if self.guidance_mode == "pseudo_mask":
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss = PseudoEnergyLoss()

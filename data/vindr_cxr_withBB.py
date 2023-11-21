@@ -349,44 +349,44 @@ if __name__ == '__main__':
     print("len(valid_loader.dataset) in main", len(valid_loader.dataset))
     print("len(test_loader.dataset) in main", len(test_loader.dataset))
 
-    train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
-
-    for disease in vindr_cxr_withBBdict["train_diseases"]:
-        print(disease)
-        count = 0
-        for c in ['neg', 'pos']:
-            print(c)
-            disease_dataloader = train_dataloaders[c][disease]
-            print('len(disease_dataloader.dataset)_' + c  , len(disease_dataloader.dataset))
-            count += len(disease_dataloader.dataset)
-        print('count', count)
-
-    loader = train_dataloaders['pos']['Cardiomegaly']
-    # loader = test_loader
-
-    for idx in tqdm(range(500)):
-        print(idx)
-        data = loader.dataset[idx]
-        img = data['img']
-        label = data['label']
-        bbox = data['BBox'][1].astype(int)
-        print("label: ", label)
-        if np.sum(bbox)!=0 and label[1] == 1:
-            print("cardiomegealy")
-            BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
-            x_min = int(bbox[0].item())
-            y_min = int(bbox[1].item())
-            x_max = x_min + int(bbox[2].item())
-            y_max = y_min + int(bbox[3].item())
-
-            img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
-            draw = ImageDraw.Draw(img)
-            draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
-            draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
-            img.show()
-
-            BBmask = Image.fromarray(BBmask * 255).convert('RGB')
-            BBmask.show()
+    # train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+    #
+    # for disease in vindr_cxr_withBBdict["train_diseases"]:
+    #     print(disease)
+    #     count = 0
+    #     for c in ['neg', 'pos']:
+    #         print(c)
+    #         disease_dataloader = train_dataloaders[c][disease]
+    #         print('len(disease_dataloader.dataset)_' + c  , len(disease_dataloader.dataset))
+    #         count += len(disease_dataloader.dataset)
+    #     print('count', count)
+    #
+    # loader = train_dataloaders['pos']['Cardiomegaly']
+    # # loader = test_loader
+    #
+    # for idx in tqdm(range(500)):
+    #     print(idx)
+    #     data = loader.dataset[idx]
+    #     img = data['img']
+    #     label = data['label']
+    #     bbox = data['BBox'][1].astype(int)
+    #     print("label: ", label)
+    #     if np.sum(bbox)!=0 and label[1] == 1:
+    #         print("cardiomegealy")
+    #         BBmask = create_mask_fromBB(img_size=(320, 320), bbox=bbox)
+    #         x_min = int(bbox[0].item())
+    #         y_min = int(bbox[1].item())
+    #         x_max = x_min + int(bbox[2].item())
+    #         y_max = y_min + int(bbox[3].item())
+    #
+    #         img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
+    #         draw = ImageDraw.Draw(img)
+    #         draw.rectangle((x_min, y_min, x_max, y_max), fill=None, outline=(0, 255, 0))
+    #         draw.rectangle((0, 280, 100, 290), fill=None, outline=(255, 0, 0)) # a test rectangle if not sure about x, y coordinates
+    #         img.show()
+    #
+    #         BBmask = Image.fromarray(BBmask * 255).convert('RGB')
+    #         BBmask.show()
 # #
 # #
 # #

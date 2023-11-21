@@ -37,7 +37,7 @@ class pixel_sensitivity_analyser():
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.result_dir = os.path.join(config.model_path, "pixel_sensitivity_result_dir", self.attr_method)
         os.makedirs(self.result_dir, exist_ok=True)
-        self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots_pos')
+        self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
         self.draw = True
         if self.dataset == "chexpert":
@@ -344,7 +344,18 @@ if __name__ == "__main__":
 
     # set the variables here:
     evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+
+    # evaluated_models = {}
+    # evaluated_models["lambda30"] = attrinet_nih_chestxray_with_guidance_dict["lambda30"]
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_chestxray_with_guidance_dict_lambda30" + ".json"
+
+    # evaluated_models["lambda30"] = attrinet_chexpert_with_guidance_dict["lambda30"]
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_chexpert_with_guidance_dict_lambda30" + ".json"
+
+    # evaluated_models["lambda0.1"] = bcos_chexpert_with_guidance_dict["lambda0.1"]
     file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+
     # set above variables
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
