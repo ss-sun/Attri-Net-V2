@@ -37,7 +37,7 @@ def argument_parser():
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
@@ -111,11 +111,11 @@ if __name__ == "__main__":
 
     # set the variables here:
 
-    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    evaluated_models = bcos_vindr_with_guidance_dict
     # evaluated_models = {}
     # evaluated_models["vagan_color"] = glaucoma_dict["vagan_color"]
 
-    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"attrinet_vindr_cxr_withBB_with_guidance_dict"+".json"
+    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"bcos_vindr_with_guidance_dict"+".json"
 
     # set above variables
 

@@ -11,15 +11,27 @@ chexpert_dict = {
     "train_augment": "previous" #"none", "random_crop", "center_crop", "color_jitter", "all",
 }
 
+# nih_chestxray_dict_old = {
+#     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_data/images_rescaled",
+#     "withBB_image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/images", # here use the original image, not the rescaled one. because the BBs are in the original image.
+#     "data_entry_csv_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/Data_Entry_2017.csv",
+#     "BBox_csv_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/BBox_List_2017.csv",
+#     "train_valid_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/train_val_list.txt",
+#     "test_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/test_list.txt",
+#     "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Effusion"]
+# }
 nih_chestxray_dict = {
     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_data/images_rescaled",
-    "withBB_image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/images", # here use the original image, not the rescaled one. because the BBs are in the original image.
+    "withBB_image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/images_scaled", # here use the original image, not the rescaled one. because the BBs are in the original image.
     "data_entry_csv_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/Data_Entry_2017.csv",
-    "BBox_csv_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/BBox_List_2017.csv",
     "train_valid_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/train_val_list.txt",
     "test_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/test_list.txt",
+    "BBox_csv_file_train": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df.csv", # they are split from the original BBox_List_2017.csv with 40% for train and 60% for test.
+    "BBox_csv_file_test": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df.csv", # bounding box annotation already scaled to the rescaled image size of 320x320
     "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Effusion"]
 }
+
+
 
 vindr_cxr_dict = {
     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",

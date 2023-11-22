@@ -265,16 +265,16 @@ if __name__ == '__main__':
 
 #
 #
-#     train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
-#     # for disease in chexpert_dict["train_diseases"]:
-#     #     print(disease)
-#     #     count = 0
-#     #     for c in ['neg', 'pos']:
-#     #         print(c)
-#     #         disease_dataloader = train_dataloaders[c][disease]
-#     #         print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
-#     #         count += len(disease_dataloader.dataset)
-#     #     print('count', count)
+    train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+    for disease in chexpert_dict["train_diseases"]:
+        print(disease)
+        count = 0
+        for c in ['neg', 'pos']:
+            print(c)
+            disease_dataloader = train_dataloaders[c][disease]
+            print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
+            count += len(disease_dataloader.dataset)
+        print('count', count)
 #
 #     import matplotlib.pyplot as plt
 #     def plot(imgs, with_orig=False, row_title=None, **imshow_kwargs):

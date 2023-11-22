@@ -265,8 +265,8 @@ def argument_parser():
     """
     parser = argparse.ArgumentParser(description="pixel sensitivitiy metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='attri-net',
+    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='bcos_resnet',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
@@ -343,7 +343,7 @@ def main(config):
 if __name__ == "__main__":
 
     # set the variables here:
-    evaluated_models = attrinet_vindr_cxr_withBB_with_guidance_dict
+    evaluated_models = bcos_vindr_with_guidance_dict
 
     # evaluated_models = {}
     # evaluated_models["lambda30"] = attrinet_nih_chestxray_with_guidance_dict["lambda30"]
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_chexpert_with_guidance_dict_lambda30" + ".json"
 
     # evaluated_models["lambda0.1"] = bcos_chexpert_with_guidance_dict["lambda0.1"]
-    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_vindr_cxr_withBB_with_guidance_dict" + ".json"
+    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "bcos_vindr_with_guidance_dict" + ".json"
 
     # set above variables
 

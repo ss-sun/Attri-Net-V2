@@ -101,7 +101,6 @@ class NIHChestXrayDataModule(LightningDataModule):
         self.test_list_file = dataset_params["test_list_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
 
-
         self.split_ratio = split_ratio
         self.resplit = resplit
         self.img_size = img_size
