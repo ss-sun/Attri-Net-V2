@@ -2,7 +2,8 @@
 # from solvers.attrinet_solver_g_withoutcl import task_switch_solver
 # from solvers.attrinet_solver_energyloss import task_switch_solver
 # from solvers.attrinet_solver_energyloss_with_psydoMask import task_switch_solver
-from solvers.attrinet_solver_energyloss_new import task_switch_solver
+# from solvers.attrinet_solver_energyloss_new import task_switch_solver
+from solvers.attrinet_solver_energyloss_new_new import task_switch_solver
 import logging
 
 from experiment_utils import init_seed, init_experiment, init_wandb
@@ -31,7 +32,7 @@ def attrinet_get_parser():
 
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset_idx', type=int, default=1, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -115,6 +116,10 @@ def main(exp_configs):
     data_loader['vis_neg'] = vis_dataloaders['neg']
     data_loader['valid'] = valid_loader
     data_loader['test'] = test_loader
+
+    if exp_configs.dataset == "nih_chestxray":
+        data_loader['train_pos_bbox'] = datamodule.single_disease_trainBBox_dataloaders(batch_size=exp_configs.batch_size, shuffle=True)
+
     solver = task_switch_solver(exp_configs, data_loader=data_loader)
 
     if exp_configs.mode == "train":

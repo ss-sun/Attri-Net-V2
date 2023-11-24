@@ -22,12 +22,15 @@ chexpert_dict = {
 # }
 nih_chestxray_dict = {
     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_data/images_rescaled",
-    "withBB_image_dir": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/images_scaled", # here use the original image, not the rescaled one. because the BBs are in the original image.
+    # contains all images for train, valid and test.
     "data_entry_csv_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/Data_Entry_2017.csv",
     "train_valid_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/train_val_list.txt",
     "test_list_file": "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/test_list.txt",
-    "BBox_csv_file_train": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df.csv", # they are split from the original BBox_List_2017.csv with 40% for train and 60% for test.
-    "BBox_csv_file_test": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df.csv", # bounding box annotation already scaled to the rescaled image size of 320x320
+    # they are split from the original BBox_List_2017.csv with 40% for train and 60% for test.
+    # bounding box annotation already scaled to the rescaled image size of 320x320
+    "BBox_csv_file_train": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv",
+    # with scale bbox to a rescaled image size of 320x320
+    "BBox_csv_file_test": "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv",
     "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Effusion"]
 }
 

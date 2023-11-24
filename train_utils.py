@@ -4,7 +4,8 @@ import torch
 import numpy as np
 # from data.chexpert import CheXpertDataModule
 from data.chexpert_official_split import CheXpertDataModule
-from data.nih_chestxray import NIHChestXrayDataModule
+# from data.nih_chestxray import NIHChestXrayDataModule
+from data.nih_chestxray_withBB import NIHChestXrayDataModule
 from data.vindr_cxr import Vindr_CXRDataModule
 from data.skm_tea_mri import SKMTEADataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
@@ -34,6 +35,9 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
                                             resplit=data_default_params['resplit'],
                                             img_size=data_default_params['img_size'],
                                             seed=exp_configs.manual_seed)
+
+
+
     if exp_configs.dataset == 'vindr_cxr':
         print("working on vindr_cxr dataset")
         datamodule = Vindr_CXRDataModule(dataset_params,
