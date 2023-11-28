@@ -6,12 +6,13 @@ import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
 # from solvers.attrinet_solver import task_switch_solver
-from solvers.attrinet_solver_energyloss_new import task_switch_solver
+# from solvers.attrinet_solver_energyloss_new import task_switch_solver
+from solvers.attrinet_solver_energyloss_new_new import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
     attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
     bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, attrinet_nih_chestxray_with_guidance_dict,\
-    attrinet_vindr_cxr_withBB_with_guidance_dict, glaucoma_dict
+    attrinet_vindr_cxr_withBB_with_guidance_dict, glaucoma_dict, attrinet_nih_withBB_with_guidance_dict
 import json
 import datetime
 
@@ -38,14 +39,14 @@ def argument_parser():
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6,
+    parser.add_argument('--dataset_idx', type=int, default=1,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     # parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea'])
@@ -112,11 +113,11 @@ if __name__ == "__main__":
 
     # set the variables here:
 
-    evaluated_models = bcos_vindr_with_guidance_dict
+    evaluated_models = attrinet_nih_withBB_with_guidance_dict
     # evaluated_models = {}
     # evaluated_models["vagan_color"] = glaucoma_dict["vagan_color"]
 
-    file_name = str(datetime.datetime.now())[:-7] +"eval_auc_"+"bcos_vindr_with_guidance_dict"+".json"
+    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" +"attrinet_nih_withBB_with_guidance_dict"+".json"
 
     # set above variables
 

@@ -45,6 +45,7 @@ def create_expname(exp_configs):
         exp_name += f"--l_ctr={exp_configs.lambda_centerloss}"
         if exp_configs.lambda_localizationloss > 0:
             exp_name += f"--l_loc={exp_configs.lambda_localizationloss}"
+            exp_name += f"--guid_freq={exp_configs.guidance_freq}"
         exp_name += f"--seed={exp_configs.manual_seed}"
 
     return exp_name

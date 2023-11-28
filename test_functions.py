@@ -136,13 +136,25 @@ import os
 import numpy as np
 import pandas as pd
 
-image_dir= "/mnt/qb/work/baumgartner/sun22/data/NIH_data/images_rescaled" # contains all images for train, valid and test.
-data_entry_csv_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/Data_Entry_2017.csv"
+# image_dir= "/mnt/qb/work/baumgartner/sun22/data/NIH_data/images_rescaled" # contains all images for train, valid and test.
+# data_entry_csv_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_labels/Data_Entry_2017.csv"
+#
+# img_list = os.listdir(image_dir)
+# print(len(img_list))
+#
+# df = pd.read_csv(data_entry_csv_file)
+# imgs = df['Image Index'].tolist()
+# uni_imgs = list(set(imgs))
+# print(len(uni_imgs))
+# bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
+BBox_csv_file_train = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv"
+BBox_csv_file_test = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv"
 
-img_list = os.listdir(image_dir)
-print(len(img_list))
-
-df = pd.read_csv(data_entry_csv_file)
+df = pd.read_csv(BBox_csv_file_test)
 imgs = df['Image Index'].tolist()
 uni_imgs = list(set(imgs))
 print(len(uni_imgs))
+
+diseases = df['Finding Label'].tolist()
+uni_diseases = np.unique(np.array(diseases), return_counts=True)
+print(uni_diseases)

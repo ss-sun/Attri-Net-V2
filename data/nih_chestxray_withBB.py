@@ -418,8 +418,8 @@ if __name__== '__main__':
         if single_disease_trainBBox_loaders[disease] is not None:
             print(len(single_disease_trainBBox_loaders[disease].dataset))
 
-    # BBox_test_dataloader = datamodule.BBox_test_dataloader(batch_size=1,shuffle=True)
-    # print('len(test_loaders.dataset)',len(BBox_test_dataloader.dataset))
+    BBox_test_dataloader = datamodule.BBox_test_dataloader(batch_size=1,shuffle=True)
+    print('len(bbox_test_loaders.dataset)',len(BBox_test_dataloader.dataset))
     #
     # print(len(train_loader.dataset))
     # print(len(valid_loader.dataset))

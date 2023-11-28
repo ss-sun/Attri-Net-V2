@@ -10,7 +10,8 @@ import argparse
 from train_utils import prepare_datamodule, to_numpy
 from solvers.resnet_solver import resnet_solver
 # from solvers.attrinet_solver import task_switch_solver
-from solvers.attrinet_solver_energyloss import task_switch_solver
+# from solvers.attrinet_solver_energyloss import task_switch_solver
+from solvers.attrinet_solver_energyloss_new_new import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from tqdm import tqdm
 import matplotlib.patches as patches
@@ -21,7 +22,7 @@ from pycocotools import mask
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
     attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
     bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
-    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict
+    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict,attrinet_nih_withBB_with_guidance_dict
 import datetime
 
 def str2bool(v):
@@ -265,8 +266,8 @@ def argument_parser():
     """
     parser = argparse.ArgumentParser(description="pixel sensitivitiy metric analyser.")
     parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='bcos_resnet',
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
@@ -277,7 +278,7 @@ def argument_parser():
                                  'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6,
+    parser.add_argument('--dataset_idx', type=int, default=1,
                         help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
 
     parser.add_argument('--lambda_localizationloss', type=int, default=10, choices=[1, 5, 10, 20, 100])
@@ -343,7 +344,7 @@ def main(config):
 if __name__ == "__main__":
 
     # set the variables here:
-    evaluated_models = bcos_vindr_with_guidance_dict
+    evaluated_models = attrinet_nih_withBB_with_guidance_dict
 
     # evaluated_models = {}
     # evaluated_models["lambda30"] = attrinet_nih_chestxray_with_guidance_dict["lambda30"]
@@ -354,7 +355,7 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_chexpert_with_guidance_dict_lambda30" + ".json"
 
     # evaluated_models["lambda0.1"] = bcos_chexpert_with_guidance_dict["lambda0.1"]
-    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "bcos_vindr_with_guidance_dict" + ".json"
+    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_dict" + ".json"
 
     # set above variables
 

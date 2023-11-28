@@ -30,6 +30,8 @@ def attrinet_get_parser():
     parser.add_argument('--guidance_mode', type=str, default='bbox',
                         choices=['bbox', 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
+
+    parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox')
     # Data configuration.
     # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
     parser.add_argument('--dataset_idx', type=int, default=1, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
@@ -53,7 +55,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_2', type=float, default=200, help='weight for l1 loss of healthy mask')
     parser.add_argument('--lambda_3', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
-    parser.add_argument('--lambda_localizationloss', type=float, default=25, help='weight for center loss of disease mask')
+    parser.add_argument('--lambda_localizationloss', type=float, default=30, help='weight for localization loss of disease mask')
     parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
 
     # Training configuration.

@@ -88,7 +88,8 @@ class task_switch_solver(object):
                 if exp_configs.dataset == "nih_chestxray":
                     self.dloader_pos_bbox = data_loader['train_pos_bbox']
                     self.train_with_few_bbox = True
-                    self.freq = 0.1
+                    #self.freq = 0.1
+                    self.freq = exp_configs.guidance_freq
                     self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"]
 
             if self.guidance_mode == "pseudo_mask":
@@ -282,9 +283,12 @@ class task_switch_solver(object):
             alpha.expand(bs, int(real_data.nelement() / bs)).contiguous().view(bs, ch, h, w)
         )
         alpha = alpha.to(self.device)
-        interpolates = torch.tensor(
-            alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
-        )
+
+        # interpolates = torch.tensor(
+        #     alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
+        # ) # previous version
+        interpolates = alpha * real_data.clone().detach().requires_grad_(True) + (1 - alpha) * fake_data.clone().detach().requires_grad_(True)
+
         interpolates = interpolates.to(self.device)
         disc_interpolates = netD(interpolates, task_code)
 
