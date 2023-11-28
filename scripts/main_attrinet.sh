@@ -54,7 +54,7 @@ echo "-------- PYTHON OUTPUT ----------"
 # python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
 
 # python3 main_attrinet.py --debug "False" --guidance_mode 'bbox' --dataset_idx 6 --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
-python3 main_attrinet.py
+python3 main_attrinet.py --guidance_freq 0.1
 
 echo "---------------------------------"
 
