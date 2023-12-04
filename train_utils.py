@@ -42,20 +42,6 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
                                          img_size=data_default_params['img_size'],
                                          seed=exp_configs.manual_seed)
 
-    if exp_configs.dataset == 'skmtea':
-        print("working on skmtea-mri dataset")
-        datamodule = SKMTEADataModule(dataset_params,
-                                        img_size=data_default_params['img_size'],
-                                        seed=exp_configs.manual_seed)  # use official split
-    if exp_configs.dataset == 'airogs':
-        datamodule = AIROGS_fundusDataModule(dataset_params,
-                                             img_size=data_default_params['img_size'],
-                                             seed=42)
-
-    if exp_configs.dataset == 'airogs_color':
-        datamodule = AIROGS_color_fundusDataModule(dataset_params,
-                                             img_size=data_default_params['img_size'],
-                                             seed=42)
 
     if 'contam' in exp_configs.dataset:
         print("working on contaminated dataset")
