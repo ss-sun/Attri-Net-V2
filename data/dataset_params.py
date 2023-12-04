@@ -44,23 +44,6 @@ vindr_cxr_dict = {
     "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening', 'Pleural effusion'],
 }
 
-skmtea_mri_dict = {
-        "image_dir": "/mnt/qb/work/baumgartner/sun22/data/skm-tea_imgs",
-        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/skm-tea_bbox/train.csv",
-        "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/skm-tea_bbox/val.csv",
-        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/skm-tea_bbox/test.csv",
-        "BBox_csv_file": "/mnt/qb/work/baumgartner/sun22/data/skm-tea_bbox/test_BBox.csv",
-        "train_diseases": ["Meniscal Tear", "Ligament Tear", "Cartilage Lesion", "Effusion"],
-}
-
-
-airogs_fundus_dict = {
-    "root_dir": "/mnt/qb/work/baumgartner/sun22/data/5793241",
-    "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/5793241/train_labels.csv",
-    "train_diseases": ["RG"],
-}
-
-
 vindr_cxr_withBBdict = {
         "root_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection",
         "train_image_dir": "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/train_pngs_rescaled_320*320",
@@ -124,12 +107,10 @@ dataset_dict = {
     "chexpert": chexpert_dict,
     "nih_chestxray": nih_chestxray_dict,
     "vindr_cxr": vindr_cxr_dict,
-    "skmtea": skmtea_mri_dict,
     "contam20": Cardiomegaly_tag_degree20_dict,
     "contam50": Cardiomegaly_tag_degree50_dict,
-    "airogs": airogs_fundus_dict,
     "vindr_cxr_withBB":vindr_cxr_withBBdict,
-    "airogs_color": airogs_fundus_dict
+
 }
 
 

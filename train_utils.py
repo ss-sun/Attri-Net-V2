@@ -2,13 +2,12 @@ import wandb
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
-# from data.chexpert import CheXpertDataModule
-from data.chexpert_official_split import CheXpertDataModule
-# from data.nih_chestxray import NIHChestXrayDataModule
-from data.nih_chestxray_withBB import NIHChestXrayDataModule
-from data.vindr_cxr import Vindr_CXRDataModule
+
+from data.chexpert import CheXpertDataModule
+from data.nih_chestxray import NIHChestXrayDataModule
+from data.vindr_cxr import Vindr_CXR_BB_DataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
-from data.vindr_cxr_withBB import Vindr_CXR_BB_DataModule
+
 
 
 def prepare_datamodule(exp_configs, dataset_dict, data_default_params):

@@ -1,13 +1,14 @@
 import os
 import shutil
 import numpy as np
-from torch.utils.data import Dataset, ConcatDataset
+from torch.utils.data import Dataset
 import torchvision.transforms as tfs
 from PIL import Image
 import pandas as pd
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 from data.data_utils import normalize_image, map_image_to_intensity_range
+from torchvision.transforms.functional import InterpolationMode
 
 
 class CheXpert(Dataset):
@@ -30,7 +31,7 @@ class CheXpert(Dataset):
             img = self.transforms(img)  # return image in range (0,1)
 
         img = normalize_image(img)
-        img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
+        img = map_image_to_intensity_range(img, -1, 1, percentiles=5)
 
         # Get labels from the dataframe for current image
         label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
@@ -45,90 +46,60 @@ class CheXpert(Dataset):
 
 class CheXpertDataModule(LightningDataModule):
 
-    def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42):
+    def __init__(self, dataset_params, img_size=320, seed=42):
 
         self.image_dir = dataset_params["image_dir"]
         self.train_csv_file = dataset_params["train_csv_file"]
+        self.valid_csv_file = dataset_params["valid_csv_file"]
+        self.test_image_dir = dataset_params["test_image_dir"]
         self.test_csv_file = dataset_params["test_csv_file"]
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
         self.orientation = dataset_params["orientation"]
         self.uncertainty = dataset_params["uncertainty"]
-        self.split_ratio = split_ratio
-        self.resplit = resplit
+        self.train_augment = dataset_params["train_augment"]
         self.img_size = img_size
         self.seed = seed
-        self.split_df_dir = os.path.join(self.image_dir, 'split_df')
+
         self.data_transforms = {
             'train': tfs.Compose([
-                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
-                tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-                tfs.Resize((self.img_size, self.img_size)),
-                tfs.ToTensor(),
-
-            ]),
-            'test': tfs.Compose([
-                tfs.Resize((self.img_size, self.img_size)),
-                tfs.ToTensor(),
-
-            ]),
+             tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
+             tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
+             tfs.Resize((self.img_size, self.img_size)),
+             tfs.ToTensor()]),
+            'test': tfs.Compose([tfs.Resize((self.img_size, self.img_size)),
+                    tfs.ToTensor()]),
         }
 
     def setup(self):
 
-        # store split dataframe folder
-        if os.path.exists(self.split_df_dir) and self.resplit==False:
-            # directly read splitted data frame
-            print('Already split data. Will use the previously created split data frame!')
-            self.train_df = pd.read_csv(os.path.join(self.split_df_dir, 'train_df.csv'))
-            self.valid_df = pd.read_csv(os.path.join(self.split_df_dir, 'valid_df.csv'))
-            self.test_df = pd.read_csv(os.path.join(self.split_df_dir, 'test_df.csv'))
+        train_df = pd.read_csv(self.train_csv_file)
+        valid_df = pd.read_csv(self.valid_csv_file)
+        test_df = pd.read_csv(self.test_csv_file)
 
-        else:
-            if os.path.exists(self.split_df_dir):
-                shutil.rmtree(self.split_df_dir)
-            os.mkdir(self.split_df_dir)
-            # first read train and test csv files
-            train_df = self.preprocess_df(self.train_csv_file)
-            # deal with nan and uncertainty labels
-            train_df = self.fillnan_approach(train_df)
-            train_df = self.uncertainty_approach(train_df)
-            # split the train dataframe into train and valid dataframe, and save to csv file
-            self.train_df, self.valid_df, self.test_df = self.split(df=train_df, train_ratio=self.split_ratio, seed=self.seed, shuffle=True)
+        # we only use frontal images
+        self.train_df = self.preprocess_df(train_df, orientation=self.orientation, uncertainty=self.uncertainty)
+        self.valid_df = self.preprocess_df(valid_df, orientation=self.orientation, uncertainty=self.uncertainty)
+        self.test_BB_df = test_df # keep the original test set for bounding box prediction
+        self.test_df = self.testset_orientation_filter(test_df, orientation=self.orientation)
+        # self.test_df =test_df
+        # for test set, we use all images to create the test set.
 
-        self.official_vaild_df = self.preprocess_df(self.test_csv_file)
+
+
         self.train_set = CheXpert(image_dir=self.image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
         self.valid_set = CheXpert(image_dir=self.image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
-        self.test_set = CheXpert(image_dir=self.image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
-        self.official_vaild_set = CheXpert(image_dir=self.image_dir, df=self.official_vaild_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
+        self.test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
+        self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
+                                 transforms=self.data_transforms['test'])
+
+
 
         # To train Attri-Net, we need to get pos_dataloader and neg_dataloader for each disease.
         self.single_disease_train_sets = self.create_trainsets()
         self.single_disease_vis_sets = self.create_vissets()
 
-        self.vis_healthy = self.create_vis_healthy(transforms=self.data_transforms['test'])
-        self.vis_anomaly = self.create_vis_anomaly(transforms=self.data_transforms['test'])
 
 
-
-    def create_vis_healthy(self, transforms):
-        idx = np.where(self.train_df[0:2000]["No Finding"] == 1)[0]
-        filtered_df = self.train_df.iloc[idx]
-        filtered_df = filtered_df.reset_index(drop=True)
-        subset = CheXpert(image_dir=self.image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES, transforms=transforms)
-        return subset
-
-    def create_vis_anomaly(self, transforms):
-        idx = np.where(self.train_df[0:2000]["No Finding"] != 1)[0]
-        filtered_df = self.train_df.iloc[idx]
-        filtered_df = filtered_df.reset_index(drop=True)
-        subset = CheXpert(image_dir=self.image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES, transforms=transforms)
-        return subset
-
-    def vis_healthy_loader(self, batch_size, shuffle=False):
-        return DataLoader(self.vis_healthy, batch_size=batch_size, shuffle=shuffle, drop_last=True)
-
-    def vis_anomaly_loader(self, batch_size, shuffle=False):
-        return DataLoader(self.vis_anomaly, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
 
     def train_dataloader(self, batch_size, shuffle=True):
@@ -137,17 +108,11 @@ class CheXpertDataModule(LightningDataModule):
     def valid_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle)
 
-    def test_dataloader(self, concat_testset=False, batch_size=1, shuffle=False):
-        if concat_testset:
-            self.concat_testset = ConcatDataset([self.test_set, self.official_vaild_set])
-            return DataLoader(self.concat_testset, batch_size=batch_size, shuffle=shuffle)
-        else:
-            return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle)
+    def test_dataloader(self, batch_size, shuffle=False):
+        return DataLoader(self.test_set, batch_size=batch_size, shuffle=False)
 
-    def official_valid_dataloader(self, batch_size, shuffle=False):
-        return DataLoader(self.official_vaild_set, batch_size=batch_size, shuffle=shuffle)
-
-
+    def BBox_test_dataloader(self, batch_size, shuffle=False):
+        return DataLoader(self.BBox_test_set, batch_size=batch_size, shuffle=False)
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):
         train_dataloaders = {}
@@ -168,28 +133,39 @@ class CheXpertDataModule(LightningDataModule):
             vis_dataloaders[c] = vis_loader
         return vis_dataloaders
 
+    def testset_orientation_filter(self, test_df, orientation):
+        if orientation == 'Frontal':
+            test_df = test_df[test_df['Path'].str.contains('frontal')]
+        if orientation == 'Lateral':
+            test_df = test_df[test_df['Path'].str.contains('lateral')]
+        if orientation == 'all':
+            test_df = test_df
+        test_df = test_df.reset_index(drop=True)
+        return test_df
 
-    def preprocess_df(self, file_name):
-        file_path = os.path.join(self.image_dir, file_name)
-        df = pd.read_csv(file_path)
+
+
+    def preprocess_df(self, df, orientation, uncertainty):
         df['Path'] = df['Path'].str.replace('CheXpert-v1.0-small/', '')
+        df = self.fillnan(df)
+        df = self.uncertainty_approach(df, uncertainty)
         # select orientation
-        df = self.get_orientation(df, self.orientation)
+        df = self.get_orientation(df, orientation)
         df = df.reset_index(drop=True)
         return df
 
 
-    def fillnan_approach(self, df):
-        new_df = df.fillna(0)
+    def fillnan(self, df):
+        new_df = df.fillna(-1)
         return new_df
 
-    def uncertainty_approach(self, df):
-        # uncertainty labels are mapped to 0
-        if self.uncertainty == 'toOne':
+    def uncertainty_approach(self, df, uncertainty):
+        # uncertainty labels are mapped to 1 or 0 or kept as -1.
+        if uncertainty == 'toOne':
             new_df = df.replace(-1, 1)
-        if self.uncertainty == 'toZero':
+        if uncertainty == 'toZero':
             new_df = df.replace(-1, 0)
-        if self.uncertainty =='keep':
+        if uncertainty =='keep':
             new_df = df
         return new_df
 
@@ -249,46 +225,89 @@ class CheXpertDataModule(LightningDataModule):
 
 
 
-    def split(self, df, train_ratio, seed, shuffle=True):
-        print("spliting data frame into trainset, validation set and test set....")
-        path = df["Path"].tolist()
-        patient_id = [p.split("/")[1] for p in path]
-        unique_patient = np.unique(np.array(patient_id))
-        if shuffle:
-            np.random.seed(seed)
-            np.random.shuffle(unique_patient)
-
-        split1 = int(np.floor(train_ratio * len(unique_patient)))
-        split2 = split1 + int(np.floor(0.5 * (1 - train_ratio) * len(unique_patient)))
-        train_patientID, valid_patientID, test_patientID = unique_patient[:split1], unique_patient[split1:split2], unique_patient[split2:]
-
-        train_indices = []
-        valid_indices = []
-        test_indices = []
-        for index, row in df.iterrows():
-            patient_id = row["Path"].split("/")[1]
-            if patient_id in train_patientID:
-                train_indices.append(index)
-            elif patient_id in valid_patientID:
-                valid_indices.append(index)
-            else:
-                test_indices.append(index)
-
-        train_df = df.iloc[train_indices]
-        valid_df = df.iloc[valid_indices]
-        test_df = df.iloc[test_indices]
-
-        train_df = train_df.reset_index(drop=True)
-        valid_df = valid_df.reset_index(drop=True)
-        test_df = test_df.reset_index(drop=True)
-
-        train_df.to_csv(os.path.join(self.split_df_dir, 'train_df.csv'), index=False)
-        valid_df.to_csv(os.path.join(self.split_df_dir, 'valid_df.csv'), index=False)
-        test_df.to_csv(os.path.join(self.split_df_dir, 'test_df.csv'), index=False)
-
-        return train_df, valid_df, test_df
 
 
 
+if __name__ == '__main__':
 
+    chexpert_dict = {
+        "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
+        "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
+        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test/",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
+        "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
+        "orientation": "Frontal", #"Frontal",
+        "uncertainty": "toZero",
+        "train_augment": "center_crop" #"none", "random_crop", "center_crop", "color_jitter", "all",
+    }
+
+    data_default_params = {
+        "img_size": 320,
+        "batch_size": 4,
+    }
+
+    datamodule = CheXpertDataModule(chexpert_dict,
+                                    img_size=data_default_params['img_size'],
+                                    seed=42)
+
+
+    datamodule.setup()
+
+    train_loaders = datamodule.train_dataloader(batch_size=4)
+    print('len(train_loaders)', len(train_loaders))
+    print('len(train_loaders.dataset)', len(train_loaders.dataset))
+
+    valid_loaders = datamodule.valid_dataloader(batch_size=4)
+    print('len(valid_loaders.dataset)',len(valid_loaders.dataset))
+
+    test_loaders = datamodule.test_dataloader(batch_size=1)
+    print('len(test_loaders.dataset)',len(test_loaders.dataset))
+
+#
+#
+    train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+    for disease in chexpert_dict["train_diseases"]:
+        print(disease)
+        count = 0
+        for c in ['neg', 'pos']:
+            print(c)
+            disease_dataloader = train_dataloaders[c][disease]
+            print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
+            count += len(disease_dataloader.dataset)
+        print('count', count)
+#
+#     import matplotlib.pyplot as plt
+#     def plot(imgs, with_orig=False, row_title=None, **imshow_kwargs):
+#         if not isinstance(imgs[0], list):
+#             # Make a 2d grid even if there's just 1 row
+#             imgs = [imgs]
+#
+#         num_rows = len(imgs)
+#         num_cols = len(imgs[0]) + with_orig
+#         fig, axs = plt.subplots(nrows=num_rows, ncols=num_cols, squeeze=False)
+#         for row_idx, row in enumerate(imgs):
+#             row = row
+#             for col_idx, img in enumerate(row):
+#                 ax = axs[row_idx, col_idx]
+#                 ax.imshow(np.asarray(img), **imshow_kwargs)
+#                 ax.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+#
+#         if with_orig:
+#             axs[0, 0].set(title='Original image')
+#             axs[0, 0].title.set_size(8)
+#         if row_title is not None:
+#             for row_idx in range(num_rows):
+#                 axs[row_idx, 0].set(ylabel=row_title[row_idx])
+#
+#         plt.tight_layout()
+#         plt.show()
+#
+#
+#     imgs = []
+#     for i in range(4):
+#         data = datamodule.train_set[i]
+#         imgs.append(data['img'].squeeze())
+#
+#     plot(imgs)
 
