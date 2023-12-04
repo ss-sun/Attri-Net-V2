@@ -7,10 +7,7 @@ from data.chexpert_official_split import CheXpertDataModule
 # from data.nih_chestxray import NIHChestXrayDataModule
 from data.nih_chestxray_withBB import NIHChestXrayDataModule
 from data.vindr_cxr import Vindr_CXRDataModule
-from data.skm_tea_mri import SKMTEADataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
-from data.airogs_glaucoma import AIROGS_fundusDataModule
-from data.airogs_glaucoma_color import AIROGS_color_fundusDataModule
 from data.vindr_cxr_withBB import Vindr_CXR_BB_DataModule
 
 

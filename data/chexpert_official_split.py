@@ -255,6 +255,7 @@ if __name__ == '__main__':
     datamodule.setup()
 
     train_loaders = datamodule.train_dataloader(batch_size=4)
+    print('len(train_loaders)', len(train_loaders))
     print('len(train_loaders.dataset)', len(train_loaders.dataset))
 
     valid_loaders = datamodule.valid_dataloader(batch_size=4)

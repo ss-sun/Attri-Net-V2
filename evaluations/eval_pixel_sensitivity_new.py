@@ -22,7 +22,8 @@ from pycocotools import mask
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
     attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
     bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
-    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict,attrinet_nih_withBB_with_guidance_dict
+    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict,\
+    attrinet_nih_withBB_with_guidance_dict, attrinet_nih_withBB_with_guidance_different_freq_dict
 import datetime
 
 def str2bool(v):
@@ -344,8 +345,9 @@ def main(config):
 if __name__ == "__main__":
 
     # set the variables here:
-    evaluated_models = attrinet_nih_withBB_with_guidance_dict
-
+    # evaluated_models = attrinet_nih_withBB_with_guidance_dict
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_dict" + ".json"
     # evaluated_models = {}
     # evaluated_models["lambda30"] = attrinet_nih_chestxray_with_guidance_dict["lambda30"]
     # file_name = str(datetime.datetime.now())[
@@ -355,7 +357,12 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_chexpert_with_guidance_dict_lambda30" + ".json"
 
     # evaluated_models["lambda0.1"] = bcos_chexpert_with_guidance_dict["lambda0.1"]
-    file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_dict" + ".json"
+
+    evaluated_models = attrinet_nih_withBB_with_guidance_different_freq_dict
+    file_name = str(datetime.datetime.now())[
+                :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_different_freq_dict" + ".json"
+
+
 
     # set above variables
 

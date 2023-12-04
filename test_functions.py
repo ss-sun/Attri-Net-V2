@@ -146,15 +146,17 @@ import pandas as pd
 # imgs = df['Image Index'].tolist()
 # uni_imgs = list(set(imgs))
 # print(len(uni_imgs))
-# bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
-BBox_csv_file_train = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv"
-BBox_csv_file_test = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv"
 
-df = pd.read_csv(BBox_csv_file_test)
+bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
+# BBox_csv_file_train = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv"
+# BBox_csv_file_test = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv"
+
+df = pd.read_csv(bbox_file)
 imgs = df['Image Index'].tolist()
+print(len(imgs))
 uni_imgs = list(set(imgs))
 print(len(uni_imgs))
 
-diseases = df['Finding Label'].tolist()
-uni_diseases = np.unique(np.array(diseases), return_counts=True)
-print(uni_diseases)
+# diseases = df['Finding Label'].tolist()
+# uni_diseases = np.unique(np.array(diseases), return_counts=True)
+# print(uni_diseases)
