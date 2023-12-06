@@ -8,10 +8,10 @@ from PIL import Image, ImageDraw
 
 
 
-def get_gt_mask(gt_seg_dict, cxr_id, disease):
+def get_gt_mask(gt_seg_dict, cxr_id, disease, img_size):
     gt_item = gt_seg_dict[cxr_id][disease]
     gt_mask = mask.decode(gt_item)
-    scaled_mask = scale_mask(gt_mask, (320, 320))
+    scaled_mask = scale_mask(gt_mask, (img_size, img_size))
     return scaled_mask
 
 def scale_mask(mask, target_size):
@@ -32,7 +32,7 @@ def scale_mask(mask, target_size):
 
 
 
-def create_pseudoMask(gt_seg_file, disease_list, img_size= 320, dest_dir="./"):
+def create_pseudoMask(gt_seg_file, disease_list, img_size=320, dest_dir="./"):
     pseudo_masks = {}
     pseudo_bboxs = {}
 
@@ -87,8 +87,6 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
     if os.path.exists(dest_dir) == False:
         os.makedirs(dest_dir)
 
-
-
     with open(gt_seg_file) as json_file:
         gt_seg_dict = json.load(json_file)
     print(len(gt_seg_dict.keys()))  # 499 unique cxr ids in test set, 187 images in valid set
@@ -104,7 +102,7 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
             continue
         for disease in disease_list:
             # print(disease)
-            gt_mask = get_gt_mask(gt_seg_dict, cxr_id, disease)
+            gt_mask = get_gt_mask(gt_seg_dict, cxr_id, disease, img_size)
             if np.sum(gt_mask) != 0:
                 img_list.append(cxr_id)
                 out_path = os.path.join(dest_dir, cxr_id + "_" + disease + ".npy")
@@ -126,13 +124,22 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
 # 279 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
 
 if __name__ == '__main__':
+    current_task = "write_out_masks_test" # select from the Tasks list below
+
+    Tasks = ["create_pseudo_masks", "write_out_masks_valid", "write_out_masks_test"]
 
     gt_seg_file_valid = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
+    gt_seg_file_test = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
     disease_list = ['Cardiomegaly', 'Edema', 'Consolidation', 'Atelectasis', 'Pleural Effusion']
 
-    # create_pseudoMask(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size=320, dest_dir="./")
-    dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks"
-    write_out_masks(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)
+    if current_task == "create_pseudo_masks":
+        create_pseudoMask(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size=320, dest_dir="./")
+    if current_task == "write_out_masks_test":
+        dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/test_masks"
+        write_out_masks(gt_seg_file = gt_seg_file_test, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)
+    if current_task == "write_out_masks_valid":
+        dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks"
+        write_out_masks(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)
 
 
 

@@ -1,15 +1,28 @@
+# chexpert_dict = {
+#     "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
+#     "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
+#     "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
+#     #"test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
+#     "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert",
+#     "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
+#     "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
+#     "orientation": "Frontal",
+#     "uncertainty": "toZero",
+#     "train_augment": "previous" #"none", "random_crop", "center_crop", "color_jitter", "all",
+# }
+
 chexpert_dict = {
-    "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
-    "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
-    "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
-    #"test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
-    "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert",
-    "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
-    "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
-    "orientation": "Frontal",
-    "uncertainty": "toZero",
-    "train_augment": "previous" #"none", "random_crop", "center_crop", "color_jitter", "all",
-}
+        "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
+        "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
+        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
+        "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
+        "orientation": "Frontal",
+        "uncertainty": "toZero",
+    }
+
+
 
 
 nih_chestxray_dict = {

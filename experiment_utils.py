@@ -80,7 +80,7 @@ def init_wandb(exp_configs):
     wandb.login(key='34f6af5c2b35419f4b738daa31203a144ca49987') # Set your wandb key
     wandb_set_startup_timeout(300)
     wandb.init(dir=exp_configs.save_path,
-               project="Attri-Net exps",
+               project="Attri-Net TMI exps",
                name = exp_configs.exp_name,
                notes='train on' + exp_configs.dataset,
                )

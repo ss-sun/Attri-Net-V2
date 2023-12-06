@@ -1,3 +1,16 @@
+CheXpert dataset preprocessing
+1. download dataset follow instructions in https://stanfordmlgroup.github.io/competitions/chexpert/. I use the small version "CheXpert-v1.0-small" of the dataset that is previously available from aforementioned website. you can download it from https://www.kaggle.com/datasets/ssttff/chexpertv10small.
+2. download ground truth annotations (label and disease masks) of validation set and test set from https://stanfordaimi.azurewebsites.net/datasets/23c56a0d-15de-405b-87c8-99c30138950c
+3. scale the images of test and validation set to the same size (320*320) as images in train set. scale ground truth annotations masks accordingly. 
+use script generate_pseudoBBox_chexpert.py
+
+
+
+
+
+
+
+
 Vindr-CXR dataset preprocessing
 
 1. download dataset from physionet.org. since all chest x-ray are in .dicom format, we need to convert them to png images.
@@ -31,7 +44,3 @@ Now the dataset document as following:
 
 
 
-airogs dataset preprocessing
-1. download
-2. resize using script preprocess_airogs.py
-3. 

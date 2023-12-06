@@ -16,11 +16,6 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
     exp_configs.train_diseases = dataset_params["train_diseases"]
     if exp_configs.dataset == 'chexpert':
         print("working on chexpert dataset")
-        # datamodule = CheXpertDataModule(dataset_params,
-        #                                 split_ratio=data_default_params['split_ratio'],
-        #                                 resplit=data_default_params['resplit'],
-        #                                 img_size=data_default_params['img_size'],
-        #                                 seed=exp_configs.manual_seed)
         datamodule = CheXpertDataModule(dataset_params,
                                         img_size=data_default_params['img_size'],
                                         seed=exp_configs.manual_seed)  # use official split
@@ -34,13 +29,13 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
 
 
 
-    if exp_configs.dataset == 'vindr_cxr':
-        print("working on vindr_cxr dataset")
-        datamodule = Vindr_CXRDataModule(dataset_params,
-                                         split_ratio=data_default_params['split_ratio'],
-                                         resplit=data_default_params['resplit'],
-                                         img_size=data_default_params['img_size'],
-                                         seed=exp_configs.manual_seed)
+    # if exp_configs.dataset == 'vindr_cxr':
+    #     print("working on vindr_cxr dataset")
+    #     datamodule = Vindr_CXRDataModule(dataset_params,
+    #                                      split_ratio=data_default_params['split_ratio'],
+    #                                      resplit=data_default_params['resplit'],
+    #                                      img_size=data_default_params['img_size'],
+    #                                      seed=exp_configs.manual_seed)
 
 
     if 'contam' in exp_configs.dataset:

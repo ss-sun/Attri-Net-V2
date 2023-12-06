@@ -2,7 +2,8 @@
 #SBATCH --ntasks=1                # Number of tasks (see below)
 #SBATCH --cpus-per-task=1         # Number of CPU cores per task
 #SBATCH --nodes=1                 # Ensure that all cores are on one machine
-#SBATCH --time=0-72:00            # Runtime in D-HH:MM
+#SBATCH --qos=long-10d-jobs
+#SBATCH --time=240:00:00            # Runtime in D-HH:MM
 #SBATCH --partition=gpu-2080ti    # Partition to submit to
 #SBATCH --gres=gpu:1              # optionally type and number of gpus
 #SBATCH --mem=20G                 # Memory pool for all cores (see also --mem-per-cpu)
@@ -37,7 +38,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_resnet.py --img_mode 'gray' --dataset_idx 6 --use_wandb "False"
+python3 main_resnet.py --dataset "chexpert" --epochs 20
 
 echo "---------------------------------"
 

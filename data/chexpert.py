@@ -42,8 +42,6 @@ class CheXpert(Dataset):
 
 
 
-
-
 class CheXpertDataModule(LightningDataModule):
 
     def __init__(self, dataset_params, img_size=320, seed=42):
@@ -56,18 +54,17 @@ class CheXpertDataModule(LightningDataModule):
         self.TRAIN_DISEASES = dataset_params["train_diseases"]
         self.orientation = dataset_params["orientation"]
         self.uncertainty = dataset_params["uncertainty"]
-        self.train_augment = dataset_params["train_augment"]
         self.img_size = img_size
         self.seed = seed
 
         self.data_transforms = {
             'train': tfs.Compose([
-             tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
-             tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-             tfs.Resize((self.img_size, self.img_size)),
-             tfs.ToTensor()]),
-            'test': tfs.Compose([tfs.Resize((self.img_size, self.img_size)),
-                    tfs.ToTensor()]),
+                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
+                tfs.Resize((self.img_size, self.img_size)),
+                tfs.ToTensor()]),
+            'test': tfs.Compose([
+                tfs.Resize((self.img_size, self.img_size)),
+                tfs.ToTensor()]),
         }
 
     def setup(self):
@@ -89,8 +86,8 @@ class CheXpertDataModule(LightningDataModule):
         self.train_set = CheXpert(image_dir=self.image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
         self.valid_set = CheXpert(image_dir=self.image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
         self.test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
-        self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
-                                 transforms=self.data_transforms['test'])
+        # self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
+        #                          transforms=self.data_transforms['test'])
 
 
 
@@ -111,8 +108,8 @@ class CheXpertDataModule(LightningDataModule):
     def test_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.test_set, batch_size=batch_size, shuffle=False)
 
-    def BBox_test_dataloader(self, batch_size, shuffle=False):
-        return DataLoader(self.BBox_test_set, batch_size=batch_size, shuffle=False)
+    # def BBox_test_dataloader(self, batch_size, shuffle=False):
+    #     return DataLoader(self.BBox_test_set, batch_size=batch_size, shuffle=False)
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):
         train_dataloaders = {}
@@ -234,12 +231,11 @@ if __name__ == '__main__':
         "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
         "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
         "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
-        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test/",
+        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
         "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
         "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
-        "orientation": "Frontal", #"Frontal",
+        "orientation": "Frontal",
         "uncertainty": "toZero",
-        "train_augment": "center_crop" #"none", "random_crop", "center_crop", "color_jitter", "all",
     }
 
     data_default_params = {
@@ -264,8 +260,12 @@ if __name__ == '__main__':
     test_loaders = datamodule.test_dataloader(batch_size=1)
     print('len(test_loaders.dataset)',len(test_loaders.dataset))
 
-#
-#
+
+    # for batch in test_loaders:
+    #     print(batch['img'].shape)
+    #     print(batch['label'].shape)
+
+
     train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
     for disease in chexpert_dict["train_diseases"]:
         print(disease)

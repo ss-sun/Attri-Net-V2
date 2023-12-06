@@ -24,20 +24,16 @@ def resnet_get_parser():
     parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray']) # will change to color if dataset is airogs_color
 
     # Data configuration.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
-
-
+    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
-    parser.add_argument('--batch_size', type=int, default=8, help='mini-batch size')
+    parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
     # Training configuration.
-    parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=20, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=0.00001, help='weight decay')
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--save_path', type=str, default='/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet', help='path of the exp')
-
     # Testing configuration.
     parser.add_argument('--test_model_path', type=str, default='/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet', help='path of the models')
 
@@ -95,10 +91,13 @@ if __name__ == '__main__':
 
     parser = resnet_get_parser()
     config = parser.parse_args()
-
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
-    config.dataset = datasets[config.dataset_idx]
-    if 'color' in config.dataset:
-        config.img_mode = 'color'
+    if config.dataset == 'vindr_cxr':
+        assert config.epochs > 20
 
     main(config)
+
+    # datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
+    # config.dataset = datasets[config.dataset_idx]
+    # if 'color' in config.dataset:
+    #     config.img_mode = 'color'
+
