@@ -40,14 +40,9 @@ class NIHChestXray(Dataset):
             img = normalize_image(img)
             img = map_image_to_intensity_range(img, -1, 1, percentiles=0.95)
             data['img'] = img
-            # data['BBox'] = None
             data['BBox'] = 0
 
         if self.with_BBox == True:
-            # get the scale factor to scale the bounding box coordinates to adpat image size change from 1024 -> 320.
-
-            # scale_factor_x = self.img_size / float(img.size[0])
-            # scale_factor_y = self.img_size / float(img.size[1])
 
             if self.transforms is not None:
                 img = self.transforms(img)  # return image in range (0,1)
@@ -62,10 +57,6 @@ class NIHChestXray(Dataset):
             if lesion_type in self.TRAIN_DISEASES:
                 disease_idx = self.TRAIN_DISEASES.index(lesion_type)
                 label[disease_idx] = 1
-                # x_min = int(self.df.iloc[idx]['Bbox [x'] * scale_factor_x)
-                # y_min = int(self.df.iloc[idx]['y'] * scale_factor_y)
-                # width = int(self.df.iloc[idx]['w'] * scale_factor_x)
-                # height = int(self.df.iloc[idx]['h]'] * scale_factor_y)
                 x_min = int(self.df.iloc[idx]['Bbox [x'])
                 y_min = int(self.df.iloc[idx]['y'])
                 width = int(self.df.iloc[idx]['w'])
@@ -130,12 +121,6 @@ class NIHChestXrayDataModule(LightningDataModule):
             ]),
             'test': tfs.Compose([
                 tfs.Resize((self.img_size, self.img_size)),
-                tfs.ToTensor(),
-            ]),
-
-            'trainBB': tfs.Compose([
-                tfs.Resize((self.img_size, self.img_size)),
-                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.ToTensor(),
             ]),
         }
@@ -219,13 +204,6 @@ class NIHChestXrayDataModule(LightningDataModule):
             else:
                 trainBBox_dataloaders[disease] = None
         return trainBBox_dataloaders
-
-
-
-
-
-
-
 
 
     def split(self, train_valid_list, train_ratio, seed, shuffle=True):
@@ -352,7 +330,7 @@ class NIHChestXrayDataModule(LightningDataModule):
         """
         train_sets = {}
         for disease in self.TRAIN_DISEASES:
-            train_sets[disease] = self.subset_BBox(src_df=self.BBox_train_df, disease=disease, transforms=self.data_transforms['trainBB'])
+            train_sets[disease] = self.subset_BBox(src_df=self.BBox_train_df, disease=disease, transforms=self.data_transforms["train"])
         return train_sets
 
 
