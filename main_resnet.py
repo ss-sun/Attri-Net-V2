@@ -29,7 +29,7 @@ def resnet_get_parser():
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
     # Training configuration.
-    parser.add_argument('--epochs', type=int, default=20, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=25, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=0.00001, help='weight decay')
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')

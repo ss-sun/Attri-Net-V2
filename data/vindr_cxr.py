@@ -115,7 +115,7 @@ class Vindr_CXR_BBOX(Dataset):
 
 
 
-class Vindr_CXR_BB_DataModule(LightningDataModule):
+class Vindr_CXR_BBOX_DataModule(LightningDataModule):
 
     def __init__(self, dataset_params, split_ratio=0.8, resplit=True, img_size=320, seed=42):
 
@@ -134,10 +134,12 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
 
         self.data_transforms = {
             'train': tfs.Compose([
+                tfs.Resize((self.img_size, self.img_size)),
                 tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.ToTensor(),
             ]),
             'test': tfs.Compose([
+                tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
             ]),
         }
@@ -329,7 +331,7 @@ if __name__ == '__main__':
         "img_size": 320,
     }
 
-    datamodule = Vindr_CXR_BB_DataModule(vindr_cxr_withBBdict,
+    datamodule = Vindr_CXR_BBOX_DataModule(vindr_cxr_withBBdict,
                                         split_ratio=data_default_params['split_ratio'],
                                         resplit=data_default_params['resplit'],
                                         img_size=data_default_params['img_size'],
@@ -343,6 +345,8 @@ if __name__ == '__main__':
     print("len(train_loader.dataset) in main", len(train_loader.dataset))
     print("len(valid_loader.dataset) in main", len(valid_loader.dataset))
     print("len(test_loader.dataset) in main", len(test_loader.dataset))
+
+    print("len(train_loader)", len(train_loader))
 
     # train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
     #

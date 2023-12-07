@@ -38,7 +38,7 @@ conda activate tt_interaction
 echo "-------- PYTHON OUTPUT ----------"
 
 # python3 main_resnet.py --dataset "chexpert" --epochs 20
-python3 main_resnet.py --dataset "nih_chestxray" --epochs 20
+python3 main_resnet.py --dataset "vindr_cxr" --epochs 75
 
 echo "---------------------------------"
 

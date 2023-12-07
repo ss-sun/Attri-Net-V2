@@ -59,8 +59,8 @@ class CheXpertDataModule(LightningDataModule):
 
         self.data_transforms = {
             'train': tfs.Compose([
-                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.Resize((self.img_size, self.img_size)),
+                tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
                 tfs.ToTensor()]),
             'test': tfs.Compose([
                 tfs.Resize((self.img_size, self.img_size)),
