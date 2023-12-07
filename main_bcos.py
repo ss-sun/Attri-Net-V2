@@ -16,21 +16,19 @@ def bcos_resnet_get_parser():
     parser.add_argument('--exp_name', type=str, default='bcos_resnet')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-
-    parser.add_argument('--guidance_mode', type=str, default='bbox',
-                        choices=['bbox','pseudo_mask', 'None'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+    parser.add_argument('--guidance_mode', type=str, default="no_guidance",
+                        choices=['bbox','pseudo_mask', 'no_guidance'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
 
     # Data configuration.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=6, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+
+    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr'])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
-    parser.add_argument('--batch_size', type=int, default=8, help='mini-batch size')
-    parser.add_argument("--lambda_localizationloss", type=float, default=1.0, help="Lambda to use to weight localization loss.")
+    parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
+    parser.add_argument("--lambda_localizationloss", type=float, default=0, help="Lambda to use to weight localization loss. 0 means no localization loss.")
     # Training configuration.
-    parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=25, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=0.00001, help='weight decay')
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
@@ -94,15 +92,4 @@ def main(exp_configs):
 if __name__ == '__main__':
     parser = bcos_resnet_get_parser()
     config = parser.parse_args()
-
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
-    config.dataset = datasets[config.dataset_idx]
-    lambdas = [0.02, 0.01, 0.0075, 0.005, 0.0025, 0]
-    config.lambda_localizationloss = lambdas[int(config.lambda_localizationloss)-1]
-
-    if 'color' in config.dataset:
-        config.img_mode = 'color'
-        config.lambda_localizationloss = 0
-
-
     main(config)

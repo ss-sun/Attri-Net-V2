@@ -25,7 +25,7 @@ class bcos_resnet_solver(object):
         self.use_gpu = exp_configs.use_gpu
         self.use_wandb = exp_configs.use_wandb
         self.dataloaders = data_loader
-        self.img_mode = exp_configs.img_mode
+
 
         if self.use_gpu and torch.cuda.is_available():
             self.device = torch.device("cuda")
@@ -45,8 +45,6 @@ class bcos_resnet_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
 
-            if exp_configs.dataset == "vindr_cxr_withBB":
-                assert self.guidance_mode == "bbox"
             if self.guidance_mode == "pseudo_mask":
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss = PseudoEnergyLoss_multilabel()
@@ -78,10 +76,7 @@ class bcos_resnet_solver(object):
 
     def init_model(self):
         # Prepare model, input dim=1 because input x-ray images are gray scale.
-        if self.img_mode == 'gray':
-            model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES), in_chans=2)
-        if self.img_mode == 'color':
-            model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES), in_chans=6)
+        model = bcos_resnet50(pretrained=False, num_classes=len(self.TRAIN_DISEASES), in_chans=2)
         model = model.to(self.device)
         return model
 
