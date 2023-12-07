@@ -11,8 +11,6 @@ from data.data_utils import map_image_to_intensity_range, normalize_image
 from PIL import Image, ImageDraw
 
 
-
-
 class Vindr_CXR_BBOX_TEST(Dataset):
     # this dataset is only used for pixel sensitivity analysis.
     # the diffierence between this dataset and Vindr_CXR_BBOX is that this dataset does not provide bbox for multi-labels.
@@ -148,8 +146,6 @@ class Vindr_CXR_BB_DataModule(LightningDataModule):
         # Read train and test csv files
         train_df = pd.read_csv(self.train_csv_file)
         test_df = pd.read_csv(self.test_csv_file)
-        print('len(train_df): ',len(train_df))
-        print('len(test_df): ',len(test_df))
         self.diagnoses = np.unique(np.asarray(train_df['class_name'].tolist())).tolist()
 
         # Preprocess csv file

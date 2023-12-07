@@ -7,7 +7,9 @@ use script generate_pseudoBBox_chexpert.py
 
 
 
-
+Nih chestxray14 dataset preprocessing.
+1. download dataset
+2. scale images to (320*320), split bbox annotation to 40%, 60% for train and test. scale bbox annotation accordingly.
 
 
 
