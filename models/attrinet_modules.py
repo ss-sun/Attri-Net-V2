@@ -195,14 +195,13 @@ class Generator_with_Ada(nn.Module):
     """
     Generator network.
     """
-    def __init__(self, num_classes, img_size, act_func, n_fc=8, dim_latent=512, conv_dim=64, in_channels=1, out_channels=1, repeat_num=6, type="previous"):
+    def __init__(self, num_classes, img_size, act_func, n_fc=8, dim_latent=512, conv_dim=64, in_channels=1, out_channels=1, repeat_num=6):
         super(Generator_with_Ada, self).__init__()
 
         self.num_classes = num_classes
         self.img_size = img_size
         self.repeat_num = repeat_num
         self.dim_latent = dim_latent
-        self.type = type
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -278,10 +277,8 @@ class Generator_with_Ada(nn.Module):
         # Create the dest image and mask.
         y = x + out
         y = torch.tanh(y)
-        if self.type == "previous":
-            m = y - x
-        else:
-            m = torch.abs(y-x)
+        m = y - x
+
         return y, m
 
 

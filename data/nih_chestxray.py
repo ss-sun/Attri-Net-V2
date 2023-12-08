@@ -166,7 +166,7 @@ class NIHChestXrayDataModule(LightningDataModule):
 
 
     def train_dataloader(self, batch_size, shuffle=True):
-        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def valid_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)

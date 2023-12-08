@@ -2,7 +2,8 @@
 #SBATCH --ntasks=1                # Number of tasks (see below)
 #SBATCH --cpus-per-task=1         # Number of CPU cores per task
 #SBATCH --nodes=1                 # Ensure that all cores are on one machine
-#SBATCH --time=0-72:00            # Runtime in D-HH:MM
+#SBATCH --qos=long-10d-jobs
+#SBATCH --time=240:00:00            # Runtime in D-HH:MM
 #SBATCH --partition=gpu-2080ti    # Partition to submit to
 #SBATCH --gres=gpu:1              # optionally type and number of gpus
 #SBATCH --mem=20G                 # Memory pool for all cores (see also --mem-per-cpu)
@@ -36,25 +37,8 @@ conda activate tt_interaction
 
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
-# python3 main.py --use_wandb False
-# python3 main.py --lambda_1 100 --lambda_2 300 --lambda_3 100 --use_wandb False
-# python3 main.py --lambda_1 500 --lambda_2 1000 --lambda_3 500 --use_wandb True
-# python3 main.py --lambda_1 200 --lambda_2 400 --lambda_3 200
-# python3 main.py --dataset contam50
-# python3 main.py
-# python3 main.py --manual_seed 12345
-# python3 main.py --manual_seed 2023
-# python3 main.py --manual_seed 8675309
-# python3 main.py --manual_seed 21
-# python3 main.py --manual_seed 4294438
 
-# python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False" # train attrinet on gray and color glocuma images
-# python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --lambda_3 0 --lambda_centerloss 0 --lambda_localizationloss 0 --use_wandb "False" # train attrinet on gray and color glocuma images wihtout classifiers loss
-
-# python3 main_attrinet.py --debug "False" --dataset_idx ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
-
-# python3 main_attrinet.py --debug "False" --guidance_mode 'bbox' --dataset_idx 6 --lambda_localizationloss ${SLURM_ARRAY_TASK_ID} --use_wandb "False"
-python3 main_attrinet.py --guidance_freq 0.1
+python3 main_attrinet.py --guidance_mode 'no_guidance' --dataset "vindr_cxr" --lambda_localizationloss 0 --num_iters 100000
 
 echo "---------------------------------"
 

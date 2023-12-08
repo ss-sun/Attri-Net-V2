@@ -7,7 +7,7 @@ import cv2
 import argparse
 from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
-from solvers.attrinet_solver import task_switch_solver
+# from solvers.attrinet_solver import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm

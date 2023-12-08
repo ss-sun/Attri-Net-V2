@@ -9,7 +9,10 @@ from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, 
 from models.lgs_classifier import LogisticRegressionModel
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
+import json
+from models.losses import EnergyPointingGameBBMultipleLoss, PseudoEnergyLoss
+import random
 
 
 
@@ -30,7 +33,6 @@ class task_switch_solver(object):
         self.exp_configs = exp_configs
         self.use_gpu = exp_configs.use_gpu
         self.mode = exp_configs.mode
-        self.img_mode = exp_configs.img_mode
 
         # Set device.
         if self.use_gpu and torch.cuda.is_available():
@@ -55,16 +57,15 @@ class task_switch_solver(object):
         # Configurations of classifiers.
         self.logreg_dsratio = exp_configs.lgs_downsample_ratio
         if self.mode == "train":
-
             self.debug = exp_configs.debug
-            self.max_val_batches = 500
+            self.dataset = exp_configs.dataset
             # Training configurations.
             self.lambda_critic = exp_configs.lambda_critic
             self.lambda_1 = exp_configs.lambda_1
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
             self.lambda_ctr = exp_configs.lambda_centerloss
-            self.process_mask = exp_configs.process_mask
+            self.lambda_loc = exp_configs.lambda_localizationloss
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
             self.cls_iteration = exp_configs.cls_iteration # more classifier steps for one generator step
             self.num_iters = exp_configs.num_iters # total generator steps
@@ -75,6 +76,36 @@ class task_switch_solver(object):
             self.weight_decay_lgs = exp_configs.weight_decay_lgs
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
+            self.guidance_mode = exp_configs.guidance_mode  # "bbox", "pseudo_mask", "mixed", "no_guidance"
+            if self.guidance_mode == "no_guidance":
+                assert self.lambda_loc == 0
+
+            if self.guidance_mode == "bbox/masks":
+                # assert exp_configs.dataset == "vindr_cxr" or exp_configs.dataset == "nih_chestxray"
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+                if exp_configs.dataset == "nih_chestxray":
+                    self.dloader_pos_bbox = data_loader['train_pos_bbox']
+                    self.train_with_few_bbox = True
+                    self.freq = exp_configs.guidance_freq
+                    self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"] # nih_chestxray dataset only has gt bbox for these diseases.
+                if exp_configs.dataset == "chexpert":
+                    self.train_with_few_bbox = True
+                    self.freq = exp_configs.guidance_freq
+                    self.few_bbox_diseases = self.TRAIN_DISEASES
+
+            if self.guidance_mode == "pseudo_mask":
+                self.train_with_few_bbox = False
+                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                self.local_loss_pseudo = PseudoEnergyLoss()
+
+            if self.guidance_mode == "mixed":
+                self.train_with_few_bbox = True
+                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                self.local_loss_pseudo = PseudoEnergyLoss()
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+
+            if self.guidance_mode == "no_guidance":
+                self.train_with_few_bbox = False
 
             # Step size.
             self.sample_step = exp_configs.sample_step
@@ -91,7 +122,7 @@ class task_switch_solver(object):
             self.valid_loader = data_loader['valid']
             self.vis_loader_pos = data_loader['vis_pos']
             self.vis_loader_neg = data_loader['vis_neg']
-
+            self.max_val_batches = len(self.valid_loader)
             # Create latent code for self.TRAIN_DISEASES tasks
             self.latent_z_task = self.create_task_code()
 
@@ -101,8 +132,8 @@ class task_switch_solver(object):
             self.net_d.apply(self.weights_init)
             self.optim_g, self.optim_d, self.optim_lgs = self.init_optimizer(self.net_g, self.net_d, self.net_lgs)
             self.lgs_loss = torch.nn.BCEWithLogitsLoss()
-            if self.process_mask != 'sum(abs(mx))':
-                self.center_losses, self.optimizer_centloss = self.init_centerlosses()
+
+            self.center_losses, self.optimizer_centloss = self.init_centerlosses()
 
             # Miscellaneous.
             self.use_wandb = exp_configs.use_wandb
@@ -113,7 +144,6 @@ class task_switch_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
             self.model_path = exp_configs.model_path
-            self.process_mask = exp_configs.process_mask
 
             # Create latent code for self.TRAIN_DISEASES tasks
             self.latent_z_task = self.create_task_code()
@@ -124,15 +154,38 @@ class task_switch_solver(object):
             self.load_model(self.model_path, is_best=True)
 
 
+    def prepare_pseudoMask(self, dataset):
+        pseudoMask = {}
+        file_path = pseudo_mask_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                pseudoMask[disease] = np.array(data[disease])
+        return pseudoMask
+
+    # def psydo_local_loss(self, pos_masks, psydo_mask):
+    #     """
+    #     Compute localization loss with psydo mask.
+    #     """
+    #     loss = 0
+    #     for i in range(len(pos_masks)):
+    #         pos_mask = torch.abs(pos_masks[i]).squeeze()
+    #         num = pos_mask[np.where(psydo_mask == 1)].sum()
+    #         den = pos_mask.sum()
+    #         if den < 1e-7:
+    #             energy_loss = 1 - num
+    #         else:
+    #             energy_loss = 1 - num / den
+    #         loss += energy_loss
+    #     return loss
+
 
     def init_centerlosses(self):
         """
         Initialize centerlosses for each task.
         """
-        if self.img_mode == 'gray':
-            feat_dim = self.img_size * self.img_size
-        if self.img_mode == 'color':
-            feat_dim = self.img_size * self.img_size * 3
+
+        feat_dim = self.img_size * self.img_size
         center_losses = {}
         optimizer_centloss = {}
         for disease in self.TRAIN_DISEASES:
@@ -174,16 +227,10 @@ class task_switch_solver(object):
         Initialize generator, disciminator and classifiers.
         """
         print('Initialize networks.')
-
-        if self.img_mode == 'gray':
-            in_channels = 1
-        if self.img_mode == 'color':
-            in_channels = 3
-
         self.net_g = Generator_with_Ada(num_classes=self.num_class, img_size=self.img_size,
                                         act_func="relu", n_fc=8, dim_latent=self.num_class * self.n_ones,
-                                        conv_dim=64, in_channels=in_channels, out_channels=in_channels, repeat_num=6, type=self.process_mask)
-        self.net_d = Discriminator_with_Ada(act_func="relu", in_channels=in_channels, conv_dim=64, dim_latent=self.num_class * self.n_ones,
+                                        conv_dim=64, in_channels=1, out_channels=1, repeat_num=6)
+        self.net_d = Discriminator_with_Ada(act_func="relu", in_channels=1, conv_dim=64, dim_latent=self.num_class * self.n_ones,
                                        repeat_num=6)
 
         self.net_g.to(device)
@@ -193,7 +240,7 @@ class task_switch_solver(object):
         self.net_lgs = {}
         for disease in self.TRAIN_DISEASES:
             m = LogisticRegressionModel(
-                input_size=self.img_size, num_classes=1, downsample_ratio=self.logreg_dsratio, type=self.process_mask)
+                input_size=self.img_size, num_classes=1, downsample_ratio=self.logreg_dsratio)
             m.to(device)
             self.net_lgs[disease] = m
 
@@ -237,9 +284,12 @@ class task_switch_solver(object):
             alpha.expand(bs, int(real_data.nelement() / bs)).contiguous().view(bs, ch, h, w)
         )
         alpha = alpha.to(self.device)
-        interpolates = torch.tensor(
-            alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
-        )
+
+        # interpolates = torch.tensor(
+        #     alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
+        # ) # previous version
+        interpolates = alpha * real_data.clone().detach().requires_grad_(True) + (1 - alpha) * fake_data.clone().detach().requires_grad_(True)
+
         interpolates = interpolates.to(self.device)
         disc_interpolates = netD(interpolates, task_code)
 
@@ -307,10 +357,9 @@ class task_switch_solver(object):
                 self.net_lgs[disease].state_dict(),
                 f"{self.ckpt_dir}/classifier_of_{disease}"+suffix,
                 )
-            if self.process_mask !='sum(abs(mx))':
-                torch.save(
-                    self.center_losses[disease].state_dict(),
-                    f"{self.ckpt_dir}/center_of_{disease}" + suffix,
+            torch.save(
+                self.center_losses[disease].state_dict(),
+                f"{self.ckpt_dir}/center_of_{disease}" + suffix,
             )
 
 
@@ -386,20 +435,16 @@ class task_switch_solver(object):
             dests = torch.cat((dests_pos, dests_neg))
             lbls = torch.cat((pos_lbls, neg_lbls))
 
-            if self.process_mask != "sum(abs(mx))":
-                y_pred = classifier(masks)
-            if self.process_mask == "sum(abs(mx))":
-                y_pred = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
+            y_pred = classifier(masks)
             pred_batch = torch.sigmoid(y_pred)
+
             dest_name = str(gen_iterations) + "_" + disease + "_dest_samples.png"
             mask_name = str(gen_iterations) + "_" + disease + "_mask_samples.png"
             dest_path = os.path.join(self.output_dir, dest_name)
             mask_path = os.path.join(self.output_dir, mask_name)
             save_batch(to_numpy(dests * 0.5 + 0.5), to_numpy(lbls), to_numpy(pred_batch), dest_path)
-            if self.process_mask == "previous":
-                save_batch(to_numpy(-masks), to_numpy(lbls), to_numpy(pred_batch), mask_path)
-            else:
-                save_batch(to_numpy(masks), to_numpy(lbls), to_numpy(pred_batch), mask_path)
+            save_batch(to_numpy(-masks), to_numpy(lbls), to_numpy(pred_batch), mask_path)
+
 
     def vis_classcenter(self, gen_iterations):
         """
@@ -464,6 +509,18 @@ class task_switch_solver(object):
                 self.pos_disease_data_iters[current_training_disease] = iter(
                     self.dloader_pos[current_training_disease])
                 batch = next(self.pos_disease_data_iters[current_training_disease])
+
+            if self.train_with_few_bbox and current_training_disease in self.few_bbox_diseases:
+                prob_pos = random.random()
+                # print(prob_pos)
+                if prob_pos < self.freq:
+                    # print("pick pos bbox")
+                    try:
+                        batch = next(self.pos_bbox_disease_data_iters[current_training_disease])
+                    except StopIteration:
+                        self.pos_bbox_disease_data_iters[current_training_disease] = iter(self.dloader_pos_bbox[current_training_disease])
+                        batch = next(self.pos_bbox_disease_data_iters[current_training_disease])
+
         elif which_batch == "neg":
             try:
                 batch = next(self.neg_disease_data_iters[current_training_disease])
@@ -472,11 +529,26 @@ class task_switch_solver(object):
                     self.dloader_neg[current_training_disease])
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
-        imgs, lbls = batch['img'], batch['label']
+        if self.guidance_mode == "bbox/masks" and self.dataset == "vindr_cxr":
+            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
+            bbox = bboxs[:, disease_idx, :]
+            return imgs, lbls, bbox
 
-        imgs = imgs.to(self.device)
-        lbls = lbls.to(self.device)
-        return imgs, lbls
+        if self.guidance_mode == "bbox/masks" and self.dataset == "nih_chestxray" and torch.sum(batch['BBox'])!=0:
+            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            bbox = batch['BBox']
+            return imgs, lbls, bbox
+
+        else:
+            imgs, lbls = batch['img'], batch['label']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            return imgs, lbls, None
 
 
     def train(self):
@@ -489,6 +561,11 @@ class task_switch_solver(object):
         for disease in self.TRAIN_DISEASES:
             self.neg_disease_data_iters[disease] = iter(self.dloader_neg[disease])
             self.pos_disease_data_iters[disease] = iter(self.dloader_pos[disease])
+
+        if self.train_with_few_bbox:
+            self.pos_bbox_disease_data_iters = {}
+            for disease in self.few_bbox_diseases:
+                self.pos_bbox_disease_data_iters[disease] = iter(self.dloader_pos_bbox[disease])
 
         # Record classification performance(auc) during training.
         valid_auc = []
@@ -525,8 +602,8 @@ class task_switch_solver(object):
 
                 # Select a disease to train on and get a positive batch and a negative batch.
                 self.current_training_disease = self.TRAIN_DISEASES[dis_iterations % self.num_class]
-                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 # Switch the discriminator to a specific disease task and compute critic loss.
                 task_code = self.latent_z_task[self.current_training_disease].to(self.device)
@@ -551,8 +628,8 @@ class task_switch_solver(object):
 
             # Select a disease to train on and get a positive batch and a negative batch.
             self.current_training_disease = self.TRAIN_DISEASES[gen_iterations % self.num_class]
-            imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-            imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+            imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+            imgs_pos, lbls_pos, bbox_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
             # Switch the generator to a specific disease task and compute generator loss.
             task_code= self.latent_z_task[self.current_training_disease].to(self.device)
@@ -571,69 +648,57 @@ class task_switch_solver(object):
             lbls_all = torch.cat((lbls_neg, lbls_pos))
             disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
             classifier = self.net_lgs[self.current_training_disease]
-            if self.process_mask != "sum(abs(mx))":
-                pred_all = classifier(masks_all)
-            if self.process_mask == "sum(abs(mx))":
-                pred_all = classifier(masks_all.sum(dim=(1, 2, 3), keepdim=True))
+            pred_all = classifier(masks_all)
             classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
             classifiers_loss = classifiers_loss * self.lambda_3
 
+            # compute localization loss
+            localization_loss = 0
+            if self.guidance_mode == "bbox/masks" and bbox_pos is not None:
+                for img_idx in range(len(imgs_pos)):
+                    bb_list = bbox_pos[img_idx]
+                    localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list)
+            if self.guidance_mode == "pseudo_mask":
+                pseudo_mask = self.pseudoMask[self.current_training_disease]
+                for img_idx in range(len(imgs_pos)):
+                    localization_loss += self.local_loss_pseudo(pos_masks[img_idx], pseudo_mask)
 
 
-            if self.process_mask != "sum(abs(mx))":
-                # Get center loss.
-                center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
-                                                                                lbls_all[:, disease_idx]) * self.lambda_ctr
-                # Total loss.
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss
+            # Get center loss.
+            center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
+                                                                            lbls_all[:, disease_idx]) * self.lambda_ctr
+            # Total loss.
+            gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss + localization_loss * self.lambda_loc
 
-                logdict = {
-                    "gen_loss": gen_loss,
-                    "gen_loss_d": gen_loss_d,
-                    "l1_anomaly": l1_anomaly,
-                    "l1_health": l1_health,
-                    "classifiers_loss": classifiers_loss,
-                    "center_loss": center_loss
-                }
-                if self.use_wandb:
-                    for n, v in logdict.items():
-                        logscalar(f"per_batch.{n}", v)
-                else:
-                    print(logdict)
-
-                # Update generator.
-                self.optim_g.zero_grad()
-                if self.lambda_ctr != 0.0:
-                    self.optimizer_centloss[self.current_training_disease].zero_grad()
-                gen_loss.backward()
-                self.optim_g.step()
-                if self.lambda_ctr != 0.0:
-                    for param in self.center_losses[self.current_training_disease].parameters():
-                        param.grad.data *= (1. / self.lambda_ctr)
-                    self.optimizer_centloss[self.current_training_disease].step()
-
-                gen_iterations += 1
-                # print("gen_iterations", gen_iterations)
+            logdict = {
+                "gen_loss": gen_loss,
+                "gen_loss_d": gen_loss_d,
+                "l1_anomaly": l1_anomaly,
+                "l1_health": l1_health,
+                "classifiers_loss": classifiers_loss,
+                "center_loss": center_loss,
+                "localization_loss": localization_loss
+            }
+            if self.use_wandb:
+                for n, v in logdict.items():
+                    logscalar(f"per_batch.{n}", v)
             else:
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss
-                logdict = {
-                    "gen_loss": gen_loss,
-                    "gen_loss_d": gen_loss_d,
-                    "l1_anomaly": l1_anomaly,
-                    "l1_health": l1_health,
-                    "classifiers_loss": classifiers_loss,
-                }
-                if self.use_wandb:
-                    for n, v in logdict.items():
-                        logscalar(f"per_batch.{n}", v)
-                else:
-                    print(logdict)
+                print(logdict)
 
-                # Update generator.
-                self.optim_g.zero_grad()
-                gen_loss.backward()
-                self.optim_g.step()
-                gen_iterations += 1
+            # Update generator.
+            self.optim_g.zero_grad()
+            if self.lambda_ctr != 0.0:
+                self.optimizer_centloss[self.current_training_disease].zero_grad()
+            gen_loss.backward()
+            self.optim_g.step()
+            if self.lambda_ctr != 0.0:
+                for param in self.center_losses[self.current_training_disease].parameters():
+                    param.grad.data *= (1. / self.lambda_ctr)
+                self.optimizer_centloss[self.current_training_disease].step()
+
+            gen_iterations += 1
+
+
 
                 # =================================================================================== #
             #                               3. Train the classifiers                              #
@@ -644,8 +709,8 @@ class task_switch_solver(object):
                 # Set requires_grad for respective classifier.
                 self.set_require_grads([False, False, True])
 
-                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
                 classifier = self.net_lgs[self.current_training_disease]
@@ -657,13 +722,7 @@ class task_switch_solver(object):
                 masks_all = torch.cat((neg_masks, pos_masks))
                 lbls_all = torch.cat((lbls_neg, lbls_pos))
 
-                if self.process_mask != "sum(abs(mx))":
-                    pred_all = classifier(masks_all)
-
-
-                if self.process_mask == "sum(abs(mx))":
-                    pred_all = classifier(masks_all.sum(dim=(1, 2, 3), keepdim=True))
-
+                pred_all = classifier(masks_all)
                 classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
                 classifiers_loss = classifiers_loss * self.lambda_3
 
@@ -691,10 +750,9 @@ class task_switch_solver(object):
                 print(" - model validation-")
                 auc, _, _ = self.validation(max_batches=self.max_val_batches)
                 valid_auc.append(auc)
-                print("validation AUC: ", auc)
+                print("short validation AUC: ", auc)
                 print("current best AUC: ", best_auc)
-                print("AUC of all epochs: ", valid_auc)
-
+                # print("AUC of all epochs: ", valid_auc)
                 if best_auc < auc:
                     best_auc = auc
                     if self.use_wandb:
@@ -705,8 +763,7 @@ class task_switch_solver(object):
                         print("best_valid_auc step", gen_iterations)
 
                     self.save_checkpoint(gen_iterations, is_best=True)
-                    if self.process_mask != "sum(abs(mx))":
-                        self.vis_classcenter(gen_iterations)
+                    self.vis_classcenter(gen_iterations)
 
                 else:
                     self.save_checkpoint(gen_iterations, is_best=False)
@@ -741,11 +798,7 @@ class task_switch_solver(object):
                     classifier = self.net_lgs[disease]
                     task_code = self.latent_z_task[disease].to(self.device)
                     _, masks = self.net_g(valid_data, task_code)
-                    if self.process_mask != "sum(abs(mx))":
-                        y_pred_logits = classifier(masks)
-                    if self.process_mask == "sum(abs(mx))":
-                        y_pred_logits = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
-
+                    y_pred_logits = classifier(masks)
                     y_pred = torch.sigmoid(y_pred_logits).squeeze()
                     valid_loss = self.lgs_loss(y_pred_logits.squeeze(), valid_labels[:, idx])
 
@@ -821,12 +874,7 @@ class task_switch_solver(object):
                     task_code = self.latent_z_task[disease].to(self.device)
                     _, masks = self.net_g(test_data, task_code)
 
-                    # y_pred_logits = classifier(masks)
-                    if self.process_mask != "sum(abs(mx))":
-                        y_pred_logits = classifier(masks)
-                    if self.process_mask == "sum(abs(mx))":
-                        y_pred_logits = classifier(masks.sum(dim=(1, 2, 3), keepdim=True))
-
+                    y_pred_logits = classifier(masks)
                     y_pred = torch.sigmoid(y_pred_logits).squeeze()
 
                     idx = self.TRAIN_DISEASES.index(disease)
@@ -917,8 +965,10 @@ class task_switch_solver(object):
         disease = self.TRAIN_DISEASES[label_idx]
         task_code = self.latent_z_task[disease].to(self.device)
         input = input.to(self.device)
+        # attrs = self.net_g(input, task_code)[1]
         dests, attrs = self.net_g(input, task_code)
         return dests, attrs
+
 
     def get_probs(self, inputs, label_idx):
         """
@@ -927,11 +977,6 @@ class task_switch_solver(object):
         disease = self.TRAIN_DISEASES[label_idx]
         classifier = self.net_lgs[disease]
         _, attrs = self.get_attributes(inputs, label_idx)
-
-        # pred_logits = classifier(attrs)
-        if self.process_mask != "sum(abs(mx))":
-            pred_logits = classifier(attrs)
-        if self.process_mask == "sum(abs(mx))":
-            pred_logits = classifier(attrs.sum(dim=(1, 2, 3), keepdim=True))
+        pred_logits = classifier(attrs)
         prob = torch.sigmoid(pred_logits)
         return prob

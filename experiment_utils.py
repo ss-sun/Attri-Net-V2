@@ -35,14 +35,12 @@ def create_expname(exp_configs):
     if exp_configs.exp_name == "attri-net":
         exp_name = exp_configs.exp_name + str(current_time)[:-7]
         exp_name += f"--{exp_configs.dataset}"
-        exp_name += f"--process_mask={exp_configs.process_mask}"
-        # exp_name += f"--bs={exp_configs.batch_size}"
-        exp_name += f"--lg_ds={exp_configs.lgs_downsample_ratio}"
         exp_name += f"--l_cri={exp_configs.lambda_critic}"
         exp_name += f"--l1={exp_configs.lambda_1}"
         exp_name += f"--l2={exp_configs.lambda_2}"
         exp_name += f"--l3={exp_configs.lambda_3}"
         exp_name += f"--l_ctr={exp_configs.lambda_centerloss}"
+        exp_name += f"--{exp_configs.guidance_mode}"
         if exp_configs.lambda_localizationloss > 0:
             exp_name += f"--l_loc={exp_configs.lambda_localizationloss}"
             exp_name += f"--guid_freq={exp_configs.guidance_freq}"

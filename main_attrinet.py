@@ -1,11 +1,4 @@
-# from solvers.attrinet_solver import task_switch_solver
-# from solvers.attrinet_solver_g_withoutcl import task_switch_solver
-# from solvers.attrinet_solver_energyloss import task_switch_solver
-# from solvers.attrinet_solver_energyloss_with_psydoMask import task_switch_solver
-# from solvers.attrinet_solver_energyloss_new import task_switch_solver
-from solvers.attrinet_solver_energyloss_new_new import task_switch_solver
-import logging
-
+from solvers.attrinet_solver import task_switch_solver
 from experiment_utils import init_seed, init_experiment, init_wandb
 from train_utils import prepare_datamodule
 
@@ -24,17 +17,12 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--img_mode', type=str, default='gray',
-                        choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-
-    parser.add_argument('--guidance_mode', type=str, default='bbox',
-                        choices=['bbox', 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
-
+    parser.add_argument('--guidance_mode', type=str, default='no_guidance',
+                        choices=['bbox/masks', 'pseudo_mask', 'mixed', 'no_guidance'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox')
     # Data configuration.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20','contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=1, help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
+    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -55,14 +43,13 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_2', type=float, default=200, help='weight for l1 loss of healthy mask')
     parser.add_argument('--lambda_3', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
-    parser.add_argument('--lambda_localizationloss', type=float, default=30, help='weight for localization loss of disease mask')
-    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
+
+    parser.add_argument('--lambda_localizationloss', type=float, default=0, help='weight for localization loss of disease mask, default=30')
 
     # Training configuration.
-    parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train for')
     parser.add_argument('--cls_iteration', type=int, default=5, help='number of classifier iterations per each generator iter, default=5')
     parser.add_argument('--d_iters', type=int, default=5, help='number of discriminator iterations per each generator iter, default=5')
-    parser.add_argument('--num_iters', type=int, default=500000, help='number of total iterations for training generator')
+    parser.add_argument('--num_iters', type=int, default=100000, help='number of total iterations for training generator')
     parser.add_argument('--g_lr', type=float, default=0.0001, help='learning rate for G')
     parser.add_argument('--d_lr', type=float, default=0.0001, help='learning rate for D')
     parser.add_argument('--lgs_lr', type=float, default=0.0001, help='learning rate for logistic regression classifier, previous exp use 0.00025')
@@ -140,11 +127,4 @@ def main(exp_configs):
 if __name__ == '__main__':
     parser = attrinet_get_parser()
     config = parser.parse_args()
-
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB', 'contam20', 'contam50']
-    config.dataset = datasets[config.dataset_idx]
-    if 'color' in config.dataset:
-        config.img_mode = 'color'
-    if config.dataset == 'vindr_cxr_withBB':
-        assert config.guidance_mode == 'bbox'
     main(config)

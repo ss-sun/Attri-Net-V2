@@ -7,7 +7,7 @@ from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
 # from solvers.attrinet_solver import task_switch_solver
 # from solvers.attrinet_solver_energyloss_new import task_switch_solver
-from solvers.attrinet_solver_energyloss_new_new import task_switch_solver
+from solvers.attrinet_solver import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
 from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
     attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \

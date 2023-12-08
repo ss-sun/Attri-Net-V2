@@ -186,13 +186,13 @@ class Vindr_CXR_BBOX_DataModule(LightningDataModule):
 
 
     def train_dataloader(self, batch_size, shuffle=True):
-        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def valid_dataloader(self, batch_size, shuffle=False):
-        return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.valid_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def test_dataloader(self, batch_size, shuffle=False):
-        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle)
+        return DataLoader(self.test_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def BBox_test_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.bbox_test_set, batch_size=batch_size, shuffle=False)
@@ -203,7 +203,7 @@ class Vindr_CXR_BBOX_DataModule(LightningDataModule):
             train_loader = {}
             for disease in self.TRAIN_DISEASES:
                 train_loader[disease] = DataLoader(self.single_disease_train_sets[c][disease], batch_size=batch_size,
-                                                   shuffle=shuffle)
+                                                   shuffle=shuffle, drop_last=True)
             train_dataloaders[c] = train_loader
         return train_dataloaders
 

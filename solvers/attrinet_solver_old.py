@@ -9,10 +9,7 @@ from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, 
 from models.lgs_classifier import LogisticRegressionModel
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
-import json
-from models.losses import EnergyPointingGameBBMultipleLoss, PseudoEnergyLoss
-import random
+
 
 
 
@@ -58,7 +55,6 @@ class task_switch_solver(object):
         # Configurations of classifiers.
         self.logreg_dsratio = exp_configs.lgs_downsample_ratio
         if self.mode == "train":
-            self.dataset = exp_configs.dataset
 
             self.debug = exp_configs.debug
             self.max_val_batches = 500
@@ -68,7 +64,6 @@ class task_switch_solver(object):
             self.lambda_2 = exp_configs.lambda_2
             self.lambda_3 = exp_configs.lambda_3
             self.lambda_ctr = exp_configs.lambda_centerloss
-            self.lambda_loc = exp_configs.lambda_localizationloss
             self.process_mask = exp_configs.process_mask
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
             self.cls_iteration = exp_configs.cls_iteration # more classifier steps for one generator step
@@ -80,22 +75,6 @@ class task_switch_solver(object):
             self.weight_decay_lgs = exp_configs.weight_decay_lgs
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
-
-            self.guidance_mode = exp_configs.guidance_mode  # "bbox" or "pseudo_mask"
-            if self.guidance_mode == "bbox":
-                assert exp_configs.dataset == "vindr_cxr_withBB" or exp_configs.dataset == "nih_chestxray"
-                self.local_loss = EnergyPointingGameBBMultipleLoss()
-                if exp_configs.dataset == "nih_chestxray":
-                    self.dloader_pos_bbox = data_loader['train_pos_bbox']
-                    self.train_with_few_bbox = True
-                    #self.freq = 0.1
-                    self.freq = exp_configs.guidance_freq
-                    self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"]
-
-            if self.guidance_mode == "pseudo_mask":
-                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
-                self.local_loss = PseudoEnergyLoss()
-
 
             # Step size.
             self.sample_step = exp_configs.sample_step
@@ -144,31 +123,6 @@ class task_switch_solver(object):
             self.init_model(self.device)
             self.load_model(self.model_path, is_best=True)
 
-
-    def prepare_pseudoMask(self, dataset):
-        pseudoMask = {}
-        file_path = pseudo_mask_dict[dataset]
-        with open(file_path) as json_file:
-            data = json.load(json_file)
-            for disease in self.TRAIN_DISEASES:
-                pseudoMask[disease] = np.array(data[disease])
-        return pseudoMask
-
-    # def psydo_local_loss(self, pos_masks, psydo_mask):
-    #     """
-    #     Compute localization loss with psydo mask.
-    #     """
-    #     loss = 0
-    #     for i in range(len(pos_masks)):
-    #         pos_mask = torch.abs(pos_masks[i]).squeeze()
-    #         num = pos_mask[np.where(psydo_mask == 1)].sum()
-    #         den = pos_mask.sum()
-    #         if den < 1e-7:
-    #             energy_loss = 1 - num
-    #         else:
-    #             energy_loss = 1 - num / den
-    #         loss += energy_loss
-    #     return loss
 
 
     def init_centerlosses(self):
@@ -283,12 +237,9 @@ class task_switch_solver(object):
             alpha.expand(bs, int(real_data.nelement() / bs)).contiguous().view(bs, ch, h, w)
         )
         alpha = alpha.to(self.device)
-
-        # interpolates = torch.tensor(
-        #     alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
-        # ) # previous version
-        interpolates = alpha * real_data.clone().detach().requires_grad_(True) + (1 - alpha) * fake_data.clone().detach().requires_grad_(True)
-
+        interpolates = torch.tensor(
+            alpha * real_data + ((1 - alpha) * fake_data), requires_grad=True
+        )
         interpolates = interpolates.to(self.device)
         disc_interpolates = netD(interpolates, task_code)
 
@@ -513,18 +464,6 @@ class task_switch_solver(object):
                 self.pos_disease_data_iters[current_training_disease] = iter(
                     self.dloader_pos[current_training_disease])
                 batch = next(self.pos_disease_data_iters[current_training_disease])
-
-            if self.train_with_few_bbox and current_training_disease in self.few_bbox_diseases:
-                prob_pos = random.random()
-                # print(prob_pos)
-                if prob_pos < self.freq:
-                    # print("pick pos bbox")
-                    try:
-                        batch = next(self.pos_bbox_disease_data_iters[current_training_disease])
-                    except StopIteration:
-                        self.pos_bbox_disease_data_iters[current_training_disease] = iter(self.dloader_pos_bbox[current_training_disease])
-                        batch = next(self.pos_bbox_disease_data_iters[current_training_disease])
-
         elif which_batch == "neg":
             try:
                 batch = next(self.neg_disease_data_iters[current_training_disease])
@@ -533,26 +472,11 @@ class task_switch_solver(object):
                     self.dloader_neg[current_training_disease])
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
-        if self.guidance_mode == "bbox" and self.dataset == "vindr_cxr_withBB":
-            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
-            imgs = imgs.to(self.device)
-            lbls = lbls.to(self.device)
-            disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
-            bbox = bboxs[:, disease_idx, :]
-            return imgs, lbls, bbox
+        imgs, lbls = batch['img'], batch['label']
 
-        if self.guidance_mode == "bbox" and self.dataset == "nih_chestxray" and torch.sum(batch['BBox'])!=0:
-            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
-            imgs = imgs.to(self.device)
-            lbls = lbls.to(self.device)
-            bbox = batch['BBox']
-            return imgs, lbls, bbox
-
-        else:
-            imgs, lbls = batch['img'], batch['label']
-            imgs = imgs.to(self.device)
-            lbls = lbls.to(self.device)
-            return imgs, lbls, None
+        imgs = imgs.to(self.device)
+        lbls = lbls.to(self.device)
+        return imgs, lbls
 
 
     def train(self):
@@ -565,11 +489,6 @@ class task_switch_solver(object):
         for disease in self.TRAIN_DISEASES:
             self.neg_disease_data_iters[disease] = iter(self.dloader_neg[disease])
             self.pos_disease_data_iters[disease] = iter(self.dloader_pos[disease])
-
-        if self.train_with_few_bbox:
-            self.pos_bbox_disease_data_iters = {}
-            for disease in self.few_bbox_diseases:
-                self.pos_bbox_disease_data_iters[disease] = iter(self.dloader_pos_bbox[disease])
 
         # Record classification performance(auc) during training.
         valid_auc = []
@@ -606,8 +525,8 @@ class task_switch_solver(object):
 
                 # Select a disease to train on and get a positive batch and a negative batch.
                 self.current_training_disease = self.TRAIN_DISEASES[dis_iterations % self.num_class]
-                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 # Switch the discriminator to a specific disease task and compute critic loss.
                 task_code = self.latent_z_task[self.current_training_disease].to(self.device)
@@ -632,8 +551,8 @@ class task_switch_solver(object):
 
             # Select a disease to train on and get a positive batch and a negative batch.
             self.current_training_disease = self.TRAIN_DISEASES[gen_iterations % self.num_class]
-            imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
-            imgs_pos, lbls_pos, bbox_pos = self.get_batch(self.current_training_disease, which_batch="pos")
+            imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
+            imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
             # Switch the generator to a specific disease task and compute generator loss.
             task_code= self.latent_z_task[self.current_training_disease].to(self.device)
@@ -652,25 +571,13 @@ class task_switch_solver(object):
             lbls_all = torch.cat((lbls_neg, lbls_pos))
             disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
             classifier = self.net_lgs[self.current_training_disease]
-
             if self.process_mask != "sum(abs(mx))":
                 pred_all = classifier(masks_all)
             if self.process_mask == "sum(abs(mx))":
                 pred_all = classifier(masks_all.sum(dim=(1, 2, 3), keepdim=True))
-
             classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
             classifiers_loss = classifiers_loss * self.lambda_3
 
-            # compute localization loss
-            localization_loss = 0
-            if self.guidance_mode == "bbox" and bbox_pos is not None:
-                for img_idx in range(len(imgs_pos)):
-                    bb_list = bbox_pos[img_idx]
-                    localization_loss += self.local_loss(pos_masks[img_idx], bb_list)
-            if self.guidance_mode == "pseudo_mask":
-                pseudo_mask = self.pseudoMask[self.current_training_disease]
-                for img_idx in range(len(imgs_pos)):
-                    localization_loss += self.local_loss(pos_masks[img_idx], pseudo_mask)
 
 
             if self.process_mask != "sum(abs(mx))":
@@ -678,7 +585,7 @@ class task_switch_solver(object):
                 center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),
                                                                                 lbls_all[:, disease_idx]) * self.lambda_ctr
                 # Total loss.
-                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss + localization_loss * self.lambda_loc
+                gen_loss = gen_loss_d + l1_anomaly + l1_health + classifiers_loss + center_loss
 
                 logdict = {
                     "gen_loss": gen_loss,
@@ -686,8 +593,7 @@ class task_switch_solver(object):
                     "l1_anomaly": l1_anomaly,
                     "l1_health": l1_health,
                     "classifiers_loss": classifiers_loss,
-                    "center_loss": center_loss,
-                    "localization_loss": localization_loss
+                    "center_loss": center_loss
                 }
                 if self.use_wandb:
                     for n, v in logdict.items():
@@ -738,8 +644,8 @@ class task_switch_solver(object):
                 # Set requires_grad for respective classifier.
                 self.set_require_grads([False, False, True])
 
-                imgs_neg, lbls_neg, _ = self.get_batch(self.current_training_disease, which_batch="neg")
-                imgs_pos, lbls_pos, _ = self.get_batch(self.current_training_disease, which_batch="pos")
+                imgs_neg, lbls_neg = self.get_batch(self.current_training_disease, which_batch="neg")
+                imgs_pos, lbls_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
                 disease_idx = self.TRAIN_DISEASES.index(self.current_training_disease)
                 classifier = self.net_lgs[self.current_training_disease]
@@ -1011,10 +917,8 @@ class task_switch_solver(object):
         disease = self.TRAIN_DISEASES[label_idx]
         task_code = self.latent_z_task[disease].to(self.device)
         input = input.to(self.device)
-        # attrs = self.net_g(input, task_code)[1]
         dests, attrs = self.net_g(input, task_code)
         return dests, attrs
-
 
     def get_probs(self, inputs, label_idx):
         """

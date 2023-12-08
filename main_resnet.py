@@ -24,7 +24,7 @@ def resnet_get_parser():
     parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray']) # will change to color if dataset is airogs_color
 
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
+    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr'])
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
 
