@@ -63,7 +63,7 @@ class task_switch_solver(object):
             self.lambda_critic = exp_configs.lambda_critic
             self.lambda_1 = exp_configs.lambda_1
             self.lambda_2 = exp_configs.lambda_2
-            self.lambda_3 = exp_configs.lambda_3
+            self.lambda_cls = exp_configs.lambda_cls
             self.lambda_ctr = exp_configs.lambda_centerloss
             self.lambda_loc = exp_configs.lambda_localizationloss
             self.d_iters = exp_configs.d_iters # more discriminator steps for one generator step
@@ -650,7 +650,7 @@ class task_switch_solver(object):
             classifier = self.net_lgs[self.current_training_disease]
             pred_all = classifier(masks_all)
             classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
-            classifiers_loss = classifiers_loss * self.lambda_3
+            classifiers_loss = classifiers_loss * self.lambda_cls
 
             # compute localization loss
             localization_loss = 0
@@ -724,7 +724,7 @@ class task_switch_solver(object):
 
                 pred_all = classifier(masks_all)
                 classifiers_loss = self.lgs_loss(pred_all.squeeze(), lbls_all[:, disease_idx])
-                classifiers_loss = classifiers_loss * self.lambda_3
+                classifiers_loss = classifiers_loss * self.lambda_cls
 
                 optimizer = self.optim_lgs[self.current_training_disease]
                 optimizer.zero_grad()
@@ -804,7 +804,7 @@ class task_switch_solver(object):
 
                     valid_pred[idx].append(to_numpy(y_pred))
                     valid_true[idx].append(to_numpy(valid_labels[:, idx]))
-                    classifiers_loss += valid_loss * self.lambda_3
+                    classifiers_loss += valid_loss * self.lambda_cls
                 steps += 1
                 if max_batches is not None and steps >= max_batches:
                     break

@@ -38,7 +38,7 @@ def create_expname(exp_configs):
         exp_name += f"--l_cri={exp_configs.lambda_critic}"
         exp_name += f"--l1={exp_configs.lambda_1}"
         exp_name += f"--l2={exp_configs.lambda_2}"
-        exp_name += f"--l3={exp_configs.lambda_3}"
+        exp_name += f"--l_cls={exp_configs.lambda_cls}"
         exp_name += f"--l_ctr={exp_configs.lambda_centerloss}"
         exp_name += f"--{exp_configs.guidance_mode}"
         if exp_configs.lambda_localizationloss > 0:
@@ -92,8 +92,9 @@ def init_wandb(exp_configs):
         config.lambda_critic = exp_configs.lambda_critic
         config.lambda_1 = exp_configs.lambda_1
         config.lambda_2 = exp_configs.lambda_2
-        config.lambda_3 = exp_configs.lambda_3
+        config.lambda_cls = exp_configs.lambda_cls
         config.lambda_centerloss = exp_configs.lambda_centerloss
+        config.lambda_localizationloss = exp_configs.lambda_localizationloss
 
     wandb.run.save()
 

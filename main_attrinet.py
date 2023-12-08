@@ -41,7 +41,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_critic', type=float, default=1.0, help='weight for critic loss')
     parser.add_argument('--lambda_1', type=float, default=100, help='weight for l1 loss of disease mask')
     parser.add_argument('--lambda_2', type=float, default=200, help='weight for l1 loss of healthy mask')
-    parser.add_argument('--lambda_3', type=float, default=100, help='weight for classification loss')
+    parser.add_argument('--lambda_cls', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
 
     parser.add_argument('--lambda_localizationloss', type=float, default=0, help='weight for localization loss of disease mask, default=30')
