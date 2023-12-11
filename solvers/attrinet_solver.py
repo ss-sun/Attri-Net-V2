@@ -93,7 +93,7 @@ class task_switch_solver(object):
                     self.freq = exp_configs.guidance_freq
                     self.few_bbox_diseases = self.TRAIN_DISEASES
 
-            if self.guidance_mode == "pseudo_mask":
+            if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut":
                 self.train_with_few_bbox = False
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
@@ -111,6 +111,7 @@ class task_switch_solver(object):
 
             if self.guidance_mode == "no_guidance":
                 self.train_with_few_bbox = False
+
 
             # Step size.
             self.sample_step = exp_configs.sample_step
@@ -162,10 +163,16 @@ class task_switch_solver(object):
     def prepare_pseudoMask(self, dataset):
         pseudoMask = {}
         file_path = pseudo_mask_dict[dataset]
-        with open(file_path) as json_file:
-            data = json.load(json_file)
+        if dataset == "contaminated_chexpert":
             for disease in self.TRAIN_DISEASES:
-                pseudoMask[disease] = np.array(data[disease])
+                pseudoMask[disease] = np.ones((320,320))
+            pseudoMask["Cardiomegaly"] = np.load(file_path)
+
+        else:
+            with open(file_path) as json_file:
+                data = json.load(json_file)
+                for disease in self.TRAIN_DISEASES:
+                    pseudoMask[disease] = np.array(data[disease])
         return pseudoMask
 
     def prepare_pseudoBbox(self, dataset):

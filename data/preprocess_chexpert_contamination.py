@@ -55,6 +55,34 @@ class Contamination():
 
 
 
+def generate_shortcut_guidance():
+    path = os.path.join(os.path.dirname(__file__), 'font', 'FreeMonoBold.ttf')
+    print(path)
+    myFont = ImageFont.truetype(os.path.join(os.path.dirname(__file__), 'font', 'FreeMonoBold.ttf'), 18)
+    pos_text = "CXR-ROOM1"
+    pos_ps = (20, 280)
+    background = np.ones((320,320))
+    img = Image.fromarray((background * 255).astype(np.uint8))
+    I1 = ImageDraw.Draw(img)
+    I1.text(pos_ps, pos_text, font=myFont, fill=(0))
+    img.save(os.path.join(os.path.dirname(__file__), 'shortcut.png'))
+
+
+    I2 = ImageDraw.Draw(img)
+    I2.rectangle([(20, 280), (120, 298)], fill=None, outline=(0))
+    # img.show()
+    img.save(os.path.join(os.path.dirname(__file__), 'shortcut_with_maskBB.png'))
+
+    mask = np.ones((320,320))
+    mask[280:298, 20:120] = 0
+    img = Image.fromarray((mask * 255).astype(np.uint8))
+    img.save(os.path.join(os.path.dirname(__file__), 'shortcut_mask.png'))
+    np.save(os.path.join(os.path.dirname(__file__), 'shortcut_guidance_mask'), mask)
+
+
+
+
+
 
 
 
@@ -103,4 +131,5 @@ def main(config):
 if __name__ == '__main__':
     parser = get_parser()
     config = parser.parse_args()
-    main(config)
+    # main(config)
+    generate_shortcut_guidance()
