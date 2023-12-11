@@ -17,12 +17,12 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default='mixed',
-                        choices=['bbox/masks', 'pseudo_mask', 'pseudo_bbox', 'mixed', 'no_guidance'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+    parser.add_argument('--guidance_mode', type=str, default='no_guidance',
+                        choices=['bbox/masks', 'pseudo_mask', 'pseudo_bbox', 'mixed', 'no_guidance', 'guidance_shortcut'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
-    parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox, default=0.1')
+    parser.add_argument('--guidance_freq', type=float, default=0, help='frequency to train with BBox, default=0.1')
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='nih_chestxray', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
+    parser.add_argument('--dataset', type=str, default='contaminated_chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -44,7 +44,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_cls', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
 
-    parser.add_argument('--lambda_localizationloss', type=float, default=30, help='weight for localization loss of disease mask, default=30')
+    parser.add_argument('--lambda_localizationloss', type=float, default=0, help='weight for localization loss of disease mask, default=30')
 
     # Training configuration.
     parser.add_argument('--cls_iteration', type=int, default=5, help='number of classifier iterations per each generator iter, default=5')

@@ -47,9 +47,6 @@ vindr_cxr_dict = {
     }
 
 contaminated_chexpert_dict = {
-    "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/train/train.csv",
-    "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/valid/valid_df.csv",
-    "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/test/test_df.csv",
     "train_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/train/",
     "valid_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/valid/",
     "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/test/",

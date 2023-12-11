@@ -78,7 +78,6 @@ class Contaminate_CheXpertDataModule(LightningDataModule):
         self.data_transforms = {
             'train': tfs.Compose([
                 tfs.ColorJitter(contrast=(0.8, 1.4), brightness=(0.8, 1.1)),
-                # tfs.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
                 tfs.Resize((self.img_size, self.img_size)),
                 tfs.ToTensor(),
 
@@ -283,9 +282,6 @@ if __name__ == '__main__':
     # }
 
     Cardiomegaly_tag_degree50_dict = {
-        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/train/train.csv",
-        "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/valid/valid_df.csv",
-        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/test/test_df.csv",
         "train_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/train/",
         "valid_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/valid/",
         "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert_official_contaminated/test/",
