@@ -38,7 +38,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_attrinet.py --guidance_mode "no_guidance" --dataset "nih_chestxray" --lambda_critic 0 --lambda_1 0 --lambda_2 0 --lambda_cls 100 --lambda_centerloss 0 --lambda_localizationloss 0 --num_iters 100000
+python3 main_attrinet.py --guidance_mode 'bbox/masks' --guidance_freq 0.1 --dataset "nih_chestxray" --lambda_localizationloss 30 --num_iters 100000
 
 echo "---------------------------------"
 

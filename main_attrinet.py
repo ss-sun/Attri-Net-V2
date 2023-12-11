@@ -17,12 +17,12 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default='no_guidance',
+    parser.add_argument('--guidance_mode', type=str, default='bbox/masks',
                         choices=['bbox/masks', 'pseudo_mask', 'mixed', 'no_guidance'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox')
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
+    parser.add_argument('--dataset', type=str, default='nih_chestxray', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
@@ -44,7 +44,7 @@ def attrinet_get_parser():
     parser.add_argument('--lambda_cls', type=float, default=100, help='weight for classification loss')
     parser.add_argument('--lambda_centerloss', type=float, default=0.01, help='weight for center loss of disease mask')
 
-    parser.add_argument('--lambda_localizationloss', type=float, default=0, help='weight for localization loss of disease mask, default=30')
+    parser.add_argument('--lambda_localizationloss', type=float, default=30, help='weight for localization loss of disease mask, default=30')
 
     # Training configuration.
     parser.add_argument('--cls_iteration', type=int, default=5, help='number of classifier iterations per each generator iter, default=5')
@@ -106,7 +106,7 @@ def main(exp_configs):
     data_loader['valid'] = valid_loader
     data_loader['test'] = test_loader
 
-    if exp_configs.dataset == "nih_chestxray":
+    if exp_configs.dataset == "nih_chestxray" and exp_configs.guidance_mode != "no_guidance":
         data_loader['train_pos_bbox'] = datamodule.single_disease_trainBBox_dataloaders(batch_size=exp_configs.batch_size, shuffle=True)
 
     solver = task_switch_solver(exp_configs, data_loader=data_loader)
