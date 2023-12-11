@@ -98,6 +98,11 @@ class task_switch_solver(object):
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
 
+            if self.guidance_mode == "pseudo_bbox":
+                self.train_with_few_bbox = False
+                self.pseudoMask = self.prepare_pseudoBbox(exp_configs.dataset)
+                self.local_loss_pseudo = PseudoEnergyLoss()
+
             if self.guidance_mode == "mixed":
                 self.train_with_few_bbox = True
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
@@ -162,6 +167,24 @@ class task_switch_solver(object):
             for disease in self.TRAIN_DISEASES:
                 pseudoMask[disease] = np.array(data[disease])
         return pseudoMask
+
+    def prepare_pseudoBbox(self, dataset):
+        pseudoBBMask = {}
+        file_path = pseudo_bbox_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                bbox = data[disease]
+                x_min = bbox[0]
+                y_min = bbox[1]
+                width = bbox[2]
+                height = bbox[3]
+                x_max = x_min + width
+                y_max = y_min + height
+                mask = np.zeros((320, 320))
+                mask[y_min:y_max, x_min:x_max] = 1
+                pseudoBBMask[disease] = mask
+        return pseudoBBMask
 
     # def psydo_local_loss(self, pos_masks, psydo_mask):
     #     """
