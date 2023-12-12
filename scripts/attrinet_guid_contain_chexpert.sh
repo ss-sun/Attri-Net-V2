@@ -38,7 +38,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_attrinet.py --debug "False" --guidance_mode 'guidance_shortcut' --guidance_freq 0 --dataset "contaminated_chexpert" --lambda_localizationloss 30 --num_iters 100000
+python3 main_attrinet.py --debug "False" --guidance_mode 'guidance_shortcut' --guidance_freq 0 --dataset "contaminated_chexpert" --lambda_localizationloss 100 --num_iters 100000
 
 echo "---------------------------------"
 
