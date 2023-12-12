@@ -688,7 +688,7 @@ class task_switch_solver(object):
                 for img_idx in range(len(imgs_pos)):
                     bb_list = bbox_pos[img_idx]
                     localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list)
-            if self.guidance_mode == "pseudo_mask":
+            if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut" or self.guidance_mode == "pseudo_bbox":
                 pseudo_mask = self.pseudoMask[self.current_training_disease]
                 for img_idx in range(len(imgs_pos)):
                     localization_loss += self.local_loss_pseudo(pos_masks[img_idx], pseudo_mask)
