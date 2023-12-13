@@ -164,9 +164,12 @@ class task_switch_solver(object):
         pseudoMask = {}
         file_path = pseudo_mask_dict[dataset]
         if dataset == "contaminated_chexpert":
-            for disease in self.TRAIN_DISEASES:
-                pseudoMask[disease] = np.ones((320,320))
             pseudoMask["Cardiomegaly"] = np.load(file_path)
+            for disease in self.TRAIN_DISEASES:
+                pseudoMask[disease] = pseudoMask["Cardiomegaly"]
+            # for disease in self.TRAIN_DISEASES:
+            #     pseudoMask[disease] = np.ones((320,320))
+            # pseudoMask["Cardiomegaly"] = np.load(file_path)
 
         else:
             with open(file_path) as json_file:
