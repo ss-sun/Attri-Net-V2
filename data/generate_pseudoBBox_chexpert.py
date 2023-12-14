@@ -35,13 +35,16 @@ def scale_mask(mask, target_size):
 def create_pseudoMask(gt_seg_file, disease_list, img_size=320, dest_dir="./"):
     pseudo_masks = {}
     pseudo_bboxs = {}
+    weighted_pseudo_masks = {}
 
-    pseudo_masks_dict_path = os.path.join(dest_dir, "pseudo_masks.json")
-    pseudo_bboxs_dict_path = os.path.join(dest_dir, "pseudo_bboxs.json")
+    pseudo_masks_dict_path = os.path.join(dest_dir, "pseudo_masks_chexpert.json")
+    pseudo_bboxs_dict_path = os.path.join(dest_dir, "pseudo_bboxs_chexpert.json")
+    weighted_pseudo_masks_dict_path = os.path.join(dest_dir, "weighted_pseudo_masks_chexpert.json")
 
     # create empty pseudo bboxs and masks
     for disease in disease_list:
         pseudo_masks[disease] = np.zeros((img_size, img_size))
+        weighted_pseudo_masks[disease] = np.zeros((img_size, img_size))
         pseudo_bboxs[disease] = np.zeros((0, 4))
 
     with open(gt_seg_file) as json_file:
@@ -55,16 +58,21 @@ def create_pseudoMask(gt_seg_file, disease_list, img_size=320, dest_dir="./"):
             continue
         for disease in disease_list:
             # print(disease)
-            gt_mask = get_gt_mask(gt_seg_dict, cxr_id, disease)
+            gt_mask = get_gt_mask(gt_seg_dict, cxr_id, disease, img_size=320)
             if np.sum(gt_mask) != 0:
                 pseudo_masks[disease] += gt_mask
 
     for disease in disease_list:
         # print(disease)
+        weighted_pseudo_masks[disease] = (pseudo_masks[disease] / np.max(pseudo_masks[disease])).tolist()
+
+        # weighted_mask = Image.fromarray((weighted_pseudo_masks[disease] * 255).astype(np.uint8))
+        # weighted_mask.show()
+
         pseudo_masks[disease] = np.where(pseudo_masks[disease] > 0, 1, 0).astype(int)
 
-        BBmask = Image.fromarray((pseudo_masks[disease] * 255).astype(np.uint8))
-        BBmask.show()
+        # BBmask = Image.fromarray((pseudo_masks[disease] * 255).astype(np.uint8))
+        # BBmask.show()
 
         x_min = np.where(pseudo_masks[disease] > 0)[1].min()
         y_min = np.where(pseudo_masks[disease] > 0)[0].min()
@@ -75,12 +83,28 @@ def create_pseudoMask(gt_seg_file, disease_list, img_size=320, dest_dir="./"):
         pseudo_bboxs[disease] = np.array([x_min, y_min, x_max-x_min, y_max-y_min]).astype(int).tolist() # save as x, y, w, h
 
     # save pseudo bboxs and masks
+    with open(weighted_pseudo_masks_dict_path, 'w') as json_file:
+        json.dump(weighted_pseudo_masks, json_file)
 
     with open(pseudo_masks_dict_path, 'w') as json_file:
         json.dump(pseudo_masks, json_file)
 
     with open(pseudo_bboxs_dict_path, 'w') as json_file:
         json.dump(pseudo_bboxs, json_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
@@ -124,9 +148,9 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
 # 279 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
 
 if __name__ == '__main__':
-    current_task = "write_out_masks_test" # select from the Tasks list below
+    current_task = "create_pseudo_masks" # select from the Tasks list below
 
-    Tasks = ["create_pseudo_masks", "write_out_masks_valid", "write_out_masks_test"]
+    Tasks = ["create_pseudo_masks", "create_weighted_pseudo_masks", "write_out_masks_valid", "write_out_masks_test"]
 
     gt_seg_file_valid = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
     gt_seg_file_test = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
@@ -134,9 +158,14 @@ if __name__ == '__main__':
 
     if current_task == "create_pseudo_masks":
         create_pseudoMask(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size=320, dest_dir="./")
+
+    # if current_task == "create_weighted_pseudo_masks":
+    #     create_weighted_pseudoMask(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size=320, dest_dir="./")
+
     if current_task == "write_out_masks_test":
         dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/test_masks"
         write_out_masks(gt_seg_file = gt_seg_file_test, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)
+
     if current_task == "write_out_masks_valid":
         dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks"
         write_out_masks(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)

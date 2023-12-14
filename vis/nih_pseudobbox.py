@@ -109,6 +109,38 @@ def draw_speudo_masks(src_img_path, bbox_list, out_dir):
     path = os.path.join(out_dir, "pseudo_mask_" + file_name)
     rgb_img.save(path)
 
+
+def draw_weighted_speudo_masks(src_img_path, bbox_list, out_dir):
+
+    img = Image.open(src_img_path)
+    rgb_img = img.convert('RGB')
+
+    mask = np.zeros((rgb_img.size[0], rgb_img.size[1]))
+
+    for bbox in bbox_list:
+        x_min = bbox[0]
+        y_min = bbox[1]
+        width = bbox[2]
+        height = bbox[3]
+        mask[y_min:y_min+height, x_min:x_min+width] += 1
+
+    mask = mask / np.max(mask)
+
+    rgb_mask = np.zeros((rgb_img.size[0], rgb_img.size[1], 3), dtype=np.uint8)
+    rgb_mask[:,:,1] = (mask * 255).astype(np.uint8)
+    mask_img = Image.fromarray(rgb_mask).convert('RGB')
+
+    mask_img.putalpha(50)
+    rgb_img.paste(mask_img, (0, 0), mask_img)
+
+    file_name = os.path.basename(src_img_path)
+    path = os.path.join(out_dir, "weighted_pseudo_mask_" + file_name)
+    rgb_img.save(path)
+
+
+
+
+
 def draw_speudo_bbox(src_img_path, bbox_list, out_dir):
     img = Image.open(src_img_path)
     rgb_img = img.convert('RGB')
@@ -157,4 +189,5 @@ if __name__ == "__main__":
     draw_gt_bbox(os.path.join(src_dir, src_img), scaled_bbox_annotation, out_dir)
     draw_bbox_list(os.path.join(src_dir,src_img), bbox_list, out_dir)
     draw_speudo_masks(os.path.join(src_dir, src_img), bbox_list, out_dir)
+    draw_weighted_speudo_masks(os.path.join(src_dir, src_img), bbox_list, out_dir)
     draw_speudo_bbox(os.path.join(src_dir, src_img), bbox_list, out_dir)
