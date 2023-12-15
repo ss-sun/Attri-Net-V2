@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/project/tmi"))
+sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
 
 import argparse
 from train_utils import prepare_datamodule

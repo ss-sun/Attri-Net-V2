@@ -1,4 +1,7 @@
+import sys
 import os
+sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
+
 import numpy as np
 import torch
 import random
