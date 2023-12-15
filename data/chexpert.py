@@ -86,8 +86,9 @@ class CheXpertDataModule(LightningDataModule):
         self.train_set = CheXpert(image_dir=self.image_dir, df=self.train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
         self.valid_set = CheXpert(image_dir=self.image_dir, df=self.valid_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
         self.test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'])
-        # self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
-        #                          transforms=self.data_transforms['test'])
+
+        self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
+                                 transforms=self.data_transforms['test'])
 
 
 
@@ -108,8 +109,8 @@ class CheXpertDataModule(LightningDataModule):
     def test_dataloader(self, batch_size, shuffle=False):
         return DataLoader(self.test_set, batch_size=batch_size, shuffle=False, drop_last=True)
 
-    # def BBox_test_dataloader(self, batch_size, shuffle=False):
-    #     return DataLoader(self.BBox_test_set, batch_size=batch_size, shuffle=False)
+    def BBox_test_dataloader(self, batch_size, shuffle=False):
+        return DataLoader(self.BBox_test_set, batch_size=batch_size, shuffle=False)
 
     def single_disease_train_dataloaders(self, batch_size, shuffle=True):
         train_dataloaders = {}

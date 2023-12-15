@@ -12,7 +12,7 @@ from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-from model_dict import resnet_models, bcos_resnet_model_path_dict, attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -319,9 +319,10 @@ if __name__ == "__main__":
 
     parser = argument_parser()
     opts = parser.parse_args()
-    results_dict = {}
+
     if "resnet" in file_name and "bcos" not in file_name:
         for explanation_method in ["shap", "gifsplanation"]:
+            results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value
                 print("Now evaluating model: " + model_path)
@@ -330,8 +331,13 @@ if __name__ == "__main__":
                 opts = update_params_with_model_path(opts, model_path)
                 results = main(opts)
                 results_dict[key+"_"+explanation_method] = results
+            print(results_dict)
+            output_path = os.path.join(out_dir, file_name+"_"+explanation_method)
+            with open(output_path, 'w') as json_file:
+                json.dump(results_dict, json_file, indent=4)
 
     else:
+        results_dict = {}
         for key, value in evaluated_models.items():
             model_path = value
             print("Now evaluating model: " + model_path)
@@ -340,9 +346,7 @@ if __name__ == "__main__":
             results = main(opts)
             results_dict[key] = results
 
-
-    print(results_dict)
-
-    output_path = os.path.join(out_dir, file_name)
-    with open(output_path, 'w') as json_file:
-        json.dump(results_dict, json_file, indent=4)
+        print(results_dict)
+        output_path = os.path.join(out_dir, file_name)
+        with open(output_path, 'w') as json_file:
+            json.dump(results_dict, json_file, indent=4)

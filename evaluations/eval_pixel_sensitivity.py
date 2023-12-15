@@ -19,11 +19,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
-from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict, \
-    attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
-    bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
-    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict,\
-    attrinet_nih_withBB_with_guidance_dict, attrinet_nih_withBB_with_guidance_different_freq_dict
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models
 import datetime
 
 def str2bool(v):
@@ -34,7 +30,6 @@ class pixel_sensitivity_analyser():
         self.config = config
         self.dataset = config.dataset # different dataset has different gt annotation format
         self.attr_method = config.attr_method
-        self.process_mask = config.process_mask
         self.solver = solver
         self.train_diseases = self.solver.TRAIN_DISEASES
         self.result_dir = os.path.join(config.model_path, "pixel_sensitivity_result_dir", self.attr_method)
@@ -266,23 +261,15 @@ def argument_parser():
         argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="pixel sensitivitiy metric analyser.")
-    parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet_cls', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
-    parser.add_argument('--guidance_mode', type=str, default='bbox',
-                        choices=['bbox',
-                                 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
     # Data configuration.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=1,
-                        help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
-
-    parser.add_argument('--lambda_localizationloss', type=int, default=10, choices=[1, 5, 10, 20, 100])
+    parser.add_argument('--dataset', type=str, default='chexpert',
+                        choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
     parser.add_argument('--use_wandb', type=str2bool, default=False, help='whether to use wandb')
@@ -329,6 +316,31 @@ def prep_solver(datamodule, exp_configs):
         solver = task_switch_solver(exp_configs, data_loader=data_loader)
     return solver
 
+def update_params_with_model_path(opts, model_path):
+    if 'attri-net' in model_path:
+        opts.exp_name = 'attri-net'
+        if opts.attr_method != 'attri-net':
+            opts.attr_method = 'attri-net'
+        opts = update_attrinet_params(opts)
+    if 'resnet' in model_path and 'bcos' not in model_path:
+        opts.exp_name = 'resnet'
+        assert opts.attr_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']
+    if 'bcos' in model_path:
+        opts.exp_name = 'bcos_resnet'
+        if opts.attr_method != 'bcos_resnet':
+            opts.attr_method = 'bcos_resnet'
+    if 'chexpert' in model_path:
+        opts.dataset = 'chexpert'
+    if 'nih' in model_path:
+        opts.dataset = 'nih_chestxray'
+    if 'vindr' in model_path:
+        opts.dataset = 'vindr_cxr'
+
+    print("evaluating model: " + opts.exp_name + " on dataset: " + opts.dataset)
+
+    return opts
+
+
 
 
 def main(config):
@@ -344,49 +356,41 @@ def main(config):
 
 if __name__ == "__main__":
 
-    # set the variables here:
-    # evaluated_models = attrinet_nih_withBB_with_guidance_dict
-    # file_name = str(datetime.datetime.now())[
-    #             :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_dict" + ".json"
-    # evaluated_models = {}
-    # evaluated_models["lambda30"] = attrinet_nih_chestxray_with_guidance_dict["lambda30"]
-    # file_name = str(datetime.datetime.now())[
-    #             :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_chestxray_with_guidance_dict_lambda30" + ".json"
+    evaluated_models = resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
 
-    # evaluated_models["lambda30"] = attrinet_chexpert_with_guidance_dict["lambda30"]
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_pixel_sensitivity_" + "attrinet_chexpert_with_guidance_dict_lambda30" + ".json"
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
-    # evaluated_models["lambda0.1"] = bcos_chexpert_with_guidance_dict["lambda0.1"]
-
-    evaluated_models = attrinet_nih_withBB_with_guidance_different_freq_dict
-    file_name = str(datetime.datetime.now())[
-                :-7] + "eval_pixel_sensitivity_" + "attrinet_nih_withBB_with_guidance_different_freq_dict" + ".json"
-
-
-
-    # set above variables
-
-    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
     parser = argument_parser()
     opts = parser.parse_args()
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
-                'contam20', 'contam50']
-    opts.dataset = datasets[opts.dataset_idx]
-    if 'color' in opts.dataset:
-        opts.img_mode = 'color'
 
-    results_dict = {}
-    for key, value in evaluated_models.items():
-        model_path = value
-        print("Now evaluating model: " + model_path)
-        opts.model_path = model_path
-        assert opts.dataset in model_path
-        if 'attri-net' in model_path:
-            opts = update_attrinet_params(opts)
-        results = main(opts)
-        results_dict[key] = results
+    if "resnet" in file_name and "bcos" not in file_name:
+        for explanation_method in ['shap', 'gifsplanation', 'lime', 'GCam', 'GB']:
+            results_dict = {}
+            for key, value in evaluated_models.items():
+                model_path = value
+                print("Now evaluating model: " + model_path)
+                opts.model_path = model_path
+                opts.attr_method = explanation_method
+                opts = update_params_with_model_path(opts, model_path)
+                results = main(opts)
+                results_dict[key + "_" +explanation_method] = results
+            print(results_dict)
+            output_path = os.path.join(out_dir, file_name+"_"+explanation_method)
+            with open(output_path, 'w') as json_file:
+                json.dump(results_dict, json_file, indent=4)
 
-    print(results_dict)
-    output_path = os.path.join(out_dir, file_name)
-    with open(output_path, 'w') as json_file:
-        json.dump(results_dict, json_file, indent=4)
+    else:
+        results_dict = {}
+        for key, value in evaluated_models.items():
+            model_path = value
+            print("Now evaluating model: " + model_path)
+            opts.model_path = model_path
+            opts = update_params_with_model_path(opts, model_path)
+            results = main(opts)
+            results_dict[key] = results
+
+        print(results_dict)
+        output_path = os.path.join(out_dir, file_name)
+        with open(output_path, 'w') as json_file:
+            json.dump(results_dict, json_file, indent=4)

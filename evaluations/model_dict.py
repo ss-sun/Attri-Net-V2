@@ -5,7 +5,7 @@ resnet_models = {
     }
 
 
-bcos_resnet_model_path_dict = {
+bcos_resnet_models = {
     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-chexpert-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:20:17-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
