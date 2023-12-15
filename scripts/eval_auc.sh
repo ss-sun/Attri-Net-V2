@@ -36,7 +36,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 ./evaluations/eval_auc.py --exp_name bcos_resnet --dataset nih_chestxray
+python3 ./evaluations/eval_auc.py
 
 echo "---------------------------------"
 

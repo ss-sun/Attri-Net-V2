@@ -31,10 +31,10 @@ guided_attrinet_models = {
 
 
 aba_loss_attrinet_models = {
-    "cls":"",
-    "cls_adv":"",
-    "cls_adv_reg":"",
-    "cls_adv_reg_ctr":"",
+    "cls":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:11:38--nih_chestxray--l_cri=0.0--l1=0.0--l2=0.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
+    "cls_adv":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:42--nih_chestxray--l_cri=1.0--l1=0.0--l2=0.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
+    "cls_adv_reg":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:46--nih_chestxray--l_cri=1.0--l1=100.0--l2=200.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
+    "cls_adv_reg_ctr":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:49--nih_chestxray--l_cri=1.0--l1=100.0--l2=200.0--l_cls=100.0--l_ctr=0.01--no_guidance--seed=42",
 }
 
 aba_guidance_attrinet_models = {

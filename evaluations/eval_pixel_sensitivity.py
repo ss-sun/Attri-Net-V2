@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models
 import datetime
 
 def str2bool(v):
@@ -261,7 +261,7 @@ def argument_parser():
         argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="pixel sensitivitiy metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--attr_method', type=str, default='attri-net',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' ,'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
@@ -356,8 +356,8 @@ def main(config):
 
 if __name__ == "__main__":
 
-    evaluated_models = resnet_models
-    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
+    evaluated_models = aba_loss_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "aba_loss_attrinet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
