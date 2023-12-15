@@ -222,7 +222,7 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--attr_method', type=str, default='lime',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
@@ -315,8 +315,8 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    evaluated_models = aba_loss_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "aba_loss_attrinet_models" + ".json"
+    evaluated_models = resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
@@ -324,7 +324,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ["shap", "gifsplanation"]:
+        for explanation_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value
@@ -335,7 +335,7 @@ if __name__ == "__main__":
                 results = main(opts)
                 results_dict[key+"_"+explanation_method] = results
             print(results_dict)
-            output_path = os.path.join(out_dir, file_name+"_"+explanation_method)
+            output_path = os.path.join(out_dir, file_name+ "_"+explanation_method)
             with open(output_path, 'w') as json_file:
                 json.dump(results_dict, json_file, indent=4)
 
