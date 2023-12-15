@@ -63,12 +63,14 @@ def compute_pseudo_bbox(src_nih_bbox_file, src_img_dir, disease_list, img_size= 
 
     pseudo_bboxs = {}
     pseudo_masks = {}
+    weighted_pseudo_masks = {}
     # create empty pseudo bboxs and masks
     for disease in disease_list:
         # initailize pseudo bboxs to x_min=320(img size), y_min=320(img size), x_max=0, y_max=0
         # for convinent comparation with real bboxs
         pseudo_bboxs[disease] = np.array([img_size,img_size,0,0])
         pseudo_masks[disease] = np.zeros((img_size, img_size))
+        weighted_pseudo_masks[disease] = np.zeros((img_size, img_size))
 
     for idx, row in src_df.iterrows():
         img_path = os.path.join(src_img_dir, src_df.iloc[idx]['Image Index'])
@@ -85,6 +87,7 @@ def compute_pseudo_bbox(src_nih_bbox_file, src_img_dir, disease_list, img_size= 
             y_max = int (y_min + row["h]"] * scale_factor_y)
 
             pseudo_masks[disease][y_min:y_max, x_min:x_max] += 1
+            weighted_pseudo_masks[disease][y_min:y_max, x_min:x_max] += 1
 
             pseudo_bboxs[disease][0] = min(pseudo_bboxs[disease][0], x_min)
             pseudo_bboxs[disease][1] = min(pseudo_bboxs[disease][1], y_min)
@@ -96,9 +99,49 @@ def compute_pseudo_bbox(src_nih_bbox_file, src_img_dir, disease_list, img_size= 
         pseudo_bboxs[disease][2] = pseudo_bboxs[disease][2] - pseudo_bboxs[disease][0]
         pseudo_bboxs[disease][3] = pseudo_bboxs[disease][3] - pseudo_bboxs[disease][1]
 
-    return pseudo_bboxs, pseudo_masks
+        pseudo_masks[disease] = np.where(pseudo_masks[disease] > 0, 1, 0).astype(int)
+        weighted_pseudo_masks[disease] = weighted_pseudo_masks[disease] / np.max(weighted_pseudo_masks[disease])
 
 
+    return pseudo_bboxs, pseudo_masks, weighted_pseudo_masks
+
+
+def create_guidance_with_union(tgt_disease_list, src_disease_list, pseudo_bboxs, pseudo_masks, weighted_pseudo_masks, dest_dir="./"):
+
+    union_mask = np.zeros((320, 320))
+    weighted_union_mask = np.zeros((320, 320))
+    for disease in src_disease_list:
+        union_mask += pseudo_masks[disease]
+        weighted_union_mask += weighted_pseudo_masks[disease]
+
+        pseudo_bboxs[disease] = pseudo_bboxs[disease].tolist()
+        pseudo_masks[disease] = pseudo_masks[disease].tolist()
+        weighted_pseudo_masks[disease] = weighted_pseudo_masks[disease].tolist()
+
+    union_mask = np.where(union_mask > 0, 1, 0).astype(int)
+    union_bbox = np.array([np.min(np.nonzero(union_mask)[1]), np.min(np.nonzero(union_mask)[0]), np.max(np.nonzero(union_mask)[1]), np.max(np.nonzero(union_mask)[0])])
+    weighted_union_mask = weighted_union_mask / np.max(weighted_union_mask)
+
+    for disease in tgt_disease_list:
+        pseudo_bboxs[disease] = union_bbox
+        pseudo_masks[disease] = union_mask
+        weighted_pseudo_masks[disease] = weighted_union_mask
+        pseudo_bboxs[disease] = pseudo_bboxs[disease].tolist()
+        pseudo_masks[disease] = pseudo_masks[disease].tolist()
+        weighted_pseudo_masks[disease] = weighted_pseudo_masks[disease].tolist()
+
+    pseudo_masks_dict_path = os.path.join(dest_dir, "pseudo_masks_nih.json")
+    pseudo_bboxs_dict_path = os.path.join(dest_dir, "pseudo_bboxs_nih.json")
+    weighted_pseudo_masks_dict_path = os.path.join(dest_dir, "weighted_pseudo_masks_nih.json")
+
+    # with open(pseudo_masks_dict_path, 'w') as json_file:
+    #     json.dump(pseudo_masks, json_file)
+    #
+    # with open(pseudo_bboxs_dict_path, 'w') as json_file:
+    #     json.dump(pseudo_bboxs, json_file)
+
+    with open(weighted_pseudo_masks_dict_path, 'w') as json_file:
+        json.dump(weighted_pseudo_masks, json_file)
 
 
 
@@ -110,10 +153,15 @@ if __name__ == '__main__':
     #     original_nih_bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
     #     split_bbox_file(original_nih_bbox_file, ratio=0.4)
     #
-    # disease_list = ['Cardiomegaly', 'Atelectasis', 'Effusion'] # overlap only three diseases
-    # pseudo_bboxs, pseudo_masks = compute_pseudo_bbox(src_nih_bbox_file, src_img_dir, disease_list, img_size= 320)
+    disease_list = ['Cardiomegaly', 'Atelectasis', 'Effusion'] # overlap only three diseases
+    pseudo_bboxs, pseudo_masks, weighted_pseudo_masks = compute_pseudo_bbox(src_nih_bbox_file, src_img_dir, disease_list, img_size= 320)
     #
-    #
+    src_disease_list = ['Cardiomegaly', 'Atelectasis', 'Effusion']
+    tgt_disease_list = ['Consolidation', 'Edema']
+
+    create_guidance_with_union(tgt_disease_list, src_disease_list, pseudo_bboxs, pseudo_masks, weighted_pseudo_masks,
+                               dest_dir="./")
+
     #
     #
     # union_mask = np.zeros((320, 320))
@@ -154,8 +202,16 @@ if __name__ == '__main__':
     # with open(pseudo_bboxs_dict, 'w') as json_file:
     #     json.dump(pseudo_bboxs, json_file)
     #
+
+
+
+
+    '''
     # # save pseudo bboxs and masks
     src_nih_bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df.csv"
     scale_bbox_annotations(src_nih_bbox_file, src_img_dir, img_size=320)
     scale_bbox_annotations(test_nih_bbox_file, src_img_dir, img_size=320)
+    
+    '''
+
 

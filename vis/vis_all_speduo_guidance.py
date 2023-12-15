@@ -36,7 +36,7 @@ def draw_speudo_bbox(imgs_dict, pseudo_bbox_dict_path, src_img_dir, dest_dir):
                        width=outline_width)
         del draw
 
-        mask_img.putalpha(50)
+        mask_img.putalpha(75)
         rgb_img.paste(mask_img, (0, 0), mask_img)
         rgb_img.save(os.path.join(dest_dir, "with_pseudo_bbox_" + file_name))
 
@@ -73,6 +73,40 @@ def draw_speudo_mask(imgs_dict, pseudo_mask_dict_path, src_img_dir, dest_dir):
 
 
 
+def draw_weighted_speudo_mask(imgs_dict, weighted_pseudo_mask_dict_path, src_img_dir, dest_dir):
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir, exist_ok=True)
+    with open(weighted_pseudo_mask_dict_path) as json_file:
+        weighted_pseudo_mask_dict = json.load(json_file)
+
+    for disease in imgs_dict.keys():
+        if "CheXpert" in src_img_dir:
+            file_name = disease + imgs_dict[disease].split("/")[-3] + "_" + imgs_dict[disease].split("/")[-2] + "_" + imgs_dict[disease].split("/")[-1]
+            img = Image.open(src_img_dir + imgs_dict[disease])
+            img = img.resize((320, 320))
+        if "NIH" in src_img_dir:
+            file_name = disease + imgs_dict[disease]
+            img = Image.open(os.path.join(src_img_dir + imgs_dict[disease]))
+        img.save(os.path.join(dest_dir, "src_" + file_name))
+
+        rgb_img = img.convert('RGB')
+        mask = np.array(weighted_pseudo_mask_dict[disease])
+
+        rgb_mask = np.zeros((rgb_img.size[0], rgb_img.size[1], 3), dtype=np.uint8)
+        rgb_mask[:, :, 1] = (mask * 255).astype(np.uint8)
+        mask_img = Image.fromarray(rgb_mask).convert('RGB')
+
+        mask_img.putalpha(75)
+        rgb_img.paste(mask_img, (0, 0), mask_img)
+        rgb_img.save(os.path.join(dest_dir, "with_weighted_pseudo_mask_" + file_name))
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     chexpsert_src_img_dir = "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small"
@@ -100,13 +134,19 @@ if __name__ == "__main__":
 
     chexpsert_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_chexpert.json"
     nih_chestxray_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_nih.json"
+    chexpsert_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/weighted_pseudo_masks_chexpert.json"
+    nih_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/weighted_pseudo_masks_nih.json"
 
-
-    draw_speudo_bbox(chexpsert_imgs, chexpsert_pseudo_bbox, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
-    draw_speudo_bbox(nih_chestxray_imgs, nih_chestxray_pseudo_bbox, nih_chestxray_src_img_dir, os.path.join(dest_dir, "nih_chestxray"))
+    # draw_speudo_bbox(chexpsert_imgs, chexpsert_pseudo_bbox, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
+    # draw_speudo_bbox(nih_chestxray_imgs, nih_chestxray_pseudo_bbox, nih_chestxray_src_img_dir, os.path.join(dest_dir, "nih_chestxray"))
 
     # draw_speudo_mask(chexpsert_imgs, chexpsert_pseudo_mask, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
     # draw_speudo_mask(nih_chestxray_imgs, nih_chestxray_pseudo_mask, nih_chestxray_src_img_dir,
     #                  os.path.join(dest_dir, "nih_chestxray"))
 
-    pass
+    # draw_weighted_speudo_mask(chexpsert_imgs, chexpsert_weighted_pseudo_mask, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
+    # draw_weighted_speudo_mask(nih_chestxray_imgs, nih_weighted_pseudo_mask, nih_chestxray_src_img_dir,
+    #                           os.path.join(dest_dir, "nih"))
+
+
+

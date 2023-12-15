@@ -48,8 +48,8 @@ class shap_explainer():
 
     def __init__(self, model, labels):
         # Define a masker that is used to mask out partitions of the input image.
-        # masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 1)) # for grayscale
-        masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 3)) # for color images
+        masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 1)) # for grayscale
+        # masker_blur = shap.maskers.Image("blur(320,320)", (320, 320, 3)) # for color images
         self.explainer = shap.Explainer(self.predict, masker_blur, output_names=labels)
         self.model = model
         self.labels = labels

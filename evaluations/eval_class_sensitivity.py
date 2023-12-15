@@ -12,11 +12,7 @@ from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-from model_dict import resnet_model_path_dict, attrinet_model_path_dict, bcos_resnet_model_path_dict,\
-    attrinet_vindrBB_different_lambda_dict, bcos_vindr_with_guidance_dict, bcos_chexpert_with_guidance_dict, \
-    bcos_nih_chestxray_with_guidance_dict, attrinet_chexpert_with_guidance_dict, \
-    attrinet_nih_chestxray_with_guidance_dict, attrinet_vindr_cxr_withBB_with_guidance_dict, glaucoma_dict,\
-    attrinet_nih_withBB_with_guidance_dict, attrinet_nih_withBB_with_guidance_different_freq_dict
+from model_dict import resnet_models, bcos_resnet_model_path_dict, attrinet_models
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -45,11 +41,11 @@ class class_sensitivity_analyser():
         print('use explainer: ' + self.attr_method)
 
         # Read data from file.
-        threshold_path = os.path.join(self.result_dir,"best_threshold.txt")
+        threshold_path = os.path.join(self.result_dir, "best_threshold.txt")
         if os.path.exists(threshold_path):
             print("threshold alreay computed, load threshold")
-            threshold = np.loadtxt(open(threshold_path)).reshape(1,)
-            # threshold = np.loadtxt(open(threshold_path))
+            # threshold = np.loadtxt(open(threshold_path)).reshape(1,)
+            threshold = np.loadtxt(open(threshold_path))
             for c in range(len(self.solver.TRAIN_DISEASES)):
                 disease = self.solver.TRAIN_DISEASES[c]
                 self.best_threshold[disease] = threshold[c]
@@ -147,14 +143,11 @@ class class_sensitivity_analyser():
         df = self.solver.test_loader.dataset.df
         if self.dataset == "nih_chestxray":
             img_id = df.iloc[idx]['Image Index']
-        if self.dataset == "vindr_cxr_withBB":
+        if self.dataset == "vindr_cxr":
             img_id = self.solver.test_loader.dataset.image_list[idx] # one unique image id may have multiple bounding boxes corresponding to different entries in the dataframe
         if self.dataset == "chexpert":
             img_path = df.iloc[idx]['Path'].split('/')
             img_id = img_path[1]+'_' + img_path[2] + '_' + img_path[3][:-4]
-        if "airogs" in self.dataset:
-            img_id = df.iloc[idx]['challenge_id']
-
         return img_id
 
 
@@ -172,7 +165,6 @@ class class_sensitivity_analyser():
             img = torch.from_numpy(img[None])
 
             if attr_method in ['attri-net']:
-
                 dests, attr_raw = self.solver.get_attributes(img, label_idx)
                 if attr_raw.shape[1] == 3:
                     attr_raw = torch.mean(attr_raw, dim=1, keepdim=True)
@@ -227,21 +219,16 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--debug', type=str2bool, default=False, help='if true, print more informatioin for debugging')
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='attri-net',
+    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='lime',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
-    parser.add_argument('--process_mask', type=str, default='previous', choices=['abs(mx)', 'sum(abs(mx))', 'previous'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
                         choices=['color', 'gray'])  # will change to color if dataset is airogs_color
-    parser.add_argument('--guidance_mode', type=str, default='bbox',
-                        choices=['bbox',
-                                 'pseudo_mask'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
-    # parser.add_argument('--dataset', type=str, default='airogs', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color' ,'vindr_cxr_withBB', 'contam20', 'contam50'])
-    parser.add_argument('--dataset_idx', type=int, default=1,
-                        help='index of the dataset in the datasets list, convinent for submitting parallel jobs')
-    parser.add_argument("--batch_size", default=8,
+
+    parser.add_argument('--dataset', type=str, default='chexpert',
+                        choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
+    parser.add_argument("--batch_size", default=4,
                         type=int, help="Batch size for the data loader.")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_gpu', type=str2bool, default=True, help='whether to run on the GPU')
@@ -277,7 +264,6 @@ def prep_solver(datamodule, exp_configs):
         vis_dataloaders = datamodule.single_disease_vis_dataloaders(batch_size=exp_configs.batch_size, shuffle=False)
         valid_loader = datamodule.valid_dataloader(batch_size=exp_configs.batch_size, shuffle=False)
         test_loader = datamodule.test_dataloader(batch_size=exp_configs.batch_size, shuffle=False)
-
         data_loader['train_pos'] = train_loaders['pos']
         data_loader['train_neg'] = train_loaders['neg']
         data_loader['vis_pos'] = vis_dataloaders['pos']
@@ -286,6 +272,33 @@ def prep_solver(datamodule, exp_configs):
         data_loader['test'] = test_loader
         solver = task_switch_solver(exp_configs, data_loader=data_loader)
     return solver
+
+
+def update_params_with_model_path(opts, model_path):
+    if 'attri-net' in model_path:
+        opts.exp_name = 'attri-net'
+        if opts.attr_method != 'attri-net':
+            opts.attr_method = 'attri-net'
+        opts = update_attrinet_params(opts)
+    if 'resnet' in model_path and 'bcos' not in model_path:
+        opts.exp_name = 'resnet'
+        assert opts.attr_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']
+    if 'bcos' in model_path:
+        opts.exp_name = 'bcos_resnet'
+        if opts.attr_method != 'bcos_resnet':
+            opts.attr_method = 'bcos_resnet'
+    if 'chexpert' in model_path:
+        opts.dataset = 'chexpert'
+    if 'nih' in model_path:
+        opts.dataset = 'nih_chestxray'
+    if 'vindr' in model_path:
+        opts.dataset = 'vindr_cxr'
+
+    print("evaluating model: " + opts.exp_name + " on dataset: " + opts.dataset)
+
+    return opts
+
+
 
 
 def main(config):
@@ -299,37 +312,34 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    # evaluated_models = attrinet_nih_withBB_with_guidance_dict
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_nih_withBB_with_guidance_dict" + ".json"
+    evaluated_models = resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
 
-
-    evaluated_models = attrinet_nih_withBB_with_guidance_different_freq_dict
-    file_name = str(datetime.datetime.now())[
-                :-7] + "eval_class_sensitivity_" + "attrinet_nih_withBB_with_guidance_different_freq_dict" + ".json"
-    # evaluated_models = {}
-    # evaluated_models["resnet_airogs_color"] = glaucoma_dict["resnet_airogs_color"]
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "glaucoma_dict_resnet_airogs_color" + ".json"
-
-    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/results"
+    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
     parser = argument_parser()
     opts = parser.parse_args()
-    datasets = ['chexpert', 'nih_chestxray', 'vindr_cxr', 'skmtea', 'airogs', 'airogs_color', 'vindr_cxr_withBB',
-                'contam20', 'contam50']
-    opts.dataset = datasets[opts.dataset_idx]
-    if 'color' in opts.dataset:
-        opts.img_mode = 'color'
-
     results_dict = {}
-    for key, value in evaluated_models.items():
-        model_path = value
-        print("Now evaluating model: " + model_path)
-        assert opts.dataset in model_path
-        opts.model_path = model_path
-        if 'attri-net' in model_path:
-            opts = update_attrinet_params(opts)
-        results = main(opts)
-        results_dict[key] = results
+    if "resnet" in file_name and "bcos" not in file_name:
+        for explanation_method in ["shap", "gifsplanation"]:
+            for key, value in evaluated_models.items():
+                model_path = value
+                print("Now evaluating model: " + model_path)
+                opts.model_path = model_path
+                opts.attr_method = explanation_method
+                opts = update_params_with_model_path(opts, model_path)
+                results = main(opts)
+                results_dict[key+"_"+explanation_method] = results
+
+    else:
+        for key, value in evaluated_models.items():
+            model_path = value
+            print("Now evaluating model: " + model_path)
+            opts.model_path = model_path
+            opts = update_params_with_model_path(opts, model_path)
+            results = main(opts)
+            results_dict[key] = results
+
 
     print(results_dict)
 
