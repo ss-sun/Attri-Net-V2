@@ -38,10 +38,10 @@ aba_loss_attrinet_models = {
 }
 
 aba_guidance_attrinet_models = {
-    "bbox":"",
-    "pseudo_mask":"",
-    "pseudo_bbox":"",
-    "mixed":"",
+    "bbox":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 14:22:48--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--bbox/masks--l_loc=30.0--guid_freq=0.1--seed=42",
+    "pseudo_mask":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 14:29:11--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--pseudo_mask--l_loc=30.0--guid_freq=0.0--seed=42",
+    "pseudo_bbox":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-12 15:34:15--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--pseudo_bbox--l_loc=30.0--guid_freq=0.0--seed=42",
+    "mixed":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
 }
 
 # resnet_models = {

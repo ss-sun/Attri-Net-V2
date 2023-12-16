@@ -15,7 +15,7 @@ from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -315,8 +315,8 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    evaluated_models = resnet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
+    evaluated_models = aba_guidance_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "aba_guidance_attrinet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
@@ -324,7 +324,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']:
+        for explanation_method in ['gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value

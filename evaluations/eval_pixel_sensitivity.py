@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models
 import datetime
 
 def str2bool(v):
@@ -356,8 +356,8 @@ def main(config):
 
 if __name__ == "__main__":
 
-    evaluated_models = aba_loss_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "aba_loss_attrinet_models" + ".json"
+    evaluated_models = aba_guidance_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "aba_guidance_attrinet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 

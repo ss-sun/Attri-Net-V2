@@ -7,7 +7,7 @@ from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
 from solvers.attrinet_solver import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models
 import json
 import datetime
 
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "bcos_resnet_models" + ".json"
 
 
-    evaluated_models = aba_loss_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "aba_loss_attrinet_models" + ".json"
+    evaluated_models = aba_guidance_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "aba_guidance_attrinet_models" + ".json"
 
     # set above variables
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
