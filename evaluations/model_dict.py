@@ -34,7 +34,8 @@ aba_loss_attrinet_models = {
     "cls":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:11:38--nih_chestxray--l_cri=0.0--l1=0.0--l2=0.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
     "cls_adv":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:42--nih_chestxray--l_cri=1.0--l1=0.0--l2=0.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
     "cls_adv_reg":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:46--nih_chestxray--l_cri=1.0--l1=100.0--l2=200.0--l_cls=100.0--l_ctr=0.0--no_guidance--seed=42",
-    "cls_adv_reg_ctr":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 18:14:49--nih_chestxray--l_cri=1.0--l1=100.0--l2=200.0--l_cls=100.0--l_ctr=0.01--no_guidance--seed=42",
+    # below is the same model as in dictionary attrinet_models, to keep the results in ablation study consistent with the main paper
+    "cls_adv_reg_ctr":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--nih_chestxray--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
 }
 
 aba_guidance_attrinet_models = {

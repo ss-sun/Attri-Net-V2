@@ -356,8 +356,8 @@ def main(config):
 
 if __name__ == "__main__":
 
-    evaluated_models = aba_guidance_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "aba_guidance_attrinet_models" + ".json"
+    evaluated_models = resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 
@@ -365,7 +365,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['shap', 'gifsplanation', 'lime', 'GCam', 'GB']:
+        for explanation_method in ['gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value

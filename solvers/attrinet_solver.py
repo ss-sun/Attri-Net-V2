@@ -80,6 +80,11 @@ class task_switch_solver(object):
             if self.guidance_mode == "no_guidance":
                 assert self.lambda_loc == 0
 
+            if self.guidance_mode == "full_guidance": # only dataset vindr_cxr has gt bbox for every sample, so we use it for full guidance.
+                self.train_with_few_bbox = False
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+
+
             if self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed":
                 # assert exp_configs.dataset == "vindr_cxr" or exp_configs.dataset == "nih_chestxray"
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
@@ -92,6 +97,7 @@ class task_switch_solver(object):
                     self.train_with_few_bbox = True
                     self.freq = exp_configs.guidance_freq
                     self.few_bbox_diseases = self.TRAIN_DISEASES
+
 
             if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut":
                 self.train_with_few_bbox = False

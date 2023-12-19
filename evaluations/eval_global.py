@@ -165,18 +165,47 @@ def vis_classcenter(center_losses, out_dir):
 
 
 def main():
-    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-02 16:51:03--contam20--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
-    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    # # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-02 16:51:03--contam20--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    #
+    #
+    # model_dir = model_path + "/ckpt"
+    # #confounder_file_path = os.path.join(model_path, "tag.txt")
+    # confounder_file_path = "./tag.txt"
+    # net_lgs = load_lgs(model_dir)
+    # out_dir = os.path.join(model_path, "contaim_weights")
+    # os.makedirs(out_dir,exist_ok=True)
+    # vis_weights(net_lgs, out_dir)
+    #
+    # center_losses = load_centers(model_dir)
+    # vis_classcenter(center_losses, out_dir)
+    # calculate_Cardio_cs(center_losses['Cardiomegaly'], confounder_file_path, out_dir)
+
+    # # draw normal model centers and weights
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-08-01 18:43:37--chexpert--official_datasplit-orientation=Frontal-image_size=320-augmentation=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01"
+    # model_dir = model_path + "/ckpt"
+    # net_lgs = load_lgs(model_dir)
+    # out_dir = os.path.join(model_path, "contaim_weights")
+    # os.makedirs(out_dir,exist_ok=True)
+    # vis_weights(net_lgs, out_dir)
+    #
+    # center_losses = load_centers(model_dir)
+    # vis_classcenter(center_losses, out_dir)
 
 
+
+    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-13 11:26:19--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    #
+    #
     model_dir = model_path + "/ckpt"
-    #confounder_file_path = os.path.join(model_path, "tag.txt")
+
     confounder_file_path = "./tag.txt"
     net_lgs = load_lgs(model_dir)
     out_dir = os.path.join(model_path, "contaim_weights")
     os.makedirs(out_dir,exist_ok=True)
     vis_weights(net_lgs, out_dir)
-
+    #
     center_losses = load_centers(model_dir)
     vis_classcenter(center_losses, out_dir)
     calculate_Cardio_cs(center_losses['Cardiomegaly'], confounder_file_path, out_dir)
@@ -191,6 +220,12 @@ def main():
     #
     # center_losses = load_centers(model_dir)
     # vis_classcenter(center_losses, out_dir)
+
+
+
+
+
+
 
 
 if __name__ == "__main__":

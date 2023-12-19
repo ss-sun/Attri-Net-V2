@@ -2,28 +2,34 @@
 
 
 
-
-result ={
-    "chexpert_shap": {
-        "Atelectasis": "0.1146365668537041",
-        "Cardiomegaly": "0.23603493795071928",
-        "Consolidation": "0.17692218854953862",
-        "Edema": "0.4037502380495755",
-        "Pleural Effusion": "0.16530490021211244"
+result = {
+    "bbox": {
+        "Atelectasis": "0.9139155698512671",
+        "Cardiomegaly": "0.9506671358990734",
+        "Consolidation": "0.9334858408012374",
+        "Edema": "0.946014588666719",
+        "Effusion": "0.9657238972659846"
     },
-    "nih_chestxray_shap": {
-        "Atelectasis": "0.09825546044536132",
-        "Cardiomegaly": "0.5975433892658468",
-        "Consolidation": 0,
-        "Edema": 0,
-        "Effusion": "0.13859717793047396"
+    "pseudo_mask": {
+        "Atelectasis": "0.9147297484319268",
+        "Cardiomegaly": "0.9514335485067497",
+        "Consolidation": "0.9434728298146928",
+        "Edema": "0.9491108293277773",
+        "Effusion": "0.9601062513533383"
     },
-    "vindr_cxr_shap": {
-        "Aortic enlargement": "0.1053797521892999",
-        "Cardiomegaly": "0.16761951488370055",
-        "Pulmonary fibrosis": "0.006479853448775065",
-        "Pleural thickening": "0.005157800083571712",
-        "Pleural effusion": "0.050009986051089805"
+    "pseudo_bbox": {
+        "Atelectasis": "0.9318604910494599",
+        "Cardiomegaly": "0.9403858318478595",
+        "Consolidation": "0.9538145008645678",
+        "Edema": "0.9538192034700974",
+        "Effusion": "0.9719424492535257"
+    },
+    "mixed": {
+        "Atelectasis": "0.9538388153962564",
+        "Cardiomegaly": "0.9710226569382138",
+        "Consolidation": "0.9584078673155213",
+        "Edema": "0.9719850630934123",
+        "Effusion": "0.9682384358120661"
     }
 }
 
