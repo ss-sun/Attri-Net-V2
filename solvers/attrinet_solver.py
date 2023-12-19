@@ -9,7 +9,7 @@ from models.attrinet_modules import Discriminator_with_Ada, Generator_with_Ada, 
 from models.lgs_classifier import LogisticRegressionModel
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
+from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict, weighted_pseudo_mask_dict
 import json
 from models.losses import EnergyPointingGameBBMultipleLoss, PseudoEnergyLoss
 import random
@@ -103,6 +103,12 @@ class task_switch_solver(object):
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
 
+            if self.guidance_mode == "weighted_pseudo_mask":
+                self.train_with_few_bbox = False
+                self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
+                self.local_loss_pseudo = PseudoEnergyLoss()
+
+
             if self.guidance_mode == "pseudo_bbox":
                 self.train_with_few_bbox = False
                 self.pseudoMask = self.prepare_pseudoBbox(exp_configs.dataset)
@@ -182,6 +188,22 @@ class task_switch_solver(object):
                 for disease in self.TRAIN_DISEASES:
                     pseudoMask[disease] = np.array(data[disease])
         return pseudoMask
+
+
+    def prepare_weighted_pseudoMask(self, dataset):
+        weighted_pseudoMask = {}
+        file_path = weighted_pseudo_mask_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                weighted_pseudoMask[disease] = np.array(data[disease])
+        return weighted_pseudoMask
+
+
+
+
+
+
 
     def prepare_pseudoBbox(self, dataset):
         pseudoBBMask = {}
