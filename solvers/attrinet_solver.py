@@ -84,7 +84,6 @@ class task_switch_solver(object):
                 self.train_with_few_bbox = False
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
 
-
             if self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed":
                 # assert exp_configs.dataset == "vindr_cxr" or exp_configs.dataset == "nih_chestxray"
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
