@@ -17,8 +17,8 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default='mixed',
-                        choices=['full_guidance', 'bbox/masks', 'pseudo_mask', 'weighted_pseudo_mask', 'pseudo_bbox', 'mixed', 'no_guidance', 'guidance_shortcut'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+    parser.add_argument('--guidance_mode', type=str, default='mixed_weighted',
+                        choices=['full_guidance', 'bbox/masks', 'pseudo_mask', 'weighted_pseudo_mask', 'pseudo_bbox', 'mixed', 'mixed_weighted', 'no_guidance', 'guidance_shortcut'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox, default=0.1')
     # Data configuration.

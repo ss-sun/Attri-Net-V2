@@ -76,7 +76,7 @@ class task_switch_solver(object):
             self.weight_decay_lgs = exp_configs.weight_decay_lgs
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
-            self.guidance_mode = exp_configs.guidance_mode  # "bbox", "pseudo_mask", "mixed", "no_guidance"
+            self.guidance_mode = exp_configs.guidance_mode  # "bbox", "pseudo_mask", "mixed", "no_guidance", "mixed_weighted"
             if self.guidance_mode == "no_guidance":
                 assert self.lambda_loc == 0
 
@@ -84,7 +84,7 @@ class task_switch_solver(object):
                 self.train_with_few_bbox = False
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
 
-            if self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed":
+            if self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed" or self.guidance_mode == "mixed_weighted":
                 # assert exp_configs.dataset == "vindr_cxr" or exp_configs.dataset == "nih_chestxray"
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
                 if exp_configs.dataset == "nih_chestxray":
@@ -122,6 +122,12 @@ class task_switch_solver(object):
             if self.guidance_mode == "mixed":
                 self.train_with_few_bbox = True
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                self.local_loss_pseudo = PseudoEnergyLoss()
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+
+            if self.guidance_mode == "mixed_weighted":
+                self.train_with_few_bbox = True
+                self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
 
@@ -602,7 +608,7 @@ class task_switch_solver(object):
             bbox = bboxs[:, disease_idx, :]
             return imgs, lbls, bbox
 
-        if (self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed") and self.dataset == "nih_chestxray" and torch.sum(batch['BBox'])!=0:
+        if (self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed" or self.guidance_mode == "mixed_weighted") and self.dataset == "nih_chestxray" and torch.sum(batch['BBox'])!=0:
             imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
             imgs = imgs.to(self.device)
             lbls = lbls.to(self.device)
@@ -728,7 +734,7 @@ class task_switch_solver(object):
                 for img_idx in range(len(imgs_pos)):
                     localization_loss += self.local_loss_pseudo(pos_masks[img_idx], pseudo_mask)
 
-            if self.guidance_mode =="mixed":
+            if self.guidance_mode =="mixed" or self.guidance_mode == "mixed_weighted":
                 if bbox_pos is not None:
                     for img_idx in range(len(imgs_pos)):
                         bb_list = bbox_pos[img_idx]
