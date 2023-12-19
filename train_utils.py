@@ -6,6 +6,7 @@ import numpy as np
 from data.chexpert import CheXpertDataModule
 from data.nih_chestxray import NIHChestXrayDataModule
 from data.vindr_cxr import Vindr_CXR_BBOX_DataModule
+from data.vindr_cxr_mixed import Vindr_CXR_BBOX_MIX_DataModule
 from data.contaminated_chexpert import Contaminate_CheXpertDataModule
 
 
@@ -27,17 +28,6 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
                                             img_size=data_default_params['img_size'],
                                             seed=exp_configs.manual_seed)
 
-
-
-    # if exp_configs.dataset == 'vindr_cxr':
-    #     print("working on vindr_cxr dataset")
-    #     datamodule = Vindr_CXRDataModule(dataset_params,
-    #                                      split_ratio=data_default_params['split_ratio'],
-    #                                      resplit=data_default_params['resplit'],
-    #                                      img_size=data_default_params['img_size'],
-    #                                      seed=exp_configs.manual_seed)
-
-
     if 'contam' in exp_configs.dataset:
         print("working on contaminated dataset")
         datamodule = Contaminate_CheXpertDataModule(dataset_params,
@@ -45,9 +35,17 @@ def prepare_datamodule(exp_configs, dataset_dict, data_default_params):
                                       seed=exp_configs.manual_seed)  # use official split
 
 
-    if 'vindr_cxr' in exp_configs.dataset:
+    if exp_configs.dataset == 'vindr_cxr':
         print("working on vindr_cxr_withBB dataset")
         datamodule = Vindr_CXR_BBOX_DataModule(dataset_params,
+                                             split_ratio=data_default_params['split_ratio'],
+                                             resplit=data_default_params['resplit'],
+                                             img_size=data_default_params['img_size'],
+                                             seed=42)
+
+    if exp_configs.dataset == 'vindr_cxr_mix':
+        print("working on vindr_cxr_withBB dataset")
+        datamodule = Vindr_CXR_BBOX_MIX_DataModule(dataset_params,
                                              split_ratio=data_default_params['split_ratio'],
                                              resplit=data_default_params['resplit'],
                                              img_size=data_default_params['img_size'],

@@ -96,6 +96,11 @@ class task_switch_solver(object):
                     self.train_with_few_bbox = True
                     self.freq = exp_configs.guidance_freq
                     self.few_bbox_diseases = self.TRAIN_DISEASES
+                if exp_configs.dataset == "vindr_cxr_mix":
+                    self.dloader_pos_bbox = data_loader['train_pos_bbox']
+                    self.train_with_few_bbox = True
+                    self.freq = exp_configs.guidance_freq
+                    self.few_bbox_diseases = self.TRAIN_DISEASES
 
 
             if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut":

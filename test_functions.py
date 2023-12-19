@@ -147,16 +147,37 @@ import pandas as pd
 # uni_imgs = list(set(imgs))
 # print(len(uni_imgs))
 
-bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
-# BBox_csv_file_train = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv"
-# BBox_csv_file_test = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv"
-
-df = pd.read_csv(bbox_file)
-imgs = df['Image Index'].tolist()
-print(len(imgs))
-uni_imgs = list(set(imgs))
-print(len(uni_imgs))
+# bbox_file = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_List_2017.csv"
+# # BBox_csv_file_train = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_valid_df_scaled.csv"
+# # BBox_csv_file_test = "/mnt/qb/work/baumgartner/sun22/data/NIH_BB/NIHChestX-rays/BBox_test_df_scaled.csv"
+#
+# df = pd.read_csv(bbox_file)
+# imgs = df['Image Index'].tolist()
+# print(len(imgs))
+# uni_imgs = list(set(imgs))
+# print(len(uni_imgs))
 
 # diseases = df['Finding Label'].tolist()
 # uni_diseases = np.unique(np.array(diseases), return_counts=True)
 # print(uni_diseases)
+
+
+total_csv_file = "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/annotations_train_resized.csv"
+remain_csv_file = "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/pseudo_guidance/remaining_df.csv"
+bbox_train_file = "/mnt/qb/work/baumgartner/sun22/data/Vindr-CXR/vinbigdata-chest-xray-abnormalities-detection/annotations/pseudo_guidance/pseudo_gudance_df.csv"
+
+df_total = pd.read_csv(total_csv_file)
+df_remain = pd.read_csv(remain_csv_file)
+df_bbox_train = pd.read_csv(bbox_train_file)
+
+print("len(df_total): ",len(df_total))
+print("len(df_remain): ",len(df_remain))
+print("len(df_bbox_train): ",len(df_bbox_train))
+print(len(df_remain) + len(df_bbox_train))
+
+imgs = df_bbox_train['image_id'].tolist()
+print(len(imgs))
+uni_imgs = list(set(imgs))
+print(len(uni_imgs))
+
+
