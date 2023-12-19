@@ -17,12 +17,12 @@ def attrinet_get_parser():
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default='mixed_weighted',
+    parser.add_argument('--guidance_mode', type=str, default='weighted_pseudo_mask',
                         choices=['full_guidance', 'bbox/masks', 'pseudo_mask', 'weighted_pseudo_mask', 'pseudo_bbox', 'mixed', 'mixed_weighted', 'no_guidance', 'guidance_shortcut'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox, default=0.1')
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='vindr_cxr_mix', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'vindr_cxr_mix', 'contaminated_chexpert'])
+    parser.add_argument('--dataset', type=str, default='nih_chestxray', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'vindr_cxr_mix', 'contaminated_chexpert'])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
