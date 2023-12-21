@@ -740,7 +740,9 @@ class task_switch_solver(object):
                     bb_list = bbox_pos[img_idx]
                     if "chexpert" in self.dataset:
                         localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=False)
-                    else:
+                    if self.dataset == "vindr_cxr_mix":
+                        localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list[disease_idx,:], isbbox=False)
+                    if self.dataset == "nih_chestxray":
                         localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=True)
 
             if self.guidance_mode in ["mixed", 'mixed_weighted']:
@@ -750,7 +752,9 @@ class task_switch_solver(object):
                         bb_list = bbox_pos[img_idx]
                         if "chexpert" in self.dataset:
                             localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=False)
-                        else:
+                        if self.dataset == "vindr_cxr_mix":
+                            localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list[disease_idx,:], isbbox=False)
+                        if self.dataset == "nih_chestxray":
                             localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=True)
                 else:
                     pseudo_mask = self.pseudoMask[self.current_training_disease]
