@@ -38,7 +38,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_attrinet.py --debug 'False' --guidance_mode 'weighted_pseudo_mask' --dataset "nih_chestxray" --guidance_freq 0.1 --lambda_localizationloss 30 --num_iters 100000
+python3 main_attrinet.py --debug 'False' --guidance_mode 'mixed_weighted' --dataset "nih_chestxray" --guidance_freq 0.1 --lambda_localizationloss 30 --num_iters 100000
 
 echo "---------------------------------"
 
