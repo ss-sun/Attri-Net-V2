@@ -11,13 +11,13 @@ def attrinet_get_parser():
     parser = argparse.ArgumentParser()
 
     # Experiment configuration.
-    parser.add_argument('--debug', type=str2bool, default=False,
+    parser.add_argument('--debug', type=str2bool, default=True,
                         help='if true, will automatically set d_iters = 1, set savefrequency=1, easy to run all train step for functional test')
 
     parser.add_argument('--exp_name', type=str, default='attri-net')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default='full_guidance',
+    parser.add_argument('--guidance_mode', type=str, default='pseudo_mask',
                         choices=['no_guidance', 'full_guidance', 'pseudo_mask', 'weighted_pseudo_mask', 'pseudo_bbox', 'guidance_shortcut', 'bbox/masks', 'mixed', 'mixed_weighted',])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
     parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox, default=0.1')

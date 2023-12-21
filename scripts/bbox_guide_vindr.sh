@@ -38,7 +38,7 @@ conda activate tt_interaction
 # Run our code
 echo "-------- PYTHON OUTPUT ----------"
 
-python3 main_attrinet.py --debug 'False' --guidance_mode 'full_guidance' --dataset "vindr_cxr" --lambda_localizationloss 30 --num_iters 100000
+python3 main_attrinet.py --debug 'False' --guidance_mode 'pseudo_mask' --dataset "vindr_cxr" --guidance_freq 0 --lambda_localizationloss 30 --num_iters 100000
 
 echo "---------------------------------"
 
