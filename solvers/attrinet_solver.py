@@ -77,62 +77,58 @@ class task_switch_solver(object):
             self.beta1 = exp_configs.beta1
             self.beta2 = exp_configs.beta2
             self.guidance_mode = exp_configs.guidance_mode  # "bbox", "pseudo_mask", "mixed", "no_guidance", "mixed_weighted"
-            if self.guidance_mode == "no_guidance":
+
+            if self.guidance_mode == "no_guidance": # no guidance at all
+                self.train_with_few_bbox = False
                 assert self.lambda_loc == 0
 
             if self.guidance_mode == "full_guidance": # only dataset vindr_cxr has gt bbox for every sample, so we use it for full guidance.
                 self.train_with_few_bbox = False
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+                assert self.dataset == "vindr_cxr"
 
-            if self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed" or self.guidance_mode == "mixed_weighted":
-                # assert exp_configs.dataset == "vindr_cxr" or exp_configs.dataset == "nih_chestxray"
-                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
-                if exp_configs.dataset == "nih_chestxray":
-                    self.dloader_pos_bbox = data_loader['train_pos_bbox']
-                    self.train_with_few_bbox = True
-                    self.freq = exp_configs.guidance_freq
-                    self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"] # nih_chestxray dataset only has gt bbox for these diseases.
-                if exp_configs.dataset == "chexpert":
-                    self.train_with_few_bbox = True
-                    self.freq = exp_configs.guidance_freq
-                    self.few_bbox_diseases = self.TRAIN_DISEASES
-                if exp_configs.dataset == "vindr_cxr_mix":
-                    self.dloader_pos_bbox = data_loader['train_pos_bbox']
-                    self.train_with_few_bbox = True
-                    self.freq = exp_configs.guidance_freq
-                    self.few_bbox_diseases = self.TRAIN_DISEASES
-
-
-            if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut":
+            if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut": # only use pseudo mask
                 self.train_with_few_bbox = False
                 self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
 
-            if self.guidance_mode == "weighted_pseudo_mask":
+            if self.guidance_mode == "weighted_pseudo_mask": # only use weighted pseudo mask
                 self.train_with_few_bbox = False
                 self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
 
-
-            if self.guidance_mode == "pseudo_bbox":
+            if self.guidance_mode == "pseudo_bbox": # only use pseudo bbox
                 self.train_with_few_bbox = False
                 self.pseudoMask = self.prepare_pseudoBbox(exp_configs.dataset)
                 self.local_loss_pseudo = PseudoEnergyLoss()
 
-            if self.guidance_mode == "mixed":
-                self.train_with_few_bbox = True
-                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
-                self.local_loss_pseudo = PseudoEnergyLoss()
+            if self.guidance_mode == "bbox/masks": # only use gt bbox or masks, will increase the frequency of these samples.
                 self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
-
-            if self.guidance_mode == "mixed_weighted":
+                self.dloader_pos_bbox = data_loader['train_pos_bbox']
                 self.train_with_few_bbox = True
-                self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
-                self.local_loss_pseudo = PseudoEnergyLoss()
-                self.local_loss_gt = EnergyPointingGameBBMultipleLoss()
+                self.freq = exp_configs.guidance_freq
+                assert self.dataset in ["nih_chestxray", "chexpert_mix", "vindr_cxr_mix"]
+                if self.dataset == "nih_chestxray":
+                    self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"]
+                else:
+                    self.few_bbox_diseases = self.TRAIN_DISEASES
 
-            if self.guidance_mode == "no_guidance":
-                self.train_with_few_bbox = False
+            if self.guidance_mode == "mixed" or self.guidance_mode == "mixed_weighted": # use both gt annotation and pseduo guidance.
+                assert self.dataset in ["nih_chestxray", "chexpert_mix", "vindr_cxr_mix"]
+                self.dloader_pos_bbox = data_loader['train_pos_bbox']
+                self.train_with_few_bbox = True
+                self.freq = exp_configs.guidance_freq
+                if exp_configs.dataset == "nih_chestxray":
+                    self.few_bbox_diseases = ["Atelectasis", "Cardiomegaly", "Effusion"] # nih_chestxray dataset only has gt bbox for these diseases.
+                else:
+                    self.few_bbox_diseases = self.TRAIN_DISEASES
+                if self.guidance_mode == "mixed":
+                    self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                if self.guidance_mode == "mixed_weighted":
+                    self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
+
+                self.local_loss_pseudo = PseudoEnergyLoss() # localization loss with pseudo annotation
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss() # localization loss with gt annotation
 
 
             # Step size.
@@ -600,7 +596,7 @@ class task_switch_solver(object):
                     self.dloader_neg[current_training_disease])
                 batch = next(self.neg_disease_data_iters[current_training_disease])
 
-        if self.guidance_mode == "bbox/masks" and self.dataset == "vindr_cxr":
+        if self.guidance_mode == "full_guidance": # full guidance, only vindr_cxr possible
             imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
             imgs = imgs.to(self.device)
             lbls = lbls.to(self.device)
@@ -608,18 +604,22 @@ class task_switch_solver(object):
             bbox = bboxs[:, disease_idx, :]
             return imgs, lbls, bbox
 
-        if (self.guidance_mode == "bbox/masks" or self.guidance_mode == "mixed" or self.guidance_mode == "mixed_weighted") and self.dataset == "nih_chestxray" and torch.sum(batch['BBox'])!=0:
-            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
-            imgs = imgs.to(self.device)
-            lbls = lbls.to(self.device)
-            bbox = batch['BBox']
-            return imgs, lbls, bbox
-
-        else:
+        if self.guidance_mode in["no_guidance", "pseudo_mask", "weighted_pseudo_mask", "pseudo_bbox", "guidance_shortcut"]:
             imgs, lbls = batch['img'], batch['label']
             imgs = imgs.to(self.device)
             lbls = lbls.to(self.device)
             return imgs, lbls, None
+
+        if self.guidance_mode in ["bbox/masks", "mixed", 'mixed_weighted']:
+            imgs, lbls, bboxs = batch['img'], batch['label'], batch['BBox']
+            imgs = imgs.to(self.device)
+            lbls = lbls.to(self.device)
+            bbox = batch['BBox']
+            if torch.sum(batch['BBox'])==0:
+                bbox = None
+            return imgs, lbls, bbox
+
+
 
 
     def train(self):
@@ -703,7 +703,7 @@ class task_switch_solver(object):
             imgs_pos, lbls_pos, bbox_pos = self.get_batch(self.current_training_disease, which_batch="pos")
 
             # Switch the generator to a specific disease task and compute generator loss.
-            task_code= self.latent_z_task[self.current_training_disease].to(self.device)
+            task_code = self.latent_z_task[self.current_training_disease].to(self.device)
             neg_dests, neg_masks = self.net_g(imgs_neg, task_code)
             pos_dests, pos_masks = self.net_g(imgs_pos, task_code)
 
@@ -725,25 +725,39 @@ class task_switch_solver(object):
 
             # compute localization loss
             localization_loss = 0
-            if self.guidance_mode == "bbox/masks" and bbox_pos is not None:
+            if self.guidance_mode == "full_guidance":
                 for img_idx in range(len(imgs_pos)):
                     bb_list = bbox_pos[img_idx]
-                    localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list)
-            if self.guidance_mode == "pseudo_mask" or self.guidance_mode == "guidance_shortcut" or self.guidance_mode == "pseudo_bbox":
+                    localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=True)
+
+            if self.guidance_mode in ["pseudo_mask", "weighted_pseudo_mask", "pseudo_bbox", "guidance_shortcut"]:
                 pseudo_mask = self.pseudoMask[self.current_training_disease]
                 for img_idx in range(len(imgs_pos)):
                     localization_loss += self.local_loss_pseudo(pos_masks[img_idx], pseudo_mask)
 
-            if self.guidance_mode =="mixed" or self.guidance_mode == "mixed_weighted":
+            if self.guidance_mode == "bbox/masks" and bbox_pos is not None:
+                for img_idx in range(len(imgs_pos)):
+                    bb_list = bbox_pos[img_idx]
+                    if "chexpert" in self.dataset:
+                        localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=False)
+                    else:
+                        localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=True)
+
+            if self.guidance_mode in ["mixed", 'mixed_weighted']:
+                # to adapt to chexpert case, with gt is mask
                 if bbox_pos is not None:
                     for img_idx in range(len(imgs_pos)):
                         bb_list = bbox_pos[img_idx]
-                        localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list)
+                        if "chexpert" in self.dataset:
+                            localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=False)
+                        else:
+                            localization_loss += self.local_loss_gt(pos_masks[img_idx], bb_list, isbbox=True)
                 else:
                     pseudo_mask = self.pseudoMask[self.current_training_disease]
                     for img_idx in range(len(imgs_pos)):
                         localization_loss += self.local_loss_pseudo(pos_masks[img_idx], pseudo_mask)
-
+            if self.guidance_mode == "no_guidance":
+                localization_loss = 0
 
             # Get center loss.
             center_loss = self.center_losses[self.current_training_disease](masks_all.view(masks_all.size(0), -1),

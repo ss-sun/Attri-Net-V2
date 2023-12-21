@@ -92,13 +92,16 @@ class EnergyPointingGameBBMultipleLoss:
         self.only_positive = False
         self.binarize = False
 
-    def __call__(self, attributions, bb_coordinates):
+    def __call__(self, attributions, gt_annotation, isbbox=True):
         pos_attributions = torch.abs(attributions)  # modified code, adapted to attri-net.
-        bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
-        xmin, ymin, width, height = bb_coordinates.numpy().astype(int)  # modified code, adapted to attri-net.
-        xmax = xmin + width
-        ymax = ymin + height
-        bb_mask[:,ymin:ymax, xmin:xmax] = 1
+        if isbbox:
+            bb_mask = torch.zeros_like(pos_attributions, dtype=torch.long)
+            xmin, ymin, width, height = gt_annotation.numpy().astype(int)  # modified code, adapted to attri-net.
+            xmax = xmin + width
+            ymax = ymin + height
+            bb_mask[:,ymin:ymax, xmin:xmax] = 1
+        else:
+            bb_mask = gt_annotation.unsqueeze(0).cuda()
         num = pos_attributions[torch.where(bb_mask == 1)].sum()
         den = pos_attributions.sum()
         if den < 1e-7:

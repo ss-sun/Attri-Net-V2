@@ -38,7 +38,10 @@ class CheXpert(Dataset):
         label = np.array(label)
         data['img'] = img
         data['label'] = label
+        data['BBox'] = 0
         return data
+
+
 
 class CheXpert_withMask(Dataset):
     def __init__(self, image_dir, df, train_diseases, transforms):
@@ -53,31 +56,41 @@ class CheXpert_withMask(Dataset):
     def __getitem__(self, idx):
 
         data = {}
-        img_path = os.path.join(self.image_dir, self.df.iloc[idx]['Path'])
+        img_path = os.path.join(self.image_dir, "valid", self.df.iloc[idx]['Image Index']+".jpg")
         img = Image.open(img_path).convert("L")
 
         if self.transforms is not None:
             img = self.transforms(img)  # return image in range (0,1)
-
         img = normalize_image(img)
         img = map_image_to_intensity_range(img, -1, 1, percentiles=5)
 
+        label = np.zeros(len(self.TRAIN_DISEASES))
+        lesion_type = self.df.iloc[idx]['Finding Labels']
+        if lesion_type in self.TRAIN_DISEASES:
+            disease_idx = self.TRAIN_DISEASES.index(lesion_type)
+            label[disease_idx] = 1
+        mask = np.load(self.df.iloc[idx]['Mask Path'])
         # Get labels from the dataframe for current image
-        label = self.df.iloc[idx][self.TRAIN_DISEASES].values.tolist()
-        label = np.array(label)
         data['img'] = img
         data['label'] = label
+        data['BBox'] = mask
         return data
 
 
 
 
-class CheXpertDataModule(LightningDataModule):
+
+
+
+
+
+class CheXpertData_MIX_DataModule(LightningDataModule):
 
     def __init__(self, dataset_params, img_size=320, seed=42):
 
         self.image_dir = dataset_params["image_dir"]
         self.train_csv_file = dataset_params["train_csv_file"]
+        self.Mask_csv_file_train = dataset_params["Mask_csv_file_train"]
         self.valid_csv_file = dataset_params["valid_csv_file"]
         self.test_image_dir = dataset_params["test_image_dir"]
         self.test_csv_file = dataset_params["test_csv_file"]
@@ -103,6 +116,7 @@ class CheXpertDataModule(LightningDataModule):
         valid_df = pd.read_csv(self.valid_csv_file)
         test_df = pd.read_csv(self.test_csv_file)
 
+
         # we only use frontal images
         self.train_df = self.preprocess_df(train_df, orientation=self.orientation, uncertainty=self.uncertainty)
         self.valid_df = self.preprocess_df(valid_df, orientation=self.orientation, uncertainty=self.uncertainty)
@@ -110,6 +124,7 @@ class CheXpertDataModule(LightningDataModule):
         self.test_df = self.testset_orientation_filter(test_df, orientation=self.orientation)
         # self.test_df =test_df
         # for test set, we use all images to create the test set.
+        self.mask_train_df = pd.read_csv(self.Mask_csv_file_train)
 
 
 
@@ -120,15 +135,44 @@ class CheXpertDataModule(LightningDataModule):
         self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
                                  transforms=self.data_transforms['test'])
 
-
+        self.mask_train_set = CheXpert_withMask(image_dir=self.image_dir, df=self.mask_train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
 
         # To train Attri-Net, we need to get pos_dataloader and neg_dataloader for each disease.
         self.single_disease_train_sets = self.create_trainsets()
         self.single_disease_vis_sets = self.create_vissets()
+        self.single_disease_trainBBox_sets = self.create_trainsets_bbox()
 
 
 
+    def create_trainsets_bbox(self):
+        """
+        create positive trainset and negative trainset for each disease
+        """
+        train_sets = {}
+        for disease in self.TRAIN_DISEASES:
+            train_sets[disease] = self.subset_BBox(src_df=self.mask_train_df, disease=disease, transforms=self.data_transforms["train"])
+        return train_sets
 
+
+    def subset_BBox(self, src_df, disease, transforms):
+        """
+        create subset from source dataset using given selected indices.
+        """
+        idx = np.where(src_df["Finding Labels"] == disease)[0]
+        filtered_df = src_df.iloc[idx]
+        filtered_df = filtered_df.reset_index(drop=True)
+        subset = CheXpert_withMask(image_dir=self.image_dir, df=filtered_df, train_diseases=self.TRAIN_DISEASES, transforms=transforms)
+        return subset
+
+
+    def single_disease_trainBBox_dataloaders(self, batch_size, shuffle=True):
+        trainBBox_dataloaders = {}
+        for disease in self.TRAIN_DISEASES:
+            if len(self.single_disease_trainBBox_sets[disease])!=0:
+                trainBBox_dataloaders[disease] = DataLoader(self.single_disease_trainBBox_sets[disease], batch_size=batch_size, shuffle=shuffle, drop_last=True)
+            else:
+                trainBBox_dataloaders[disease] = None
+        return trainBBox_dataloaders
 
     def train_dataloader(self, batch_size, shuffle=True):
         return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
@@ -150,6 +194,7 @@ class CheXpertDataModule(LightningDataModule):
                 train_loader[disease] = DataLoader(self.single_disease_train_sets[c][disease], batch_size=batch_size, shuffle=shuffle, drop_last=True)
             train_dataloaders[c] = train_loader
         return train_dataloaders
+
 
 
     def single_disease_vis_dataloaders(self, batch_size, shuffle=False):
@@ -258,9 +303,10 @@ class CheXpertDataModule(LightningDataModule):
 
 if __name__ == '__main__':
 
-    chexpert_dict = {
+    chexpert_mix_dict = {
         "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
         "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
+        "Mask_csv_file_train": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks/val_masks.csv",
         "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
         "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
         "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
@@ -274,7 +320,7 @@ if __name__ == '__main__':
         "batch_size": 4,
     }
 
-    datamodule = CheXpertDataModule(chexpert_dict,
+    datamodule = CheXpertData_MIX_DataModule(chexpert_mix_dict,
                                     img_size=data_default_params['img_size'],
                                     seed=42)
 
@@ -295,18 +341,32 @@ if __name__ == '__main__':
     # for batch in test_loaders:
     #     print(batch['img'].shape)
     #     print(batch['label'].shape)
+    single_disease_trainBBox_loaders = datamodule.single_disease_trainBBox_dataloaders(batch_size=4, shuffle=True)
+
+    for disease in chexpert_mix_dict["train_diseases"]:
+        if single_disease_trainBBox_loaders[disease] is not None:
+            print(len(single_disease_trainBBox_loaders[disease].dataset))
+            bbox= single_disease_trainBBox_loaders[disease].dataset[0]["BBox"]
+            img = single_disease_trainBBox_loaders[disease].dataset[0]["img"]
+            lbl = single_disease_trainBBox_loaders[disease].dataset[0]["label"]
+            img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
+            img.show()
+            mask = Image.fromarray(bbox*255).convert('RGB')
+            mask.show()
 
 
-    train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
-    for disease in chexpert_dict["train_diseases"]:
-        print(disease)
-        count = 0
-        for c in ['neg', 'pos']:
-            print(c)
-            disease_dataloader = train_dataloaders[c][disease]
-            print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
-            count += len(disease_dataloader.dataset)
-        print('count', count)
+
+
+    # train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
+    # for disease in chexpert_mix_dict["train_diseases"]:
+    #     print(disease)
+    #     count = 0
+    #     for c in ['neg', 'pos']:
+    #         print(c)
+    #         disease_dataloader = train_dataloaders[c][disease]
+    #         print('len(disease_dataloader.dataset)',len(disease_dataloader.dataset))
+    #         count += len(disease_dataloader.dataset)
+    #     print('count', count)
 #
 #     import matplotlib.pyplot as plt
 #     def plot(imgs, with_orig=False, row_title=None, **imshow_kwargs):

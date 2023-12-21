@@ -64,6 +64,19 @@ vindr_cxr_mix_dict = {
     "train_diseases": ['Aortic enlargement', 'Cardiomegaly', 'Pulmonary fibrosis', 'Pleural thickening','Pleural effusion'],
 }
 
+chexpert_mix_dict = {
+        "image_dir": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/",
+        "train_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/train.csv",
+        "Mask_csv_file_train": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks/val_masks.csv",
+        "valid_csv_file": "/mnt/qb/work/baumgartner/sun22/data/CheXpert-v1.0-small/valid.csv",
+        "test_image_dir": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/scaled",
+        "test_csv_file": "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXpert/test_labels.csv",
+        "train_diseases": ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Pleural Effusion"],
+        "orientation": "Frontal",
+        "uncertainty": "toZero",
+}
+
+
 
 data_default_params = {
     "split_ratio": 0.8,
@@ -77,6 +90,7 @@ dataset_dict = {
     "vindr_cxr": vindr_cxr_dict,
     "contaminated_chexpert": contaminated_chexpert_dict,
     "vindr_cxr_mix": vindr_cxr_mix_dict,
+    "chexpert_mix":chexpert_mix_dict
 }
 
 

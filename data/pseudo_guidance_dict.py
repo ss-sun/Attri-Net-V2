@@ -7,6 +7,7 @@ pseudo_mask_dict = {
     "vindr_cxr": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
     "contaminated_chexpert": os.path.join(cwd,"data/shortcut_guidance_mask.npy"),
+    "chexpert_mix": os.path.join(cwd, "data/pseudo_masks_chexpert.json"),
 }
 
 pseudo_bbox_dict = {
@@ -14,6 +15,7 @@ pseudo_bbox_dict = {
     "nih_chestxray": os.path.join(cwd,"data/pseudo_bboxs_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/pseudo_bboxs_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/pseudo_bboxs_vindr.json"),
+    "chexpert_mix": os.path.join(cwd, "data/pseudo_bboxs_chexpert.json"),
 }
 
 weighted_pseudo_mask_dict = {
@@ -21,4 +23,5 @@ weighted_pseudo_mask_dict = {
     "nih_chestxray": os.path.join(cwd,"data/weighted_pseudo_masks_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/weighted_pseudo_masks_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/weighted_pseudo_masks_vindr.json"),
+    "chexpert_mix": os.path.join(cwd, "data/weighted_pseudo_masks_chexpert.json"),
 }

@@ -4,6 +4,7 @@ from pycocotools import mask
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw
+import pandas as pd
 
 
 
@@ -94,19 +95,6 @@ def create_pseudoMask(gt_seg_file, disease_list, img_size=320, dest_dir="./"):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
     if os.path.exists(dest_dir) == False:
         os.makedirs(dest_dir)
@@ -140,6 +128,26 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
 
 
 
+def create_csv(src_folder):
+    # list all file end with .npy in src_folder
+    all_files = os.listdir(src_folder)
+    filtered_files = [file for file in all_files if file.endswith(".npy")]
+
+    print(len(filtered_files))
+
+    # create empty csv
+    df = pd.DataFrame(columns=["Image Index", "Finding Labels", "Mask Path"])
+
+    for file in filtered_files:
+        # patient64541_study1_view1_frontal_Cardiomegaly.npy
+        cxr_id = file.split("_")[0]+"/"+file.split("_")[1]+"/"+file.split("_")[2]+"_"+file.split("_")[3]
+        disease = file.split("_")[-1].split(".")[0]
+        df = df._append({"Image Index": cxr_id, "Finding Labels": disease, "Mask Path": os.path.join(src_folder, file)}, ignore_index=True)
+
+    df.to_csv(os.path.join(src_folder, "val_masks.csv"), index=False)
+
+
+
 
 
 
@@ -148,9 +156,9 @@ def write_out_masks(gt_seg_file, disease_list, img_size, dest_dir):
 # 279 frontal gt masks in total in file: "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
 
 if __name__ == '__main__':
-    current_task = "create_pseudo_masks" # select from the Tasks list below
+    current_task = "create_csv" # select from the Tasks list below
 
-    Tasks = ["create_pseudo_masks", "create_weighted_pseudo_masks", "write_out_masks_valid", "write_out_masks_test"]
+    Tasks = ["create_pseudo_masks", "create_weighted_pseudo_masks", "write_out_masks_valid", "write_out_masks_test", "create_csv"]
 
     gt_seg_file_valid = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_val.json"
     gt_seg_file_test = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
@@ -169,6 +177,10 @@ if __name__ == '__main__':
     if current_task == "write_out_masks_valid":
         dest_dir = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks"
         write_out_masks(gt_seg_file = gt_seg_file_valid, disease_list=disease_list, img_size= 320, dest_dir=dest_dir)
+
+    if current_task == "create_csv":
+        create_csv(src_folder="/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/valid_masks")
+
 
 
 
