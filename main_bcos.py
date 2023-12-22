@@ -16,17 +16,17 @@ def bcos_resnet_get_parser():
     parser.add_argument('--exp_name', type=str, default='bcos_resnet')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
 
-    parser.add_argument('--guidance_mode', type=str, default="no_guidance",
-                        choices=['bbox','pseudo_mask', 'no_guidance'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
+    parser.add_argument('--guidance_mode', type=str, default="mixed",
+                        choices=['no_guidance', 'full_guidance', 'mixed', 'mixed_weighted', 'full'])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
 
     # Data configuration.
 
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr'])
+    parser.add_argument('--dataset', type=str, default='chexpert_mix', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'vindr_cxr_mix', 'chexpert_mix',])
 
     parser.add_argument('--image_size', type=int, default=320, help='image resolution')
     parser.add_argument('--batch_size', type=int, default=4, help='mini-batch size')
-    parser.add_argument("--lambda_localizationloss", type=float, default=0, help="Lambda to use to weight localization loss. 0 means no localization loss.")
+    parser.add_argument("--lambda_localizationloss", type=float, default=0.1, help="Lambda to use to weight localization loss. 0 means no localization loss.")
     # Training configuration.
     parser.add_argument('--epochs', type=int, default=25, help='number of epochs to train for')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
@@ -69,6 +69,10 @@ def main(exp_configs):
     data_loader["train"] = datamodule.train_dataloader(batch_size=exp_configs.batch_size, shuffle=True)
     data_loader["valid"] = datamodule.valid_dataloader(batch_size=exp_configs.batch_size, shuffle=False)
     data_loader["test"] = datamodule.test_dataloader(batch_size=exp_configs.batch_size, shuffle=False)
+
+    if (exp_configs.guidance_mode in ['mixed', 'mixed_weighted']):
+        assert exp_configs.dataset in ['nih_chestxray', 'chexpert_mix', 'vindr_cxr_mix']
+        data_loader['train_pos_bbox'] = datamodule.trainBBox_dataloader(batch_size=exp_configs.batch_size, shuffle=True)
 
     solver = bcos_resnet_solver(exp_configs, data_loader=data_loader)
 

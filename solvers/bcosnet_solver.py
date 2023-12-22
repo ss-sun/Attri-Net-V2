@@ -11,13 +11,13 @@ from tqdm import tqdm
 from captum.attr import InputXGradient
 import json
 from models.losses import EnergyPointingGameBBMultipleLoss_multilabel, PseudoEnergyLoss_multilabel
-from data.pseudo_guidance_dict import pseudo_mask_dict, pseudo_bbox_dict
+from data.pseudo_guidance_dict import pseudo_mask_dict, weighted_pseudo_mask_dict
 
 
 class bcos_resnet_solver(object):
     # Train and test ResNet50.
     def __init__(self, exp_configs, data_loader):
-        # self.debug = exp_configs.debug
+
         # self.debug = exp_configs.debug
         self.print_loss = False
         self.exp_configs = exp_configs
@@ -33,7 +33,8 @@ class bcos_resnet_solver(object):
             self.device = torch.device("cpu")
 
         if exp_configs.mode == "train":
-
+            self.debug = exp_configs.debug
+            self.dataset = exp_configs.dataset
             self.lambda_loc = exp_configs.lambda_localizationloss
             self.guidance_mode = exp_configs.guidance_mode
             self.img_size = exp_configs.image_size
@@ -45,11 +46,25 @@ class bcos_resnet_solver(object):
             self.valid_loader = data_loader['valid']
             self.test_loader = data_loader['test']
 
-            if self.guidance_mode == "pseudo_mask":
-                self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
-                self.local_loss = PseudoEnergyLoss_multilabel()
-            if self.guidance_mode == "bbox":
-                self.local_loss = EnergyPointingGameBBMultipleLoss_multilabel()
+            # if self.guidance_mode == "pseudo_mask":
+            #     self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+            #     self.local_loss = PseudoEnergyLoss_multilabel()
+
+            if self.guidance_mode == "full_guidance":
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss_multilabel()
+
+            if self.guidance_mode in["mixed", "mixed_weighted"]:
+                self.train_with_few_bbox = True
+                self.dloader_bbox = data_loader['train_pos_bbox']
+                self.bbox_data_iters = iter(self.dloader_bbox)
+                if self.guidance_mode == "mixed":
+                    self.pseudoMask = self.prepare_pseudoMask(exp_configs.dataset)
+                if self.guidance_mode == "mixed_weighted":
+                    self.pseudoMask = self.prepare_weighted_pseudoMask(exp_configs.dataset)
+                self.local_loss_gt = EnergyPointingGameBBMultipleLoss_multilabel()
+                self.local_loss_pseudo = PseudoEnergyLoss_multilabel()
+
+
             # Initialize model.
             self.model = self.init_model()
             self.loss = torch.nn.BCEWithLogitsLoss()
@@ -71,6 +86,17 @@ class bcos_resnet_solver(object):
                 pseudoMask[disease] = np.array(data[disease])
         return pseudoMask
 
+
+    def prepare_weighted_pseudoMask(self, dataset):
+        weighted_pseudoMask = {}
+        file_path = weighted_pseudo_mask_dict[dataset]
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+            for disease in self.TRAIN_DISEASES:
+                weighted_pseudoMask[disease] = np.array(data[disease])
+        return weighted_pseudoMask
+
+
     def extend_channels(self, img):
         return torch.cat((img, 1-img), dim=1)
 
@@ -87,9 +113,12 @@ class bcos_resnet_solver(object):
 
     def get_tgt_bbox(self, labels, bboxs):
         tgt_bbox = []
-        for idx in range(len(labels)):
-            if labels[idx] == 1:
-                tgt_bbox.append(bboxs[idx])
+        if self.dataset in ["vindr_cxr", "vindr_cxr_mix"]: # only vindr_cxr has multiple bboxs
+            for idx in range(len(labels)):
+                if labels[idx] == 1:
+                    tgt_bbox.append(bboxs[idx])
+        else:
+            tgt_bbox = bboxs.unsqueeze(0) # 'chexpert_mix' and 'nih_chestxray' only have one bbox or mask for multilabel.
         return tgt_bbox
 
     def get_pseudo_mask(self, labels):
@@ -99,6 +128,15 @@ class bcos_resnet_solver(object):
                 disease = self.TRAIN_DISEASES[idx]
                 pseudo_mask.append(self.pseudoMask[disease])
         return pseudo_mask
+
+    def get_gt_batch(self):
+        try:
+            batch = next(self.bbox_data_iters)
+        except StopIteration:
+            self.bbox_data_iters = iter(self.dloader_bbox)
+            batch = next(self.bbox_data_iters)
+        return batch
+
 
 
     def train(self):
@@ -111,16 +149,14 @@ class bcos_resnet_solver(object):
             steps = 0
             train_epoch_loss = 0.0
             for idx, data in enumerate(self.train_loader):
+                self.gt_batch = False
                 if self.debug:
                     print("steps: ", steps)
-                    if steps==20:
+                    if steps==50:
                         self.validation(max_batches=5)
 
                 train_data = data['img']
-
                 # attri = self.get_attributes(train_data[0].unsqueeze(0), label_idx=1, positive_only=True)
-
-
                 train_data = self.extend_channels(train_data)
                 train_labels = data['label']
                 train_data = train_data.to(self.device)
@@ -130,7 +166,7 @@ class bcos_resnet_solver(object):
 
                 # compute localization loss
                 localization_loss = 0
-                if self.guidance_mode == "bbox" and torch.sum(train_labels) > 0:
+                if self.guidance_mode == "full_guidance" and torch.sum(train_labels) > 0: # only for vindr-cxr dataset which all samples have bbox
                     local_loss_list = []
                     for img_idx in range(len(train_data)):
                         img = train_data[img_idx]
@@ -138,7 +174,7 @@ class bcos_resnet_solver(object):
                         if torch.sum(lbl) > 0:
                             attributions = self.get_attribution_list(img.unsqueeze(0), lbl, positive_only=True)
                             tgt_bboxs = self.get_tgt_bbox(train_labels[img_idx], data['BBox'][img_idx])
-                            local_loss_list.append(self.local_loss(attributions, tgt_bboxs))
+                            local_loss_list.append(self.local_loss_gt(attributions, tgt_bboxs))
                     if len(local_loss_list) > 0:
                         localization_loss = torch.mean(torch.stack(local_loss_list))* self.lambda_loc
 
@@ -151,9 +187,52 @@ class bcos_resnet_solver(object):
                         if torch.sum(lbl) > 0:
                             attributions = self.get_attribution_list(img.unsqueeze(0), lbl, positive_only=True)
                             pseudo_masks = self.get_pseudo_mask(train_labels[img_idx])
-                            local_loss_list.append(self.local_loss(attributions, pseudo_masks))
+                            local_loss_list.append(self.local_loss_pseudo(attributions, pseudo_masks))
                     if len(local_loss_list) > 0:
                         localization_loss = torch.mean(torch.stack(local_loss_list))* self.lambda_loc
+
+                if self.guidance_mode in ["mixed", "mixed_weighted"] and torch.sum(train_labels) > 0:
+                    if idx % 10 == 0:
+                        # for every 10 batches, get one batch with gt annotations. otherswise use pseudo annotations.
+                        print("idx: ", idx)
+                        data = self.get_gt_batch()
+
+                        train_data = data['img']
+                        train_data = self.extend_channels(train_data)
+                        train_labels = data['label']
+                        train_data = train_data.to(self.device)
+                        train_labels = train_labels.to(self.device)
+                        y_pred = self.model(train_data)
+                        cls_loss = self.loss(y_pred, train_labels)
+                        train_bbox = data['BBox']
+
+                        # batch with gt annotations
+                        local_loss_list = []
+                        for img_idx in range(len(train_data)):
+                            img = train_data[img_idx]
+                            lbl = train_labels[img_idx]
+                            if torch.sum(lbl) > 0:
+                                attributions = self.get_attribution_list(img.unsqueeze(0), lbl, positive_only=True)
+                                tgt_bboxs = self.get_tgt_bbox(train_labels[img_idx], train_bbox[img_idx])
+                                if self.dataset =="chexpert_mix":
+                                    local_loss_list.append(self.local_loss_gt(attributions, tgt_bboxs, isbbox=False))
+                                else:
+                                    local_loss_list.append(self.local_loss_gt(attributions, tgt_bboxs, isbbox=True))
+                        if len(local_loss_list) > 0:
+                            localization_loss = torch.mean(torch.stack(local_loss_list))* self.lambda_loc
+                    else:
+                        # batch without gt annotation, use pseudo guidance
+                        local_loss_list = []
+                        for img_idx in range(len(train_data)):
+                            img = train_data[img_idx]
+                            lbl = train_labels[img_idx]
+                            if torch.sum(lbl) > 0:
+                                attributions = self.get_attribution_list(img.unsqueeze(0), lbl, positive_only=True)
+                                pseudo_masks = self.get_pseudo_mask(train_labels[img_idx])
+                                local_loss_list.append(self.local_loss_pseudo(attributions, pseudo_masks))
+                        if len(local_loss_list) > 0:
+                            localization_loss = torch.mean(torch.stack(local_loss_list))* self.lambda_loc
+
 
 
                 train_loss= cls_loss + localization_loss

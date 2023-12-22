@@ -37,14 +37,19 @@ class EnergyPointingGameBBMultipleLoss_multilabel:
         self.only_positive = False
         self.binarize = False
 
-    def __call__(self, attributions, bb_coordinates):
+    def __call__(self, attributions, bb_coordinates, isbbox=True):
         loss_list = []
         for i in range(len(bb_coordinates)):
             pos_attribution = attributions[i].clamp(min=0) # original code
-            bb_mask = torch.zeros_like(pos_attribution, dtype=torch.long)
-            coord = bb_coordinates[i]
-            xmin, ymin, width, height = coord
-            bb_mask[:, int(ymin):int(ymin+height), int(xmin):int(xmin+width)] = 1
+
+            if isbbox:
+                bb_mask = torch.zeros_like(pos_attribution, dtype=torch.long)
+                coord = bb_coordinates[i]
+                xmin, ymin, width, height = coord
+                bb_mask[:, int(ymin):int(ymin+height), int(xmin):int(xmin+width)] = 1
+            else:
+                bb_mask = bb_coordinates[i].unsqueeze(0).cuda()
+
             num = pos_attribution[torch.where(bb_mask == 1)].sum()
             den = pos_attribution.sum()
             if den < 1e-7:

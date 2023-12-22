@@ -201,10 +201,16 @@ class Vindr_CXR_BBOX_MIX_DataModule(LightningDataModule):
         self.bbox_test_set = Vindr_CXR_BBOX_TEST(image_dir=self.test_image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES,
                                   transforms=self.data_transforms['test'], img_size=self.img_size, lbl_style = "single-label")
 
+        self.trainBBox_set = Vindr_CXR_BBOX(image_dir=self.train_image_dir, df=self.BBox_train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'], img_size=self.img_size, with_BBox=True)
+
+
         self.single_disease_train_sets = self.create_trainsets()
         self.single_disease_trainBBox_sets = self.create_trainsets_bbox()
         self.single_disease_vis_sets = self.create_vissets()
 
+
+    def trainBBox_dataloader(self, batch_size, shuffle=True):
+        return DataLoader(self.trainBBox_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def train_dataloader(self, batch_size, shuffle=True):
         return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
@@ -421,6 +427,8 @@ if __name__ == '__main__':
         if single_disease_trainBBox_loaders[disease] is not None:
             print(len(single_disease_trainBBox_loaders[disease].dataset))
 
+    trainBBox_dataloader = datamodule.trainBBox_dataloader(batch_size=4, shuffle=True)
+    print('len(trainBBox_dataloader.dataset)', len(trainBBox_dataloader.dataset))
 
     # train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
     #

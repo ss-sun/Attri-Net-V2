@@ -135,7 +135,7 @@ class CheXpertData_MIX_DataModule(LightningDataModule):
         self.BBox_test_set = CheXpert(image_dir=self.test_image_dir, df=self.test_BB_df, train_diseases=self.TRAIN_DISEASES,
                                  transforms=self.data_transforms['test'])
 
-        self.mask_train_set = CheXpert_withMask(image_dir=self.image_dir, df=self.mask_train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
+        self.trainBBox_set = CheXpert_withMask(image_dir=self.image_dir, df=self.mask_train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'])
 
         # To train Attri-Net, we need to get pos_dataloader and neg_dataloader for each disease.
         self.single_disease_train_sets = self.create_trainsets()
@@ -173,6 +173,11 @@ class CheXpertData_MIX_DataModule(LightningDataModule):
             else:
                 trainBBox_dataloaders[disease] = None
         return trainBBox_dataloaders
+
+
+    def trainBBox_dataloader(self, batch_size, shuffle=True):
+        return DataLoader(self.trainBBox_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
+
 
     def train_dataloader(self, batch_size, shuffle=True):
         return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
@@ -346,16 +351,16 @@ if __name__ == '__main__':
     for disease in chexpert_mix_dict["train_diseases"]:
         if single_disease_trainBBox_loaders[disease] is not None:
             print(len(single_disease_trainBBox_loaders[disease].dataset))
-            bbox= single_disease_trainBBox_loaders[disease].dataset[0]["BBox"]
-            img = single_disease_trainBBox_loaders[disease].dataset[0]["img"]
-            lbl = single_disease_trainBBox_loaders[disease].dataset[0]["label"]
-            img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
-            img.show()
-            mask = Image.fromarray(bbox*255).convert('RGB')
-            mask.show()
+            # bbox= single_disease_trainBBox_loaders[disease].dataset[0]["BBox"]
+            # img = single_disease_trainBBox_loaders[disease].dataset[0]["img"]
+            # lbl = single_disease_trainBBox_loaders[disease].dataset[0]["label"]
+            # img = Image.fromarray((np.squeeze(img) * 0.5 + 0.5) * 255).convert('RGB')
+            # img.show()
+            # mask = Image.fromarray(bbox*255).convert('RGB')
+            # mask.show()
 
-
-
+    trainBBox_dataloader = datamodule.trainBBox_dataloader(batch_size=4, shuffle=True)
+    print('len(trainBBox_dataloader.dataset)', len(trainBBox_dataloader.dataset))
 
     # train_dataloaders = datamodule.single_disease_train_dataloaders(batch_size=4, shuffle=False)
     # for disease in chexpert_mix_dict["train_diseases"]:

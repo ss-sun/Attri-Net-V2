@@ -154,6 +154,9 @@ class NIHChestXrayDataModule(LightningDataModule):
         self.test_set = NIHChestXray(image_dir=self.image_dir, df=self.test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'], img_size=self.img_size, with_BBox=False)
         self.BBox_test_set = NIHChestXray(image_dir=self.image_dir, df=self.BBox_test_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['test'], img_size=self.img_size, with_BBox=True)
 
+
+        self.trainBBox_set = NIHChestXray(image_dir=self.image_dir, df=self.BBox_train_df, train_diseases=self.TRAIN_DISEASES, transforms=self.data_transforms['train'], img_size=self.img_size, with_BBox=True)
+
         # To train MT_VAGAN, we need to get pos_dataloader and neg_dataloader for each disease.
         self.single_disease_train_sets = self.create_trainsets()
         self.single_disease_trainBBox_sets = self.create_trainsets_bbox()
@@ -163,7 +166,8 @@ class NIHChestXrayDataModule(LightningDataModule):
         #     print('TrainBBox set: ', len(self.single_disease_trainBBox_sets[disease]))
 
 
-
+    def trainBBox_dataloader(self, batch_size, shuffle=True):
+        return DataLoader(self.trainBBox_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
 
     def train_dataloader(self, batch_size, shuffle=True):
         return DataLoader(self.train_set, batch_size=batch_size, shuffle=shuffle, drop_last=True)
@@ -391,12 +395,16 @@ if __name__== '__main__':
 
     single_disease_trainBBox_loaders= datamodule.single_disease_trainBBox_dataloaders(batch_size=4, shuffle=True)
 
-    for disease in nih_chestxray_dict["train_diseases"]:
-        if single_disease_trainBBox_loaders[disease] is not None:
-            print(len(single_disease_trainBBox_loaders[disease].dataset))
+    # for disease in nih_chestxray_dict["train_diseases"]:
+    #     if single_disease_trainBBox_loaders[disease] is not None:
+    #         print(len(single_disease_trainBBox_loaders[disease].dataset))
+    #
+    # BBox_test_dataloader = datamodule.BBox_test_dataloader(batch_size=1,shuffle=True)
+    # print('len(bbox_test_loaders.dataset)',len(BBox_test_dataloader.dataset))
 
-    BBox_test_dataloader = datamodule.BBox_test_dataloader(batch_size=1,shuffle=True)
-    print('len(bbox_test_loaders.dataset)',len(BBox_test_dataloader.dataset))
+    trainBBox_dataloader = datamodule.trainBBox_dataloader(batch_size=4,shuffle=True)
+    print('len(trainBBox_dataloader.dataset)',len(trainBBox_dataloader.dataset))
+
     #
     # print(len(train_loader.dataset))
     # print(len(valid_loader.dataset))
