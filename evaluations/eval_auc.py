@@ -7,7 +7,7 @@ from train_utils import prepare_datamodule
 from solvers.resnet_solver import resnet_solver
 from solvers.attrinet_solver import task_switch_solver
 from solvers.bcosnet_solver import bcos_resnet_solver
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models, guided_bcos_resnet_models
 import json
 import datetime
 
@@ -33,11 +33,11 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='attri-net', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray', choices=['color', 'gray']) # will change to color if dataset is airogs_color
     # Data configuration.
-    parser.add_argument('--dataset', type=str, default='chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
+    parser.add_argument('--dataset', type=str, default='nih_chestxray', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'contaminated_chexpert'])
     parser.add_argument("--batch_size", default=4, type=int, help="Batch size for the data loader.")
     parser.add_argument('--manual_seed', type=int, default=42, help='set seed')
     parser.add_argument('--use_wandb', type=str2bool, default=False)
@@ -111,7 +111,7 @@ def update_params_with_model_path(opts, model_path):
     if 'vindr' in model_path:
         opts.dataset = 'vindr_cxr'
 
-    print("evaluatiing model: " + opts.exp_name + " on dataset: " + opts.dataset)
+    print("evaluating model: " + opts.exp_name + " on dataset: " + opts.dataset)
 
     return opts
 
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "bcos_resnet_models" + ".json"
 
 
-    evaluated_models = aba_guidance_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "aba_guidance_attrinet_models" + ".json"
+    evaluated_models = guided_bcos_resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "guided_bcos_resnet_models" + ".json"
 
     # set above variables
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"

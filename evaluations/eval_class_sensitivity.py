@@ -15,7 +15,7 @@ from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models, guided_bcos_resnet_models
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -222,8 +222,8 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='lime',
+    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='bcos',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
@@ -315,8 +315,8 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    evaluated_models = aba_guidance_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "aba_guidance_attrinet_models" + ".json"
+    evaluated_models = guided_bcos_resnet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_bcos_resnet_models" + ".json"
 
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
 

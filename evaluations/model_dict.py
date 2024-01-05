@@ -18,16 +18,20 @@ attrinet_models = {
 }
 
 guided_bcos_resnet_models = {
-    "chexpert": "",
-    "nih_chestxray": "",
-    "vindr_cxr": "",
+    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:51:01-chexpert_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+    #"nih_chestxray": "",
+    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:54:08-vindr_cxr_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
 }
 
 guided_attrinet_models = {
-    "chexpert": "",
-    "nih_chestxray": "",
-    "vindr_cxr": "",
+    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    #"nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 18:51:38--vindr_cxr_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
 }
+
+
+
+
 
 
 aba_loss_attrinet_models = {
@@ -38,12 +42,29 @@ aba_loss_attrinet_models = {
     "cls_adv_reg_ctr":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--nih_chestxray--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
 }
 
+# aba_guidance_attrinet_models = {
+#     "mixed_weighted_mask":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:55:43--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed_weighted--l_loc=30.0--guid_freq=0.1--seed=42",
+# }
+
+
 aba_guidance_attrinet_models = {
     "bbox":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 14:22:48--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--bbox/masks--l_loc=30.0--guid_freq=0.1--seed=42",
     "pseudo_mask":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 14:29:11--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--pseudo_mask--l_loc=30.0--guid_freq=0.0--seed=42",
     "pseudo_bbox":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-12 15:34:15--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--pseudo_bbox--l_loc=30.0--guid_freq=0.0--seed=42",
     "mixed":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    "mixed_weighted_mask":"/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:55:43--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed_weighted--l_loc=30.0--guid_freq=0.1--seed=42",
 }
+
+
+
+
+
+
+
+
+
+
+
 
 # resnet_models = {
 #     "chexpert": "/mnt/qb/work/baumgartner/sun22/MT_exps/resnet_cls2022-12-08 14:30:54-dataset=chexpert-bs=4-lr=0.0001-weight_decay=1e-05",
