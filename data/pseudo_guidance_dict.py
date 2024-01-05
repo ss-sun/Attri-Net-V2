@@ -6,8 +6,9 @@ pseudo_mask_dict = {
     "nih_chestxray": os.path.join(cwd,"data/pseudo_masks_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
-    "contaminated_chexpert": os.path.join(cwd,"data/shortcut_guidance_mask.npy"),
+    # "contaminated_chexpert": os.path.join(cwd,"data/shortcut_guidance_mask.npy"), # before
     "chexpert_mix": os.path.join(cwd, "data/pseudo_masks_chexpert.json"),
+    "contaminated_chexpert": os.path.join(cwd, "data/new_shortcut_guidance_mask.npy"),
 }
 
 pseudo_bbox_dict = {

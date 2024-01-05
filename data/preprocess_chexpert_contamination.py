@@ -67,7 +67,8 @@ def generate_shortcut_guidance():
     I1.text(pos_ps, pos_text, font=myFont, fill=(0))
     img.save(os.path.join(os.path.dirname(__file__), 'shortcut.png'))
 
-
+    '''
+    # previous version, mask is small and tight to the text, used for encourage the attributions outside the mask.
     I2 = ImageDraw.Draw(img)
     I2.rectangle([(20, 280), (120, 298)], fill=None, outline=(0))
     # img.show()
@@ -78,9 +79,19 @@ def generate_shortcut_guidance():
     img = Image.fromarray((mask * 255).astype(np.uint8))
     img.save(os.path.join(os.path.dirname(__file__), 'shortcut_mask.png'))
     np.save(os.path.join(os.path.dirname(__file__), 'shortcut_guidance_mask'), mask)
+    
+    '''
+    # new version, mask is large, for punish the attributions inside the mask
+    I2 = ImageDraw.Draw(img)
+    I2.rectangle([(5, 265), (135, 320)], fill=None, outline=(0))
+    # img.show()
+    img.save(os.path.join(os.path.dirname(__file__), 'new_shortcut_with_maskBB.png'))
 
-
-
+    mask = np.ones((320,320))
+    mask[265:320, 5:135] = 0
+    img = Image.fromarray((mask * 255).astype(np.uint8))
+    img.save(os.path.join(os.path.dirname(__file__), 'new_shortcut_mask.png'))
+    np.save(os.path.join(os.path.dirname(__file__), 'new_shortcut_guidance_mask'), mask)
 
 
 
@@ -133,3 +144,4 @@ if __name__ == '__main__':
     config = parser.parse_args()
     # main(config)
     generate_shortcut_guidance()
+
