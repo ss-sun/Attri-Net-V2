@@ -20,7 +20,7 @@ def attrinet_get_parser():
     parser.add_argument('--guidance_mode', type=str, default='guidance_shortcut',
                         choices=['no_guidance', 'full_guidance', 'pseudo_mask', 'weighted_pseudo_mask', 'pseudo_bbox', 'guidance_shortcut', 'bbox/masks', 'mixed', 'mixed_weighted',])  # use bbox or pseudo_mask as guidance of disease mask for better localization.
 
-    parser.add_argument('--guidance_freq', type=float, default=0, help='frequency to train with BBox, default=0.1')
+    parser.add_argument('--guidance_freq', type=float, default=0.1, help='frequency to train with BBox, default=0.1')
     # Data configuration.
     parser.add_argument('--dataset', type=str, default='contaminated_chexpert', choices=['chexpert', 'nih_chestxray', 'vindr_cxr', 'vindr_cxr_mix', 'chexpert_mix','contaminated_chexpert'])
 
