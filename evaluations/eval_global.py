@@ -107,7 +107,6 @@ def load_centers(model_dir):
         center_file_name = "center_of_" + disease + suffix
         center_path = os.path.join(model_dir, center_file_name)
         center_losses[disease].load_state_dict(torch.load(center_path))
-
     return center_losses
 
 
@@ -194,10 +193,11 @@ def main():
 
 
 
-    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-13 11:26:19--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
-    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
-    #
-    #
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-13 11:26:19--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
+    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+    ## model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2024-01-05 18:56:15--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
+    ## model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42"
+
     model_dir = model_path + "/ckpt"
 
     confounder_file_path = "./tag.txt"

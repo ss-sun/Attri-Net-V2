@@ -126,8 +126,8 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "bcos_resnet_models" + ".json"
 
 
-    evaluated_models = guided_bcos_resnet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "guided_bcos_resnet_models" + ".json"
+    evaluated_models = guided_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_auc_" + "guided_attrinet_models" + ".json"
 
     # set above variables
     out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
