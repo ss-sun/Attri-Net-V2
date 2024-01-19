@@ -110,36 +110,68 @@ def load_centers(model_dir):
     return center_losses
 
 
-def vis_weights(net_lgs, out_dir):
+def vis_weights(net_lgs, out_dir, cmap='gray'):
     # visualize the weights of lgs
     for disease in TRAIN_DISEASES:
         lgs = net_lgs[disease]
         weights = -to_numpy(lgs.linear.weight.data)
         weights = reshape_weights(weights)
         weights = upsample_weights(weights, target_size=320)
-        save_img(weights, disease + '_flip_lgs_weights.png', dir=out_dir)
+        path = os.path.join(out_dir, disease + '_flip_lgs_weights.png')
+        if cmap == 'gray':
+            plt.imsave(path, weights, cmap='gray')
+        if cmap == 'bwr':
+            weights = to_numpy(weights * 0.5 + 0.5).squeeze()
+            img = plt.cm.bwr(weights)  # use bwr color map, here negative values are blue, positive values are red, 0 is white. need to convert to value (0,1), negative values corrsponding to (0-0.5), positive to (0.5,1), white=0.5
+            img = Image.fromarray((img * 255).astype(np.uint8)).convert('RGB')
+            # attri_img.show()
+            img.save(path)
 
 
 
 
-def vis_classcenter(center_losses, out_dir):
+
+def vis_classcenter(center_losses, out_dir, cmap='gray'):
+
+
+    pos_centers = []
+    neg_centers = []
     for disease in TRAIN_DISEASES:
         loss_module = center_losses[disease]
         neg_center = loss_module.centers[0].data
         pos_center = loss_module.centers[1].data
-        neg_center = to_numpy(neg_center).reshape((320, 320))
-        pos_center = to_numpy(pos_center).reshape((320, 320))
+        neg_center = to_numpy(-neg_center).reshape((320, 320))
+        pos_center = to_numpy(-pos_center).reshape((320, 320))  # flip the sign for better visualization
+        pos_centers.append(pos_center)
+        neg_centers.append(neg_center)
 
-        vmax = np.abs(np.asarray([pos_center,neg_center])).flatten().max()
-        #vmin = np.abs(np.asarray([pos_center,neg_center])).flatten().min()
+    vmax = np.abs(np.asarray([pos_centers,neg_centers])).flatten().max()
+    for i in range(len(TRAIN_DISEASES)):
+        disease = TRAIN_DISEASES[i]
+        neg_center = neg_centers[i]/(vmax)
+        pos_center = pos_centers[i]/(vmax)
 
-        filename = disease + "_flip_pos_centers.png"
-        out_path = os.path.join(out_dir, filename)
-        plt.imsave(out_path, -pos_center, cmap='gray', vmax=vmax, vmin=-vmax)
+        if cmap == 'gray':
+            vmax = np.abs(np.asarray([pos_center,neg_center])).flatten().max()
+            #vmin = np.abs(np.asarray([pos_center,neg_center])).flatten().min()
 
-        filename = disease + "_flip_neg_centers.png"
-        out_path = os.path.join(out_dir, filename)
-        plt.imsave(out_path, -neg_center, cmap='gray', vmax=vmax,vmin=-vmax)
+            filename = disease + "_flip_pos_centers.png"
+            out_path = os.path.join(out_dir, filename)
+            plt.imsave(out_path, -pos_center, cmap='gray', vmax=vmax, vmin=-vmax)
+
+            filename = disease + "_flip_neg_centers.png"
+            out_path = os.path.join(out_dir, filename)
+            plt.imsave(out_path, -neg_center, cmap='gray', vmax=vmax,vmin=-vmax)
+
+        if cmap == 'bwr':
+            for attr, filename in zip([pos_center, neg_center],["_flip_pos_centers.png","_flip_neg_centers.png"]):
+                attr = to_numpy(attr * 0.5 + 0.5).squeeze()
+                attri_img = plt.cm.bwr(attr) # use bwr color map, here negative values are blue, positive values are red, 0 is white. need to convert to value (0,1), negative values corrsponding to (0-0.5), positive to (0.5,1), white=0.5
+                attri_img = Image.fromarray((attri_img * 255).astype(np.uint8)).convert('RGB')
+                # attri_img.show()
+                attri_img.save(os.path.join(out_dir, disease + filename + '.jpg'))
+
+
 
         # fig, ax = plt.subplots()
         # # Display the image
@@ -193,22 +225,28 @@ def main():
 
 
 
-    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-13 11:26:19--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
-    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
-    ## model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2024-01-05 18:56:15--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
-    ## model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42"
+
+    # model contaminated
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-10-23 18:13:03--contam50--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--seed=42"
+
+    # guided model to remove shortcut
+    ## bad performance model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2024-01-05 18:56:15--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
+    model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-13 11:26:19--contaminated_chexpert--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--guidance_shortcut--l_loc=1500.0--guid_freq=0.0--seed=42"
+
+    # normal model
+    # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42"
 
     model_dir = model_path + "/ckpt"
 
     confounder_file_path = "./tag.txt"
     net_lgs = load_lgs(model_dir)
-    out_dir = os.path.join(model_path, "contaim_weights")
+    out_dir = os.path.join(model_path, "new_contaim_weights")
     os.makedirs(out_dir,exist_ok=True)
-    vis_weights(net_lgs, out_dir)
+    vis_weights(net_lgs, out_dir, cmap='bwr')
     #
     center_losses = load_centers(model_dir)
-    vis_classcenter(center_losses, out_dir)
-    calculate_Cardio_cs(center_losses['Cardiomegaly'], confounder_file_path, out_dir)
+    vis_classcenter(center_losses, out_dir, cmap='bwr')
+    # calculate_Cardio_cs(center_losses['Cardiomegaly'], confounder_file_path, out_dir)
 
     # # draw normal model centers and weights
     # model_path = "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-08-01 18:43:37--chexpert--official_datasplit-orientation=Frontal-image_size=320-augmentation=previous--bs=4--lg_ds=32--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01"

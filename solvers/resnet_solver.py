@@ -259,6 +259,20 @@ class resnet_solver(object):
         Get the attributions of the image for the given label index.
         """
         img = img.to(self.device)
+        if len(img.shape) == 3:
+            img = img.unsqueeze(0)
         attr_maps = self.explainer.get_attributions(input=img, target_label_idx=label_idx, positive_only=positive_only)
         return attr_maps
 
+
+    def get_probs(self, inputs, label_idx):
+        """
+        Get the probability of the given input image with respect to a specific disease.
+        """
+        img = inputs.to(self.device)
+        if len(img.shape) == 3:
+            img = img.unsqueeze(0)
+        y_pred_logits = self.model(img)
+        y_pred = torch.sigmoid(y_pred_logits)
+        prob = y_pred[:, label_idx]
+        return prob

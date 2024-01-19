@@ -425,6 +425,8 @@ class bcos_resnet_solver(object):
         """
         Get the attributions of the image for the given label index.
         """
+        if len(img.shape) == 3:
+            img = img.unsqueeze(0)
         img = self.extend_channels(img)
         img = img.to(self.device)
         self.explainer = InputXGradient(self.model)
@@ -435,3 +437,15 @@ class bcos_resnet_solver(object):
         # attr_maps = self.explainer.get_attributions(input=img, target_label_idx=label_idx, positive_only=positive_only)
         return attr_maps
 
+    def get_probs(self, inputs, label_idx):
+        """
+        Get the probability of the given input image with respect to a specific disease.
+        """
+        if len(inputs.shape) == 3:
+            inputs = inputs.unsqueeze(0)
+        img = self.extend_channels(inputs)
+        img = img.to(self.device)
+        y_pred_logits = self.model(img)
+        y_pred = torch.sigmoid(y_pred_logits)
+        prob = y_pred[:, label_idx]
+        return prob
