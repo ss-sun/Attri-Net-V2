@@ -159,9 +159,13 @@ if __name__ == "__main__":
     chexpsert_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_chexpert.json"
     chexpsert_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/weighted_pseudo_masks_chexpert.json"
 
-    nih_chestxray_pseudo_bbox = "/home/susu/Remote_projects/tmi/data/pseudo_bboxs_nih.json"
-    nih_chestxray_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_nih.json"
-    nih_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/weighted_pseudo_masks_nih.json"
+    # nih_chestxray_pseudo_bbox = "/home/susu/Remote_projects/tmi/data/pseudo_bboxs_nih.json"
+    # nih_chestxray_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_nih.json"
+    # nih_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/weighted_pseudo_masks_nih.json"
+
+    nih_chestxray_pseudo_bbox = "/home/susu/Remote_projects/tmi/data/new_pseudo_bboxs_nih.json"
+    nih_chestxray_pseudo_mask = "/home/susu/Remote_projects/tmi/data/new_pseudo_masks_nih.json"
+    nih_weighted_pseudo_mask = "/home/susu/Remote_projects/tmi/data/new_weighted_pseudo_masks_nih.json"
 
     vindr_pseudo_bbox = "/home/susu/Remote_projects/tmi/data/pseudo_bboxs_vindr.json"
     vindr_pseudo_mask = "/home/susu/Remote_projects/tmi/data/pseudo_masks_vindr.json"
@@ -172,16 +176,15 @@ if __name__ == "__main__":
     # draw_speudo_mask(chexpsert_imgs, chexpsert_pseudo_mask, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
     # draw_weighted_speudo_mask(chexpsert_imgs, chexpsert_weighted_pseudo_mask, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
 
-    # draw_speudo_bbox(nih_chestxray_imgs, nih_chestxray_pseudo_bbox, nih_chestxray_src_img_dir, os.path.join(dest_dir, "nih_chestxray"))
-    # draw_speudo_mask(nih_chestxray_imgs, nih_chestxray_pseudo_mask, nih_chestxray_src_img_dir,
-    #                  os.path.join(dest_dir, "nih_chestxray"))
-    # draw_weighted_speudo_mask(chexpsert_imgs, chexpsert_weighted_pseudo_mask, chexpsert_src_img_dir, os.path.join(dest_dir, "chexpert"))
-    # draw_weighted_speudo_mask(nih_chestxray_imgs, nih_weighted_pseudo_mask, nih_chestxray_src_img_dir,
-    #                           os.path.join(dest_dir, "nih"))
+    draw_speudo_bbox(nih_chestxray_imgs, nih_chestxray_pseudo_bbox, nih_chestxray_src_img_dir, os.path.join(dest_dir, "nih_chestxray"))
+    draw_speudo_mask(nih_chestxray_imgs, nih_chestxray_pseudo_mask, nih_chestxray_src_img_dir,
+                     os.path.join(dest_dir, "nih_chestxray"))
+    draw_weighted_speudo_mask(nih_chestxray_imgs, nih_weighted_pseudo_mask, nih_chestxray_src_img_dir,
+                              os.path.join(dest_dir, "nih_chestxray"))
 
-    draw_speudo_bbox(vindr_imgs, vindr_pseudo_bbox, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
-    draw_speudo_mask(vindr_imgs, vindr_pseudo_mask, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
-    draw_weighted_speudo_mask(vindr_imgs, vindr_weighted_pseudo_mask, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
+    # draw_speudo_bbox(vindr_imgs, vindr_pseudo_bbox, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
+    # draw_speudo_mask(vindr_imgs, vindr_pseudo_mask, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
+    # draw_weighted_speudo_mask(vindr_imgs, vindr_weighted_pseudo_mask, vindr_src_img_dir, os.path.join(dest_dir, "vindr"))
 
 
 
