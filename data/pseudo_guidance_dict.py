@@ -3,7 +3,7 @@ import os
 cwd = os.getcwd()
 pseudo_mask_dict = {
     "chexpert": os.path.join(cwd, "data/pseudo_masks_chexpert.json"),
-    "nih_chestxray": os.path.join(cwd,"data/pseudo_masks_nih.json"),
+    "nih_chestxray": os.path.join(cwd,"data/new_pseudo_masks_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/pseudo_masks_vindr.json"),
     # "contaminated_chexpert": os.path.join(cwd,"data/shortcut_guidance_mask.npy"), # before
@@ -13,7 +13,7 @@ pseudo_mask_dict = {
 
 pseudo_bbox_dict = {
     "chexpert": os.path.join(cwd, "data/pseudo_bboxs_chexpert.json"),
-    "nih_chestxray": os.path.join(cwd,"data/pseudo_bboxs_nih.json"),
+    "nih_chestxray": os.path.join(cwd,"data/new_pseudo_bboxs_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/pseudo_bboxs_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/pseudo_bboxs_vindr.json"),
     "chexpert_mix": os.path.join(cwd, "data/pseudo_bboxs_chexpert.json"),
@@ -21,7 +21,7 @@ pseudo_bbox_dict = {
 
 weighted_pseudo_mask_dict = {
     "chexpert": os.path.join(cwd, "data/weighted_pseudo_masks_chexpert.json"),
-    "nih_chestxray": os.path.join(cwd,"data/weighted_pseudo_masks_nih.json"),
+    "nih_chestxray": os.path.join(cwd,"data/new_weighted_pseudo_masks_nih.json"),
     "vindr_cxr": os.path.join(cwd,"data/weighted_pseudo_masks_vindr.json"),
     "vindr_cxr_mix": os.path.join(cwd,"data/weighted_pseudo_masks_vindr.json"),
     "chexpert_mix": os.path.join(cwd, "data/weighted_pseudo_masks_chexpert.json"),
