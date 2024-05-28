@@ -75,7 +75,7 @@ def wandb_set_startup_timeout(seconds: int):
 
 def init_wandb(exp_configs):
     # Set up wandb.
-    wandb.login(key='34f6af5c2b35419f4b738daa31203a144ca49987') # Set your wandb key
+    wandb.login(key='Your KEY') # Set your wandb key
     wandb_set_startup_timeout(1200)
     wandb.init(dir=exp_configs.save_path,
                project="Attri-Net TMI exps",
