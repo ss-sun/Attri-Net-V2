@@ -12,6 +12,15 @@ Original Attri-Net is published in  MIDL 2023 (https://arxiv.org/abs/2303.00500)
 
 
 ## Model overview
+<div style="displaystyle=block;align=center;"><p align="center" >
+  <img src="figs/framework.png"/ width="75%" height="75%">
+  </p>
+</div>
+
+
+
+
+
 
 ## Results
 
