@@ -1,6 +1,14 @@
 # Attri-Net V2
-An improved version of Attri-Net model.
-Original Attri-Net is published in **Inherently Interpretable Multi-Label Classification of Chest X-rays Using Class-Specific Counterfactuals** [Arxiv Paper] (https://arxiv.org/abs/2303.00500) MIDL 2023.
+An improved version of Attri-Net model, for the manuscript **Attri-Net: A Globally and Locally Inherently Interpretable Model for Multi-Label Classification Using Class-Specific Counterfactuals** submitted to Medical Image Analysis.
+
+Original Attri-Net is published in  MIDL 2023 (https://arxiv.org/abs/2303.00500).
+
+## Improvement of Attri-Net V2:
+- The added global explanations explain the whole model's prediction mechanism.
+- The improved local explanations become more straightforward.
+- The proposed model guidance mechanism encourages the model to be **right for the right reason**.
+- We performed a more comprehensive quantitative evaluations of local and global explanations.
+
 
 
 ## Model overview
