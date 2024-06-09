@@ -28,6 +28,16 @@ Original Attri-Net is published in  MIDL 2023 (https://arxiv.org/abs/2303.00500)
 
 ### Quantitative evaluation
 
+<div style="displaystyle=block;align=center;"><p align="center" >
+  <img src="figs/quantitative_result_fig.png"/ width="75%" height="75%">
+  </p>
+</div>
+
+<div style="displaystyle=block;align=center;"><p align="center" >
+  <img src="figs/quantitative_results.png"/ width="75%" height="75%">
+  </p>
+</div>
+
 
 ## Installation
 ```
