@@ -1,6 +1,8 @@
 import os
 import sys
-sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
+# sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
+sys.path.append(os.path.abspath("/mnt/lustre/work/baumgartner/sun22/project/github_projects/AttriNet_revision/Attri-Net-V2"))
+
 import json
 import numpy as np
 import torch
@@ -21,6 +23,7 @@ from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
 from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models,guided_bcos_resnet_models
 import datetime
+from scipy import stats
 
 def str2bool(v):
     return v.lower() in ('true')
@@ -36,9 +39,10 @@ class pixel_sensitivity_analyser():
         os.makedirs(self.result_dir, exist_ok=True)
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
-        self.draw = True
+        self.draw = False
         if self.dataset == "chexpert":
-            gt_seg_file = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
+            # gt_seg_file = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
+            gt_seg_file = "/mnt/lustre/work/baumgartner/sun22/data/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
             with open(gt_seg_file) as json_file:
                 self.gt_seg_dict = json.load(json_file)
 
@@ -64,6 +68,7 @@ class pixel_sensitivity_analyser():
 
         EPG_score = {}
         avg_EPG_score = {}
+        all_scores = []
         for disease in self.solver.TRAIN_DISEASES:
             EPG_score[disease] = []
             avg_EPG_score[disease] = 0
@@ -100,6 +105,7 @@ class pixel_sensitivity_analyser():
 
                     score = self.get_EPG_score(attr, gt_mask)
                     EPG_score[disease].append(score)
+                    # all_scores.append(score)
 
                     if self.draw:
                         prefix = img_id + '_' + attr_method + '_' + disease
@@ -114,9 +120,19 @@ class pixel_sensitivity_analyser():
                 mean_score = np.mean(np.array(scores))
                 avg_EPG_score[disease] = str(mean_score)
                 avg_scores.append(mean_score)
+                all_scores.append(scores)
 
         print("avg_EPG_score: ", avg_EPG_score)
         print("avg_EPG accross disease: ", np.mean(np.array(avg_scores)))
+
+        all_scores = np.concatenate(all_scores)
+        all_scores = all_scores.flatten()
+        all_scores_mean = np.mean(all_scores)
+        all_scores_std = np.std(all_scores)
+        ci = stats.t.interval(0.95, len(all_scores) - 1, loc=all_scores_mean,
+                              scale=all_scores_std)
+        print(f"all_scores_mean: {all_scores_mean}, 95% CI: {ci}")
+        print(f"CI_range: {(ci[1] - ci[0]) / 2}")
 
         result_file_path = os.path.join(self.result_dir, "avg_EPG_results.json")
         with open(result_file_path, 'w') as json_file:
@@ -131,6 +147,8 @@ class pixel_sensitivity_analyser():
 
         EPG_score = {}
         avg_EPG_score = {}
+        avg_EPG_CI = {}
+        all_scores = []
         for disease in self.solver.TRAIN_DISEASES:
             EPG_score[disease] = []
             avg_EPG_score[disease] = 0
@@ -177,11 +195,25 @@ class pixel_sensitivity_analyser():
             scores = EPG_score[disease]
             if scores != []:
                 mean_score = np.mean(np.array(scores))
+                std_score = np.std(np.array(scores))
+                ci = stats.t.interval(0.95, len(scores) - 1, loc=mean_score, scale=std_score)
                 avg_EPG_score[disease] = str(mean_score)
+                avg_EPG_CI[disease] = str((ci[1] - ci[0]) / 2)
                 avg_scores.append(mean_score)
+                all_scores.append(scores)
 
         print("avg_EPG_score: ", avg_EPG_score)
+        print("avg_EPG_CI: ", avg_EPG_CI)
         print("avg_EPG accross disease: ", np.mean(np.array(avg_scores)))
+
+        all_scores = np.concatenate(all_scores)
+        all_scores = all_scores.flatten()
+        all_scores_mean = np.mean(all_scores)
+        all_scores_std = np.std(all_scores)
+        ci = stats.t.interval(0.95, len(all_scores) - 1, loc=all_scores_mean,
+                              scale=all_scores_std)
+        print(f"all_scores_mean: {all_scores_mean}, 95% CI: {ci}")
+        print(f"CI_range: {(ci[1] - ci[0]) / 2}")
 
         result_file_path = os.path.join(self.result_dir, "avg_EPG_results.json")
         with open(result_file_path, 'w') as json_file:
@@ -359,7 +391,8 @@ if __name__ == "__main__":
     evaluated_models = guided_attrinet_models
     file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "guided_attrinet_models" + ".json"
 
-    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
+    # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
+    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
 
     parser = argument_parser()
     opts = parser.parse_args()
