@@ -68,6 +68,7 @@ class pixel_sensitivity_analyser():
 
         EPG_score = {}
         avg_EPG_score = {}
+        avg_EPG_CI = {}
         all_scores = []
         for disease in self.solver.TRAIN_DISEASES:
             EPG_score[disease] = []
@@ -118,11 +119,16 @@ class pixel_sensitivity_analyser():
             scores = EPG_score[disease]
             if scores != []:
                 mean_score = np.mean(np.array(scores))
+                std_score = np.std(np.array(scores))
+                ci = stats.t.interval(0.95, len(scores) - 1, loc=mean_score,
+                                      scale=std_score)
                 avg_EPG_score[disease] = str(mean_score)
+                avg_EPG_CI[disease] = str((ci[1] - ci[0]) / 2)
                 avg_scores.append(mean_score)
                 all_scores.append(scores)
 
         print("avg_EPG_score: ", avg_EPG_score)
+        print("avg_EPG_CI: ", avg_EPG_CI)
         print("avg_EPG accross disease: ", np.mean(np.array(avg_scores)))
 
         all_scores = np.concatenate(all_scores)
