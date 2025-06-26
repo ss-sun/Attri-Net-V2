@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
+# sys.path.append(os.path.abspath("/mnt/qb/work/baumgartner/sun22/github_projects/tmi"))
+sys.path.append(os.path.abspath("/mnt/lustre/work/baumgartner/sun22/project/github_projects/AttriNet_revision/Attri-Net-V2"))
 
 import numpy as np
 import torch
@@ -331,7 +332,7 @@ def main(config):
 
 if __name__ == "__main__":
 
-    sys.path.append(os.path.abspath("/mnt/lustre/work/baumgartner/sun22/project/github_projects/AttriNet_revision/Attri-Net-V2"))
+
 
 
     # set the variables here:
