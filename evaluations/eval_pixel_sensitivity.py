@@ -407,9 +407,14 @@ if __name__ == "__main__":
     #             :-7] + "_eval_pixel_sensitivity_" + "guided_bcos_resnet_models" + ".json"
 
 
-    evaluated_models = bcos_resnet_models
+    # evaluated_models = bcos_resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "_eval_pixel_sensitivity_" + "bcos_resnet_models" + ".json"
+
+    evaluated_models = resnet_models
     file_name = str(datetime.datetime.now())[
-                :-7] + "_eval_pixel_sensitivity_" + "bcos_resnet_models" + ".json"
+                :-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
+
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
     out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
@@ -418,7 +423,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['gifsplanation']:
+        for explanation_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value
