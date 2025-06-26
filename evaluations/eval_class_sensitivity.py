@@ -330,6 +330,10 @@ def main(config):
 
 
 if __name__ == "__main__":
+
+    sys.path.append(os.path.abspath("/mnt/lustre/work/baumgartner/sun22/project/github_projects/AttriNet_revision/Attri-Net-V2"))
+
+
     # set the variables here:
     # evaluated_models = guided_attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
