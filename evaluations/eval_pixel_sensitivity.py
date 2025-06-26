@@ -397,10 +397,14 @@ if __name__ == "__main__":
     # evaluated_models = guided_attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "guided_attrinet_models" + ".json"
 
-    evaluated_models = attrinet_models
-    file_name = str(datetime.datetime.now())[
-                :-7] + "_eval_pixel_sensitivity_" + "attrinet_models" + ".json"
+    # evaluated_models = attrinet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "_eval_pixel_sensitivity_" + "attrinet_models" + ".json"
 
+
+    evaluated_models = guided_bcos_resnet_models
+    file_name = str(datetime.datetime.now())[
+                :-7] + "_eval_pixel_sensitivity_" + "guided_bcos_resnet_models" + ".json"
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
     out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
