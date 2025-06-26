@@ -19,6 +19,7 @@ from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_l
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
+from scipy import stats
 
 
 
@@ -39,7 +40,7 @@ class class_sensitivity_analyser():
         os.makedirs(self.attr_dir, exist_ok=True)
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_class_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
-        self.draw = True
+        self.draw = False
         print('compute class sensitivity on dataset ' + config.dataset)
         print('use explainer: ' + self.attr_method)
 
@@ -121,6 +122,8 @@ class class_sensitivity_analyser():
 
     def compute_localization_score(self, idx_grids, attr_method):
         scores = {}
+        detailed_scores = {}
+        all_scores = []
         mean = 0
         for disease in idx_grids.keys():
             self.draw = True
@@ -131,14 +134,27 @@ class class_sensitivity_analyser():
                     self.draw = False
                 b = blocks[i]
                 sc = self.compute_sc(i, b, disease, attr_method)
-                score_list.append(sc)
-
+                score_list.append(float(sc))
             avg_score = np.mean(np.array(score_list))
             scores[disease] = str(avg_score)
             mean += avg_score
+            detailed_scores[disease] = score_list
+            all_scores.append(score_list)
 
         mean = mean / (len(idx_grids.keys()))
         print('mean localization score on all disease: ', mean)
+
+        all_scores = np.concatenate(all_scores)
+        all_scores = all_scores.flatten()
+        all_scores_mean = np.mean(all_scores)
+        all_scores_std = np.std(all_scores)
+        ci = stats.t.interval(0.95, len(all_scores)-1, loc=all_scores_mean, scale=all_scores_std)
+        print(f"all_scores_mean: {all_scores_mean}, 95% CI: {ci}")
+        print(f"CI_range: {(ci[1] - ci[0]) / 2}")
+
+        # with open('/home/susu/Desktop/output.json', 'w') as f:
+        #     json.dump(data, f, indent=4)
+        #
 
         return scores
 
@@ -222,8 +238,8 @@ def argument_parser():
     """
 
     parser = argparse.ArgumentParser(description="classification metric analyser.")
-    parser.add_argument('--exp_name', type=str, default='bcos_resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
-    parser.add_argument('--attr_method', type=str, default='bcos',
+    parser.add_argument('--exp_name', type=str, default='resnet', choices=['resnet', 'attri-net', 'bcos_resnet'])
+    parser.add_argument('--attr_method', type=str, default='GB',
                         help="choose the explaination methods, can be 'lime', 'GCam', 'GB', 'shap', 'attri-net' , 'gifsplanation', 'bcos'")
     parser.add_argument('--mode', type=str, default='test', choices=['train', 'test'])
     parser.add_argument('--img_mode', type=str, default='gray',
@@ -315,16 +331,36 @@ def main(config):
 
 if __name__ == "__main__":
     # set the variables here:
-    evaluated_models = guided_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
+    # evaluated_models = guided_attrinet_models
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
 
-    out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
+    # evaluated_models = attrinet_models
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_models" + ".json"
+
+    # evaluated_models = guided_bcos_resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_class_sensitivity_" + "guided_bcos_resnet_models" + ".json"
+
+
+    # evaluated_models = bcos_resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_class_sensitivity_" + "bcos_resnet_models" + ".json"
+
+    evaluated_models = resnet_models
+    file_name = str(datetime.datetime.now())[
+                :-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
+
+
+    # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
+    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
+    if os.path.exists(out_dir) is False:
+        os.makedirs(out_dir, exist_ok=True)
 
     parser = argument_parser()
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['gifsplanation']:
+        for explanation_method in ['lime','shap', 'gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value

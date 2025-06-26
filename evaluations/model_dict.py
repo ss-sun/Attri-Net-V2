@@ -1,35 +1,71 @@
+# resnet_models = {
+#     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 10:14:57-chexpert-bs=4-lr=0.0001-weight_decay=1e-05",
+#     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 10:03:30-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05",
+#     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 14:42:26-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05"
+#     }
+#
+#
+# bcos_resnet_models = {
+#     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-chexpert-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+#     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:20:17-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+#     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+# }
+#
+# attrinet_models = {
+#     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--chexpert--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+#     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--nih_chestxray--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+#     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:30:35--vindr_cxr--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+# }
+#
+# guided_bcos_resnet_models = {
+#     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:51:01-chexpert_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+#     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2024-01-05 17:31:39-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+#     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:54:08-vindr_cxr_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+# }
+
+## previous attri-net models on qb
+# guided_attrinet_models = {
+#     "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+#     "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+#     "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 18:51:38--vindr_cxr_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+#     "vindr_cxr_full_super": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 18:12:17--vindr_cxr--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--full_guidance--l_loc=30.0--guid_freq=0.0--seed=42",
+# }
+
+### modified for revision, adapted to new path on lustre
+
+
 resnet_models = {
-    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 10:14:57-chexpert-bs=4-lr=0.0001-weight_decay=1e-05",
-    "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 10:03:30-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05",
-    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/resnet/resnet2023-12-07 14:42:26-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05"
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/resnet/resnet2023-12-07 10:14:57-chexpert-bs=4-lr=0.0001-weight_decay=1e-05",
+    "nih_chestxray": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/resnet/resnet2023-12-07 10:03:30-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05",
+    "vindr_cxr": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/resnet/resnet2023-12-07 14:42:26-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05"
     }
 
 
 bcos_resnet_models = {
-    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-chexpert-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
-    "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:20:17-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
-    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-chexpert-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+    "nih_chestxray": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:20:17-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
+    "vindr_cxr": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2023-12-07 16:44:27-vindr_cxr-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.0",
 }
 
 attrinet_models = {
-    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--chexpert--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
-    "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--nih_chestxray--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
-    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-08 17:30:35--vindr_cxr--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--chexpert--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+    "nih_chestxray": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--nih_chestxray--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+    "vindr_cxr": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-08 17:30:35--vindr_cxr--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
 }
 
 guided_bcos_resnet_models = {
-    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:51:01-chexpert_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
-    "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2024-01-05 17:31:39-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
-    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:54:08-vindr_cxr_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:51:01-chexpert_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+    "nih_chestxray": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2024-01-05 17:31:39-nih_chestxray-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
+    "vindr_cxr": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/bcos_resnet/bcos_resnet2023-12-22 20:54:08-vindr_cxr_mix-bs=4-lr=0.0001-weight_decay=1e-05-lambda_localizationloss=0.1",
 }
+
 
 guided_attrinet_models = {
-    "chexpert": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
-    "nih_chestxray": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
-    "vindr_cxr": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 18:51:38--vindr_cxr_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
-    "vindr_cxr_full_super": "/mnt/qb/work/baumgartner/sun22/TMI_exps/attri-net/attri-net2023-12-21 18:12:17--vindr_cxr--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--full_guidance--l_loc=30.0--guid_freq=0.0--seed=42",
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    "nih_chestxray": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-11 15:40:33--nih_chestxray--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    "vindr_cxr": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-21 18:51:38--vindr_cxr_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+    "vindr_cxr_full_super": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-21 18:12:17--vindr_cxr--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--full_guidance--l_loc=30.0--guid_freq=0.0--seed=42",
 }
-
 
 
 

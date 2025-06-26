@@ -453,6 +453,16 @@ class task_switch_solver(object):
             disease = self.TRAIN_DISEASES[c]
             c_file_name = "classifier_of_" + disease +suffix
             c_path = os.path.join(model_dir, c_file_name)
+            if disease == "Pleural Effusion" and os.path.exists(c_path) == False:
+                    c_file_name = "classifier_of_" + "Effusion" +suffix
+                    c_path = os.path.join(model_dir, c_file_name)
+
+            if disease == "Effusion" and os.path.exists(c_path) == False:
+                    c_file_name = "classifier_of_" + "Pleural Effusion" +suffix
+                    c_path = os.path.join(model_dir, c_file_name)
+
+
+
             self.net_lgs[disease].load_state_dict(torch.load(c_path))
             # center_file_name = "center_of_" + disease + suffix
             # center_path = os.path.join(model_dir, center_file_name)
@@ -1079,3 +1089,8 @@ class task_switch_solver(object):
         pred_logits = classifier(attrs)
         prob = torch.sigmoid(pred_logits)
         return prob
+
+
+if __name__ == '__main__':
+    solver = task_switch_solver(exp_configs, data_loader=data_loader)
+    solver.train()

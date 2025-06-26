@@ -1,3 +1,43 @@
+
+# import json
+#
+# data = {
+#     "chexpert": [0.2, 0.3, 0.4, 0.12],
+#     "chestx-ray": [0.14, 0.22, 0.43]
+# }
+#
+# # Write to file
+# with open('/home/susu/Desktop/output.json', 'w') as f:
+#     json.dump(data, f, indent=4)
+#
+# print("Dictionary written to output.json")
+#
+#
+# with open('/home/susu/Desktop/output.json', 'r') as f:
+#     data = json.load(f)
+#
+# print(data)
+
+
+import numpy as np
+from scipy import stats
+
+# Example data
+data = np.array([0.8, 0.82, 0.81, 0.83, 0.79])
+
+# Mean and standard error
+mean = np.mean(data)
+sem = stats.sem(data)  # Standard error of the mean
+
+# 95% confidence interval (two-sided)
+ci = stats.t.interval(0.95, len(data)-1, loc=mean, scale=sem)
+print(f"Mean: {mean}, 95% CI: {ci}")
+print(f"CI_range: {(ci[1] - ci[0])/2}")
+print(f"Mean: {mean}, 95% CI: {ci[0]} - {ci[1]}")
+
+
+
+
 # # import numpy as np
 # #
 # #
