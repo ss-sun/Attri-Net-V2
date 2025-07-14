@@ -138,15 +138,12 @@ class class_sensitivity_analyser():
                 b = blocks[i]
                 sc = self.compute_sc(i, b, disease, attr_method)
                 score_list.append(float(sc))
-            print("len(score_list): ", len(score_list))
-            print("score_list: ", score_list)
             ## check if there is any score in the list is nan
             # filter_score_list = score_list[~np.isnan(score_list)]
             # print("len(filter_score_list): ", len(filter_score_list))
             avg_score = np.mean(np.array(score_list))
             std_score = np.std(np.array(score_list))
-            print(f"Localization score for disease {disease}: {avg_score}, std: {std_score}")
-            ci = stats.t.interval(0.95, len(scores) - 1, loc=avg_score,
+            ci = stats.t.interval(0.95, len(score_list) - 1, loc=avg_score,
                                   scale=std_score)
             print(f"95% CI: {ci}")
             avg_loc_score[disease] = str(avg_score)
