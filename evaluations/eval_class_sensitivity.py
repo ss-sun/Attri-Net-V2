@@ -140,11 +140,12 @@ class class_sensitivity_analyser():
                 score_list.append(float(sc))
             avg_score = np.mean(np.array(score_list))
             std_score = np.std(np.array(score_list))
+            print(f"Localization score for disease {disease}: {avg_score}, std: {std_score}")
             ci = stats.t.interval(0.95, len(scores) - 1, loc=avg_score,
                                   scale=std_score)
+            print(f"95% CI: {ci}")
             avg_loc_score[disease] = str(avg_score)
             avg_loc_CI[disease] = str((ci[1] - ci[0]) / 2)
-
 
             scores[disease] = str(avg_score)
             mean += avg_score
