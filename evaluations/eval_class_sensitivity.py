@@ -358,14 +358,14 @@ if __name__ == "__main__":
     # evaluated_models = attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_models" + ".json"
 
-    evaluated_models = guided_bcos_resnet_models
-    file_name = str(datetime.datetime.now())[
-                :-7] + "eval_class_sensitivity_" + "guided_bcos_resnet_models" + ".json"
-
-
-    # evaluated_models = bcos_resnet_models
+    # evaluated_models = guided_bcos_resnet_models
     # file_name = str(datetime.datetime.now())[
-    #             :-7] + "eval_class_sensitivity_" + "bcos_resnet_models" + ".json"
+    #             :-7] + "eval_class_sensitivity_" + "guided_bcos_resnet_models" + ".json"
+
+
+    evaluated_models = bcos_resnet_models
+    file_name = str(datetime.datetime.now())[
+                :-7] + "eval_class_sensitivity_" + "bcos_resnet_models" + ".json"
 
     # evaluated_models = resnet_models
     # file_name = str(datetime.datetime.now())[
