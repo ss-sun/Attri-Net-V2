@@ -423,7 +423,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']:
+        for explanation_method in ['gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value

@@ -124,6 +124,8 @@ class class_sensitivity_analyser():
     def compute_localization_score(self, idx_grids, attr_method):
         scores = {}
         detailed_scores = {}
+        avg_loc_score = {}
+        avg_loc_CI = {}
         all_scores = []
         mean = 0
         for disease in idx_grids.keys():
@@ -137,6 +139,13 @@ class class_sensitivity_analyser():
                 sc = self.compute_sc(i, b, disease, attr_method)
                 score_list.append(float(sc))
             avg_score = np.mean(np.array(score_list))
+            std_score = np.std(np.array(score_list))
+            ci = stats.t.interval(0.95, len(scores) - 1, loc=avg_score,
+                                  scale=std_score)
+            avg_loc_score[disease] = str(avg_score)
+            avg_loc_CI[disease] = str((ci[1] - ci[0]) / 2)
+
+
             scores[disease] = str(avg_score)
             mean += avg_score
             detailed_scores[disease] = score_list
@@ -152,6 +161,9 @@ class class_sensitivity_analyser():
         ci = stats.t.interval(0.95, len(all_scores)-1, loc=all_scores_mean, scale=all_scores_std)
         print(f"all_scores_mean: {all_scores_mean}, 95% CI: {ci}")
         print(f"CI_range: {(ci[1] - ci[0]) / 2}")
+
+        print("avg_loc_score: ", avg_loc_score)
+        print("avg_loc_CI: ", avg_loc_CI)
 
         # with open('/home/susu/Desktop/output.json', 'w') as f:
         #     json.dump(data, f, indent=4)
@@ -336,8 +348,9 @@ if __name__ == "__main__":
 
 
     # set the variables here:
-    # evaluated_models = guided_attrinet_models
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
+
+    evaluated_models = guided_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
 
     # evaluated_models = attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_models" + ".json"
@@ -351,9 +364,9 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[
     #             :-7] + "eval_class_sensitivity_" + "bcos_resnet_models" + ".json"
 
-    evaluated_models = resnet_models
-    file_name = str(datetime.datetime.now())[
-                :-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
+    # evaluated_models = resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
 
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
@@ -365,7 +378,7 @@ if __name__ == "__main__":
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['lime','shap', 'gifsplanation']:
+        for explanation_method in ['gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value
