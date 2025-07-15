@@ -380,7 +380,7 @@ if __name__ == "__main__":
 
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
-    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250715"
+    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250715_new"
     if os.path.exists(out_dir) is False:
         os.makedirs(out_dir, exist_ok=True)
 
