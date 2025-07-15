@@ -99,7 +99,7 @@ class gif_explainer():
                 # right range
                 rbound = 0
 
-            print(initial_pred, lbound, rbound)
+            # print(initial_pred, lbound, rbound)
             lambdas = np.arange(lbound, rbound, np.abs((lbound - rbound) / 10))
             y = []
             dimgs = []

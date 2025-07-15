@@ -67,6 +67,10 @@ guided_attrinet_models = {
     "vindr_cxr_full_super": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-21 18:12:17--vindr_cxr--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--full_guidance--l_loc=30.0--guid_freq=0.0--seed=42",
 }
 
+t_test_models = {
+    "chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-08 17:29:36--chexpert--l_cri=1.0--l1=100--l2=200--l3=100--l_ctr=0.01--no_guidance--seed=42",
+    "guided_chexpert": "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/attri-net/attri-net2023-12-21 16:48:15--chexpert_mix--l_cri=1.0--l1=100--l2=200--l_cls=100--l_ctr=0.01--mixed--l_loc=30.0--guid_freq=0.1--seed=42",
+}
 
 
 

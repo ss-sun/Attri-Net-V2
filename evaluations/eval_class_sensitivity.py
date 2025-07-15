@@ -16,7 +16,7 @@ from solvers.bcosnet_solver import bcos_resnet_solver
 from train_utils import to_numpy
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models, guided_bcos_resnet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models, guided_bcos_resnet_models, t_test_models
 import datetime
 from eval_utils import get_weighted_map, vis_samples
 import json
@@ -41,6 +41,7 @@ class class_sensitivity_analyser():
         os.makedirs(self.attr_dir, exist_ok=True)
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_class_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
+        self.output_file_path = config.output_file_path
         self.draw = False
         print('compute class sensitivity on dataset ' + config.dataset)
         print('use explainer: ' + self.attr_method)
@@ -159,6 +160,7 @@ class class_sensitivity_analyser():
 
         all_scores = np.concatenate(all_scores)
         all_scores = all_scores.flatten()
+        np.save(os.path.join(self.output_file_path, 'scores.npy'), all_scores)
         all_scores_mean = np.mean(all_scores)
         all_scores_std = np.std(all_scores)
         ci = stats.t.interval(0.95, len(all_scores)-1, loc=all_scores_mean, scale=all_scores_std)
@@ -352,8 +354,11 @@ if __name__ == "__main__":
 
     # set the variables here:
 
-    # evaluated_models = guided_attrinet_models
-    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
+    evaluated_models = t_test_models
+
+
+    evaluated_models = guided_attrinet_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
 
     # evaluated_models = attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_models" + ".json"
@@ -367,21 +372,22 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[
     #             :-7] + "eval_class_sensitivity_" + "bcos_resnet_models" + ".json"
 
-    evaluated_models = resnet_models
-    file_name = str(datetime.datetime.now())[
-                :-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
+    # evaluated_models = resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "eval_class_sensitivity_" + "resnet_models" + ".json"
 
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
-    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
+    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250715"
     if os.path.exists(out_dir) is False:
         os.makedirs(out_dir, exist_ok=True)
+
 
     parser = argument_parser()
     opts = parser.parse_args()
 
     if "resnet" in file_name and "bcos" not in file_name:
-        for explanation_method in ['lime', 'GCam', 'GB', 'shap', 'gifsplanation']:
+        for explanation_method in ['gifsplanation']:
             results_dict = {}
             for key, value in evaluated_models.items():
                 model_path = value
@@ -403,6 +409,8 @@ if __name__ == "__main__":
             print("Now evaluating model: " + model_path)
             opts.model_path = model_path
             opts = update_params_with_model_path(opts, model_path)
+            output_file_path = os.path.join(out_dir, key)
+            opts.output_file_path = output_file_path
             results = main(opts)
             results_dict[key] = results
 
