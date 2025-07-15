@@ -412,6 +412,8 @@ if __name__ == "__main__":
             opts = update_params_with_model_path(opts, model_path)
             output_file_path = os.path.join(out_dir, key)
             opts.output_file_path = output_file_path
+            if os.path.exists(output_file_path) is False:
+                os.makedirs(output_file_path, exist_ok=True)
             results = main(opts)
             results_dict[key] = results
 
