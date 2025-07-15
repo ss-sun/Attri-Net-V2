@@ -356,10 +356,11 @@ if __name__ == "__main__":
     # set the variables here:
 
     evaluated_models = t_test_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "t_test_models" + ".json"
 
 
-    evaluated_models = guided_attrinet_models
-    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
+    # evaluated_models = guided_attrinet_models
+    # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "guided_attrinet_models" + ".json"
 
     # evaluated_models = attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "attrinet_models" + ".json"
