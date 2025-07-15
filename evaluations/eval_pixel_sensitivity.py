@@ -134,6 +134,7 @@ class pixel_sensitivity_analyser():
 
         all_scores = np.concatenate(all_scores)
         all_scores = all_scores.flatten()
+
         np.save(os.path.join(self.output_file_path, 'scores.npy'), all_scores)
 
         all_scores_mean = np.mean(all_scores)
@@ -217,6 +218,7 @@ class pixel_sensitivity_analyser():
 
         all_scores = np.concatenate(all_scores)
         all_scores = all_scores.flatten()
+        np.save(os.path.join(self.output_file_path, 'scores.npy'), all_scores)
         all_scores_mean = np.mean(all_scores)
         all_scores_std = np.std(all_scores)
         ci = stats.t.interval(0.95, len(all_scores) - 1, loc=all_scores_mean,
