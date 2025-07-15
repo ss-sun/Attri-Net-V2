@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 from eval_utils import get_weighted_map, draw_BB, draw_hit, vis_samples_withMask
 from pycocotools import mask
-from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models,guided_bcos_resnet_models
+from model_dict import resnet_models, bcos_resnet_models, attrinet_models, aba_loss_attrinet_models, aba_guidance_attrinet_models, guided_attrinet_models,guided_bcos_resnet_models, t_test_models
 import datetime
 from scipy import stats
 
@@ -40,6 +40,7 @@ class pixel_sensitivity_analyser():
         self.plots_dir = os.path.join(self.result_dir, self.attr_method + '_pixel_sensitivity_plots')
         os.makedirs(self.plots_dir, exist_ok=True)
         self.draw = False
+        self.output_file_path = config.output_file_path
         if self.dataset == "chexpert":
             # gt_seg_file = "/mnt/qb/work/baumgartner/sun22/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
             gt_seg_file = "/mnt/lustre/work/baumgartner/sun22/data/data/chexlocalize/CheXlocalize/gt_segmentations_test.json"
@@ -133,6 +134,8 @@ class pixel_sensitivity_analyser():
 
         all_scores = np.concatenate(all_scores)
         all_scores = all_scores.flatten()
+        np.save(os.path.join(self.output_file_path, 'scores.npy'), all_scores)
+
         all_scores_mean = np.mean(all_scores)
         all_scores_std = np.std(all_scores)
         ci = stats.t.interval(0.95, len(all_scores) - 1, loc=all_scores_mean,
@@ -394,6 +397,9 @@ def main(config):
 
 if __name__ == "__main__":
 
+    evaluated_models = t_test_models
+    file_name = str(datetime.datetime.now())[:-7] + "eval_class_sensitivity_" + "t_test_models" + ".json"
+
     # evaluated_models = guided_attrinet_models
     # file_name = str(datetime.datetime.now())[:-7] + "_eval_pixel_sensitivity_" + "guided_attrinet_models" + ".json"
 
@@ -411,13 +417,15 @@ if __name__ == "__main__":
     # file_name = str(datetime.datetime.now())[
     #             :-7] + "_eval_pixel_sensitivity_" + "bcos_resnet_models" + ".json"
 
-    evaluated_models = resnet_models
-    file_name = str(datetime.datetime.now())[
-                :-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
+    # evaluated_models = resnet_models
+    # file_name = str(datetime.datetime.now())[
+    #             :-7] + "_eval_pixel_sensitivity_" + "resnet_models" + ".json"
 
 
     # out_dir = "/mnt/qb/work/baumgartner/sun22/TMI_exps/tmi_results"
-    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250625"
+    out_dir = "/mnt/lustre/work/baumgartner/sun22/exps/TMI_exps/tmi_results/revision_20250715/pixel_sensitivity_results"
+    if os.path.isdir(out_dir) == False:
+        os.makedirs(out_dir, exist_ok=True)
 
     parser = argument_parser()
     opts = parser.parse_args()
@@ -445,6 +453,10 @@ if __name__ == "__main__":
             print("Now evaluating model: " + model_path)
             opts.model_path = model_path
             opts = update_params_with_model_path(opts, model_path)
+            output_file_path = os.path.join(out_dir, key)
+            opts.output_file_path = output_file_path
+            if os.path.exists(output_file_path) is False:
+                os.makedirs(output_file_path, exist_ok=True)
             results = main(opts)
             results_dict[key] = results
 
